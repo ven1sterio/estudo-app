@@ -277,15 +277,15 @@ export default function Dashboard() {
                       className="group rounded-[18px] bg-white overflow-hidden shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow flex flex-col"
                     >
                       <div
-                        className="h-20 flex items-center px-4"
+                        className="h-28 flex items-center px-4"
                         style={{ background: cor }}
                       >
                         <span className="w-9 h-9 rounded-xl bg-white/60 flex items-center justify-center text-textPrimary">
                           {icons.book}
                         </span>
                       </div>
-                      <div className="p-4 pt-3 relative flex-1">
-                        <h3 className="font-semibold text-[15px] text-textPrimary pr-8">{m.nome}</h3>
+                      <div className="p-5 pt-4 flex-1 flex flex-col">
+                        <h3 className="font-semibold text-[15px] text-textPrimary">{m.nome}</h3>
                         {m.professor && (
                           <p className="text-textMuted text-xs mt-0.5">{m.professor}</p>
                         )}
@@ -301,12 +301,14 @@ export default function Dashboard() {
                             ))}
                           </div>
                         )}
-                        <span
-                          className="absolute bottom-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform"
-                          style={{ background: "#8B6FD8" }}
-                        >
-                          {icons.arrowRight}
-                        </span>
+                        <div className="mt-auto pt-4 flex justify-end">
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform"
+                            style={{ background: "#8B6FD8" }}
+                          >
+                            {icons.arrowRight}
+                          </span>
+                        </div>
                       </div>
                     </Link>
                   );
