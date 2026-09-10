@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRequireAuth } from "../lib/useAuth";
 import { supabase } from "../lib/supabaseClient";
 import AppLayout from "../components/AppLayout";
+import { icons } from "../components/icons";
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MESES = [
@@ -25,6 +26,9 @@ const TAREFA_TIPO_PARA_FILTRO = {
   lista: "atividade",
   outro: "outro",
 };
+
+// Paleta pastel de apoio para os cards de Matérias/Flashcards quando a matéria não tem cor própria
+const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
 // Função ymd com correção para o fuso horário local
 function ymd(date) {
@@ -81,7 +85,7 @@ export default function Dashboard() {
 
     const { data: colecoes } = await supabase
       .from("flashcard_colecoes")
-      .select("id, nome_colecao, materia_id, cor, materias(cor), created_at")
+      .select("id, nome_colecao, materia_id, cor, materias(nome, cor), created_at")
       .order("created_at", { ascending: false })
       .limit(3);
 
@@ -241,76 +245,125 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
+      <h2 className="text-3xl font-bold flex items-center gap-2 mb-6 text-textPrimary">
+        {icons.home}
+        Dashboard
+      </h2>
+
       <div className="grid lg:grid-cols-3 gap-6 mb-10">
         <div className="lg:col-span-2 space-y-6">
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-lg">Minhas Matérias</h2>
+              <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+                {icons.book}
+                Minhas Matérias
+              </h2>
               <Link href="/materias" className="text-sm text-primary hover:underline">
                 ver todas →
               </Link>
             </div>
             {materias.length === 0 ? (
-              <div className="card text-gray-400 text-sm">
+              <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-6 text-textMuted text-sm text-center">
                 Nenhuma matéria cadastrada ainda.
               </div>
             ) : (
-              <div className="grid sm:grid-cols-3 gap-3">
-                {materias.map((m) => (
-                  <Link
-                    key={m.id}
-                    href={`/materias/${m.id}`}
-                    className="card hover:shadow-md transition-shadow block"
-                    style={{ borderLeft: `4px solid ${m.cor || "#8B85F0"}` }}
-                  >
-                    <h3 className="font-semibold">{m.nome}</h3>
-                    <p className="text-gray-400 text-xs mt-0.5">{m.professor}</p>
-                    {m.sala && <p className="text-gray-400 text-xs mt-0.5">Sala {m.sala}</p>}
-                    {m.horarios?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {m.horarios.map((h) => (
-                          <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
-                            {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][h.dia_semana]}{" "}
-                            {h.hora_inicio?.slice(0,5)}-{h.hora_fim?.slice(0,5)}
-                            {h.sala ? ` · ${h.sala}` : ""}
-                          </span>
-                        ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {materias.map((m, i) => {
+                  const cor = m.cor || PASTEL_COLORS[i % PASTEL_COLORS.length];
+                  return (
+                    <Link
+                      key={m.id}
+                      href={`/materias/${m.id}`}
+                      className="group rounded-[18px] bg-white overflow-hidden shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow flex flex-col"
+                    >
+                      <div
+                        className="h-20 flex items-center px-4"
+                        style={{ background: cor }}
+                      >
+                        <span className="w-9 h-9 rounded-xl bg-white/60 flex items-center justify-center text-textPrimary">
+                          {icons.book}
+                        </span>
                       </div>
-                    )}
-                  </Link>
-                ))}
+                      <div className="p-4 pt-3 relative flex-1">
+                        <h3 className="font-semibold text-[15px] text-textPrimary pr-8">{m.nome}</h3>
+                        {m.professor && (
+                          <p className="text-textMuted text-xs mt-0.5">{m.professor}</p>
+                        )}
+                        {m.sala && <p className="text-textMuted text-xs mt-0.5">Sala {m.sala}</p>}
+                        {m.horarios?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {m.horarios.map((h) => (
+                              <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
+                                {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][h.dia_semana]}{" "}
+                                {h.hora_inicio?.slice(0,5)}-{h.hora_fim?.slice(0,5)}
+                                {h.sala ? ` · ${h.sala}` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <span
+                          className="absolute bottom-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform"
+                          style={{ background: "#8B6FD8" }}
+                        >
+                          {icons.arrowRight}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </section>
 
           <section>
-            <h2 className="font-semibold text-lg mb-3">Meus Cartões</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2 mb-3 text-textPrimary">
+              {icons.layers}
+              Meus Flashcards
+            </h2>
             {cartoes.length === 0 ? (
-              <div className="card text-gray-400 text-sm">
+              <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-6 text-textMuted text-sm text-center">
                 Nenhum baralho criado ainda.
               </div>
             ) : (
-              <div className="grid sm:grid-cols-3 gap-3">
-                {cartoes.map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/materias/${c.materia_id}/flashcards/${c.id}`}
-                    className="card hover:shadow-md transition-shadow block"
-                    style={{ borderLeft: `4px solid ${c.cor || c.materias?.cor || "#8B85F0"}` }}
-                  >
-                    <h3 className="font-semibold">{c.nome_colecao}</h3>
-                    <p className="text-gray-400 text-xs mt-1">ver baralho</p>
-                  </Link>
-                ))}
+              <div className="flex flex-col gap-2">
+                {cartoes.map((c, i) => {
+                  const cor = c.cor || c.materias?.cor || PASTEL_COLORS[i % PASTEL_COLORS.length];
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/materias/${c.materia_id}/flashcards/${c.id}`}
+                      className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow"
+                    >
+                      <span
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-textPrimary"
+                        style={{ background: cor }}
+                      >
+                        {icons.layers}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-textPrimary truncate">{c.nome_colecao}</p>
+                        {c.materias?.nome && (
+                          <p className="text-xs text-textMuted truncate">{c.materias.nome}</p>
+                        )}
+                      </div>
+                      <span className="text-xs font-medium text-primary shrink-0 flex items-center gap-1">
+                        Ver baralho {icons.arrowRight}
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </section>
         </div>
 
         <div className="space-y-6">
-          <section className="card">
+          <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-sm tracking-wide text-gray-500 uppercase">Atividades</h2>
+              <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">
+                {icons.check}
+                Atividades
+              </h2>
               <Link
                 href="/tarefas"
                 title="Adicionar atividade"
@@ -320,30 +373,57 @@ export default function Dashboard() {
               </Link>
             </div>
             {proximos.length === 0 ? (
-              <p className="text-gray-400 text-sm">Nada agendado por enquanto.</p>
+              <p className="text-textMuted text-sm">Nada agendado por enquanto.</p>
             ) : (
-              <ul className="space-y-2">
-                {proximos.map((p) => (
-                  <li key={p.id} className="text-sm">
-                    {p.materia && <span className="text-gray-400">{p.materia} · </span>}
-                    <Link href="/tarefas" className="text-primary hover:underline">
-                      {p.titulo}
+              <div className="flex flex-col gap-2">
+                {proximos.map((p, i) => {
+                  const destaque = i === 0;
+                  return (
+                    <Link
+                      key={p.id}
+                      href="/tarefas"
+                      className={
+                        "flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(40,30,70,0.06)] transition-shadow hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] " +
+                        (destaque ? "bg-primary" : "bg-white")
+                      }
+                    >
+                      <span
+                        className={
+                          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 " +
+                          (destaque ? "bg-white/20 text-white" : "bg-primarySoft text-primaryDark")
+                        }
+                      >
+                        {icons.check}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className={"text-sm font-medium truncate " + (destaque ? "text-white" : "text-textPrimary")}>
+                          {p.titulo}
+                        </p>
+                        {p.materia && (
+                          <p className={"text-xs truncate " + (destaque ? "text-white/75" : "text-textMuted")}>
+                            {p.materia}
+                          </p>
+                        )}
+                      </div>
+                      <span className={"text-xs shrink-0 " + (destaque ? "text-white/85" : "text-textMuted")}>
+                        {new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                        })}
+                      </span>
                     </Link>
-                    <span className="text-xs text-gray-400 float-right">
-                      {new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                      })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                  );
+                })}
+              </div>
             )}
           </section>
 
-          <section className="card">
+          <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-sm tracking-wide text-gray-500 uppercase">Lembretes</h2>
+              <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">
+                {icons.bell}
+                Lembretes
+              </h2>
               <Link
                 href="/tarefas"
                 title="Adicionar lembrete"
@@ -353,48 +433,52 @@ export default function Dashboard() {
               </Link>
             </div>
             {lembretes.length === 0 ? (
-              <p className="text-gray-400 text-sm">Nenhum lembrete ainda.</p>
+              <p className="text-textMuted text-sm">Nenhum lembrete ainda.</p>
             ) : (
-              <ul className="space-y-2">
+              <div className="flex flex-col gap-2">
                 {lembretes.map((l) => (
-                  <li key={l.id} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={l.id}
+                    className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(40,30,70,0.06)] cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={l.concluido}
                       onChange={() => toggleLembrete(l)}
                       className="w-4 h-4 accent-primary shrink-0"
                     />
-                    <span className={l.concluido ? "line-through text-gray-300" : ""}>
+                    <span className={"text-sm flex-1 min-w-0 truncate " + (l.concluido ? "line-through text-textMuted" : "text-textPrimary")}>
                       {l.titulo}
                     </span>
-                  </li>
+                  </label>
                 ))}
-              </ul>
+              </div>
             )}
           </section>
         </div>
       </div>
 
-      <hr className="border-gray-100 my-8" />
+      <hr className="border-borderSoft my-8" />
 
       {/* SEÇÃO DO CALENDÁRIO */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <span className="text-3xl">🗓️</span> Calendário
+          <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+            {icons.calendar}
+            Calendário
           </h2>
           <div className="flex items-center gap-3">
-            <button onClick={() => mudarMes(-1)} className="text-gray-400 hover:text-primary px-2">‹</button>
-            <span className="font-medium w-40 text-center">
+            <button onClick={() => mudarMes(-1)} className="text-textMuted hover:text-primary px-2">‹</button>
+            <span className="font-medium w-40 text-center text-textPrimary">
               {MESES[cursor.getMonth()]} {cursor.getFullYear()}
             </span>
-            <button onClick={() => mudarMes(1)} className="text-gray-400 hover:text-primary px-2">›</button>
+            <button onClick={() => mudarMes(1)} className="text-textMuted hover:text-primary px-2">›</button>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-4 mb-4 text-sm">
           {Object.entries(TIPO_INFO).map(([key, info]) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer">
+            <label key={key} className="flex items-center gap-2 cursor-pointer text-textSecondary">
               <input
                 type="checkbox"
                 checked={filtros[key]}
@@ -408,11 +492,11 @@ export default function Dashboard() {
         </div>
 
         {loadingCalendario ? (
-          <p className="text-gray-400">Carregando calendário...</p>
+          <p className="text-textMuted">Carregando calendário...</p>
         ) : (
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <div className="grid grid-cols-7 text-center text-xs text-gray-400 mb-2">
+            <div className="md:col-span-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(40,30,70,0.06)] p-4">
+              <div className="grid grid-cols-7 text-center text-xs text-textMuted mb-2">
                 {DIAS_SEMANA.map((d) => <div key={d}>{d}</div>)}
               </div>
               <div className="grid grid-cols-7 gap-1">
@@ -431,11 +515,11 @@ export default function Dashboard() {
                         setShowNovoEvento(false);
                       }}
                       className={
-                        "aspect-square rounded-xl border text-left p-1.5 flex flex-col overflow-hidden " +
-                        (isSelected ? "border-primary bg-primarySoft/40" : "border-gray-100 hover:border-gray-300")
+                        "aspect-square rounded-xl border text-left p-1.5 flex flex-col overflow-hidden transition-colors " +
+                        (isSelected ? "border-primary bg-primarySoft/50" : "border-borderSoft hover:border-primary/40")
                       }
                     >
-                      <span className={"text-xs font-medium " + (isHoje ? "text-primary font-bold" : "text-gray-600")}>
+                      <span className={"text-xs font-medium " + (isHoje ? "text-primary font-bold" : "text-textSecondary")}>
                         {dia.getDate()}
                       </span>
                       <div className="flex flex-wrap gap-0.5 mt-1">
@@ -449,9 +533,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="card h-fit">
+            <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(40,30,70,0.06)] p-4 h-fit">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold">
+                <h2 className="font-semibold text-textPrimary">
                   {selectedDay
                     ? new Date(selectedDay + "T00:00:00").toLocaleDateString("pt-BR", {
                         weekday: "long", day: "2-digit", month: "long",
@@ -474,7 +558,7 @@ export default function Dashboard() {
               )}
 
               {selectedDay && !showNovoEvento && eventosDoDiaSelecionado.length === 0 && (
-                <p className="text-gray-400 text-sm">Nada por aqui neste dia.</p>
+                <p className="text-textMuted text-sm">Nada por aqui neste dia.</p>
               )}
 
               {!showNovoEvento && (
@@ -483,9 +567,9 @@ export default function Dashboard() {
                     <li key={e.id} className="flex items-start gap-2">
                       <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: e.cor }} />
                       <div>
-                        <p className="text-sm font-medium">{e.titulo}</p>
-                        {e.descricao && <p className="text-xs text-gray-400">{e.descricao}</p>}
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-medium text-textPrimary">{e.titulo}</p>
+                        {e.descricao && <p className="text-xs text-textMuted">{e.descricao}</p>}
+                        <p className="text-xs text-textMuted">
                           {TIPO_INFO[e.filtro]?.label}{e.materia ? ` · ${e.materia}` : ""}
                         </p>
                       </div>

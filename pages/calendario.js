@@ -162,7 +162,7 @@ export default function Calendario() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">🗓️ Calendário</h1>
+        <h1 className="text-2xl font-bold">calendário</h1>
         <div className="flex items-center gap-3">
           <button onClick={() => mudarMes(-1)} className="text-gray-400 hover:text-primary px-2">‹</button>
           <span className="font-medium w-40 text-center">
