@@ -26,7 +26,7 @@ const TAREFA_TIPO_PARA_FILTRO = {
   outro: "outro",
 };
 
-// Função ymd corrigida para o fuso horário local
+// Função ymd com correção para o fuso horário local
 function ymd(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -37,13 +37,14 @@ function ymd(date) {
 export default function Dashboard() {
   const { user, loading: authLoading } = useRequireAuth();
 
+  // Estados do Dashboard
   const [materias, setMaterias] = useState([]);
   const [cartoes, setCartoes] = useState([]);
   const [proximos, setProximos] = useState([]);
   const [lembretes, setLembretes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados do Calendário Completo
+  // Estados do Calendário
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -263,7 +264,7 @@ export default function Dashboard() {
                     style={{ borderLeft: `4px solid ${m.cor || "#8B85F0"}` }}
                   >
                     <h3 className="font-semibold">{m.nome}</h3>
-                    <p className="text-gray-400 text-sm">{m.professor}</p>
+                    <p className="text-gray-400 text-xs mt-0.5">{m.professor}</p>
                     {m.sala && <p className="text-gray-400 text-xs mt-0.5">Sala {m.sala}</p>}
                     {m.horarios?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -271,6 +272,7 @@ export default function Dashboard() {
                           <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
                             {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][h.dia_semana]}{" "}
                             {h.hora_inicio?.slice(0,5)}-{h.hora_fim?.slice(0,5)}
+                            {h.sala ? ` · ${h.sala}` : ""}
                           </span>
                         ))}
                       </div>
@@ -375,7 +377,7 @@ export default function Dashboard() {
 
       <hr className="border-gray-100 my-8" />
 
-      {/* Seção do Calendário */}
+      {/* SEÇÃO DO CALENDÁRIO */}
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-2">

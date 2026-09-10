@@ -196,7 +196,6 @@ export default function MateriaDetalhe() {
                   {materia.codigo && `${materia.codigo} · `}
                   {materia.professor}
                 </p>
-                {materia.sala && <p className="text-gray-400 text-sm">{materia.sala}</p>}
               </div>
               <button
                 onClick={handleDeleteMateria}
@@ -212,6 +211,7 @@ export default function MateriaDetalhe() {
                 {materia.horarios.map((h) => (
                   <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
                     {DIAS[h.dia_semana]} {h.hora_inicio?.slice(0, 5)}-{h.hora_fim?.slice(0, 5)}
+                    {h.sala ? ` · ${h.sala}` : ""}
                   </span>
                 ))}
               </div>

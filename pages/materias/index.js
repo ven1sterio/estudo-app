@@ -118,6 +118,7 @@ function HorariosBadges({ horarios }) {
       {horarios.map((h) => (
         <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
           {DIAS[h.dia_semana]} {h.hora_inicio?.slice(0, 5)}-{h.hora_fim?.slice(0, 5)}
+          {h.sala ? ` · ${h.sala}` : ""}
         </span>
       ))}
     </div>
@@ -188,20 +189,19 @@ function NovaMateriaForm({ onClose, onCreated }) {
   const [descricao, setDescricao] = useState("");
   const [professor, setProfessor] = useState("");
   const [emailProfessor, setEmailProfessor] = useState("");
-  const [cor, setCor] = useState("#8B85F0");
-  const [predio, setPredio] = useState("");
-  const [bloco, setBloco] = useState("");
-  const [sala, setSala] = useState("");
+  const [cor, setCor] = useState("#8B6FD8");
 
+  // Cada horário agora tem seu próprio local, já que a matéria pode
+  // acontecer em salas diferentes dependendo do dia da semana.
   const [horarios, setHorarios] = useState([
-    { diaSemana: "1", horaInicio: "", horaFim: "" },
+    { diaSemana: "1", horaInicio: "", horaFim: "", predio: "", bloco: "", sala: "" },
   ]);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function addHorario() {
-    setHorarios((h) => [...h, { diaSemana: "1", horaInicio: "", horaFim: "" }]);
+    setHorarios((h) => [...h, { diaSemana: "1", horaInicio: "", horaFim: "", predio: "", bloco: "", sala: "" }]);
   }
 
   function removeHorario(i) {
@@ -231,9 +231,6 @@ function NovaMateriaForm({ onClose, onCreated }) {
         professor,
         email_professor: emailProfessor,
         cor,
-        predio,
-        bloco,
-        sala,
       })
       .select()
       .single();
@@ -252,6 +249,9 @@ function NovaMateriaForm({ onClose, onCreated }) {
           dia_semana: Number(h.diaSemana),
           hora_inicio: h.horaInicio,
           hora_fim: h.horaFim,
+          predio: h.predio || null,
+          bloco: h.bloco || null,
+          sala: h.sala || null,
         }))
       );
       if (horarioError) {
@@ -328,63 +328,68 @@ function NovaMateriaForm({ onClose, onCreated }) {
         </div>
 
         <hr className="border-gray-100" />
-        <p className="text-sm font-medium text-gray-500">Local e horário padrão</p>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <input
-            className="input-field"
-            placeholder="Prédio"
-            value={predio}
-            onChange={(e) => setPredio(e.target.value)}
-          />
-          <input
-            className="input-field"
-            placeholder="Bloco"
-            value={bloco}
-            onChange={(e) => setBloco(e.target.value)}
-          />
-          <input
-            className="input-field"
-            placeholder="Sala"
-            value={sala}
-            onChange={(e) => setSala(e.target.value)}
-          />
-        </div>
+        <p className="text-sm font-medium text-gray-500">
+          Locais e horários (cada dia pode ter um local diferente)
+        </p>
 
         {horarios.map((h, i) => (
-          <div key={i} className="grid sm:grid-cols-3 gap-4 items-center">
-            <select
-              className="input-field"
-              value={h.diaSemana}
-              onChange={(e) => updateHorario(i, "diaSemana", e.target.value)}
-            >
-              {DIAS.map((d, idx) => (
-                <option key={idx} value={idx}>
-                  {d}
-                </option>
-              ))}
-            </select>
-            <input
-              type="time"
-              className="input-field"
-              value={h.horaInicio}
-              onChange={(e) => updateHorario(i, "horaInicio", e.target.value)}
-            />
-            <div className="flex gap-2">
+          <div key={i} className="border border-borderSoft rounded-xl p-3 space-y-3">
+            <div className="grid sm:grid-cols-3 gap-3">
+              <select
+                className="input-field"
+                value={h.diaSemana}
+                onChange={(e) => updateHorario(i, "diaSemana", e.target.value)}
+              >
+                {DIAS.map((d, idx) => (
+                  <option key={idx} value={idx}>
+                    {d}
+                  </option>
+                ))}
+              </select>
               <input
                 type="time"
                 className="input-field"
-                value={h.horaFim}
-                onChange={(e) => updateHorario(i, "horaFim", e.target.value)}
+                value={h.horaInicio}
+                onChange={(e) => updateHorario(i, "horaInicio", e.target.value)}
               />
-              {horarios.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeHorario(i)}
-                  className="text-gray-400 hover:text-red-500 px-2"
-                >
-                  ✕
-                </button>
-              )}
+              <div className="flex gap-2">
+                <input
+                  type="time"
+                  className="input-field"
+                  value={h.horaFim}
+                  onChange={(e) => updateHorario(i, "horaFim", e.target.value)}
+                />
+                {horarios.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeHorario(i)}
+                    className="text-gray-400 hover:text-red-500 px-2"
+                    title="Remover este horário"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <input
+                className="input-field"
+                placeholder="Prédio"
+                value={h.predio}
+                onChange={(e) => updateHorario(i, "predio", e.target.value)}
+              />
+              <input
+                className="input-field"
+                placeholder="Bloco"
+                value={h.bloco}
+                onChange={(e) => updateHorario(i, "bloco", e.target.value)}
+              />
+              <input
+                className="input-field"
+                placeholder="Sala"
+                value={h.sala}
+                onChange={(e) => updateHorario(i, "sala", e.target.value)}
+              />
             </div>
           </div>
         ))}
