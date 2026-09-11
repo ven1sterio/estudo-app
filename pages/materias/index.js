@@ -3,8 +3,10 @@ import Link from "next/link";
 import { useRequireAuth } from "../../lib/useAuth";
 import { supabase } from "../../lib/supabaseClient";
 import AppLayout from "../../components/AppLayout";
+import { icons } from "../../components/icons";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
 export default function Materias() {
   const { user, loading: authLoading } = useRequireAuth();
@@ -48,30 +50,34 @@ export default function Materias() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-2xl font-bold">Minhas Matérias</h1>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-white rounded-xl border border-gray-200 p-1">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <h2 className="text-3xl font-bold flex items-center gap-2 text-textPrimary">
+          {icons.book}
+          Minhas Matérias
+        </h2>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white rounded-xl border border-borderSoft p-1 shadow-sm">
             <button
               onClick={() => setView("grid")}
               className={
-                "px-3 py-1 rounded-lg text-sm transition-colors " +
-                (view === "grid" ? "bg-primarySoft text-primaryDark" : "text-gray-400")
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors " +
+                (view === "grid" ? "bg-primarySoft text-primaryDark" : "text-textMuted hover:text-textPrimary")
               }
             >
-              ▦ Grade
+              Grade
             </button>
             <button
               onClick={() => setView("list")}
               className={
-                "px-3 py-1 rounded-lg text-sm transition-colors " +
-                (view === "list" ? "bg-primarySoft text-primaryDark" : "text-gray-400")
+                "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors " +
+                (view === "list" ? "bg-primarySoft text-primaryDark" : "text-textMuted hover:text-textPrimary")
               }
             >
-              ☰ Lista
+              Lista
             </button>
           </div>
-          <button onClick={() => setShowForm(true)} className="btn-primary">
+          <button onClick={() => setShowForm(true)} className="btn-primary shadow-sm flex items-center gap-2">
             + Nova matéria
           </button>
         </div>
@@ -88,22 +94,22 @@ export default function Materias() {
       )}
 
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-textMuted">Carregando...</p>
       ) : materias.length === 0 ? (
-        <p className="text-gray-400">
-          Você ainda não cadastrou nenhuma matéria. Clique em "+ Nova matéria" para
-          começar.
-        </p>
+        <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-10 text-textMuted text-center">
+          Você ainda não cadastrou nenhuma matéria. Clique em <span className="font-semibold text-textPrimary">"+ Nova matéria"</span> para começar.
+        </div>
       ) : view === "grid" ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {materias.map((m) => (
-            <MateriaCard key={m.id} m={m} onDelete={handleDeleteMateria} />
+        // AQUI FOI ALTERADO PARA CABER 4 (lg:grid-cols-4) E 5 EM TELAS GIGANTES (xl:grid-cols-5)
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          {materias.map((m, i) => (
+            <MateriaCard key={m.id} m={m} index={i} onDelete={handleDeleteMateria} />
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
-          {materias.map((m) => (
-            <MateriaRow key={m.id} m={m} onDelete={handleDeleteMateria} />
+        <div className="space-y-3">
+          {materias.map((m, i) => (
+            <MateriaRow key={m.id} m={m} index={i} onDelete={handleDeleteMateria} />
           ))}
         </div>
       )}
@@ -114,9 +120,9 @@ export default function Materias() {
 function HorariosBadges({ horarios }) {
   if (!horarios?.length) return null;
   return (
-    <div className="mt-2 flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1 mt-2 min-w-0">
       {horarios.map((h) => (
-        <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
+        <span key={h.id} className="text-[10px] bg-primarySoft text-primaryDark rounded-md px-1.5 py-0.5 max-w-full break-words">
           {DIAS[h.dia_semana]} {h.hora_inicio?.slice(0, 5)}-{h.hora_fim?.slice(0, 5)}
           {h.sala ? ` · ${h.sala}` : ""}
         </span>
@@ -125,59 +131,90 @@ function HorariosBadges({ horarios }) {
   );
 }
 
-function MateriaCard({ m, onDelete }) {
+function MateriaCard({ m, index, onDelete }) {
+  const cor = m.cor || PASTEL_COLORS[index % PASTEL_COLORS.length];
+
   return (
-    <div
-      className="card hover:shadow-md transition-shadow relative"
-      style={{ borderLeft: `4px solid ${m.cor || "#8B85F0"}` }}
-    >
-      <div className="flex justify-between items-start mb-1">
-        <Link href={`/materias/${m.id}`} className="font-semibold text-lg hover:underline flex-1">
-          {m.nome}
-        </Link>
+    <div className="group rounded-[16px] bg-white overflow-hidden shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow flex flex-col relative">
+      <div
+        className="h-12 flex items-center px-3 justify-between"
+        style={{ background: cor }}
+      >
+        <span className="w-6 h-6 rounded-lg bg-white/60 flex items-center justify-center text-textPrimary [&>svg]:w-3.5 [&>svg]:h-3.5">
+          {icons.book}
+        </span>
         <button
           onClick={(e) => onDelete(e, m.id, m.nome)}
-          className="text-gray-400 hover:text-red-500 text-xs ml-2 p-1"
+          className="w-6 h-6 rounded-full flex items-center justify-center bg-white/30 hover:bg-white/60 text-textPrimary/80 transition-colors text-xs"
           title="Excluir matéria"
         >
-          🗑️
+          ✕
         </button>
       </div>
-      <Link href={`/materias/${m.id}`} className="block">
-        <p className="text-gray-400 text-sm">{m.professor}</p>
-        {m.descricao && <p className="text-gray-400 text-xs mt-1 line-clamp-2">{m.descricao}</p>}
-        <p className="text-gray-400 text-xs mt-1">{m.sala ? `Sala ${m.sala}` : ""}</p>
+      <Link href={`/materias/${m.id}`} className="p-4 pt-3 flex-1 flex flex-col min-w-0">
+        <h3 className="font-bold text-sm text-textPrimary leading-tight line-clamp-2">{m.nome}</h3>
+        {m.professor && <p className="text-textMuted text-[11px] mt-1 truncate">{m.professor}</p>}
+        {m.descricao && <p className="text-textMuted text-[11px] mt-0.5 line-clamp-2">{m.descricao}</p>}
+        
         <HorariosBadges horarios={m.horarios} />
+        
+        <div className="mt-auto pt-3 flex justify-end">
+          <span
+            className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform [&>svg]:w-3 [&>svg]:h-3"
+            style={{ background: "#8B6FD8" }}
+          >
+            {icons.arrowRight}
+          </span>
+        </div>
       </Link>
     </div>
   );
 }
 
-function MateriaRow({ m, onDelete }) {
+function MateriaRow({ m, index, onDelete }) {
+  const cor = m.cor || PASTEL_COLORS[index % PASTEL_COLORS.length];
+
   return (
-    <div
-      className="card hover:shadow-md transition-shadow flex items-center justify-between gap-4"
-      style={{ borderLeft: `4px solid ${m.cor || "#8B85F0"}` }}
-    >
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <Link href={`/materias/${m.id}`} className="font-semibold hover:underline">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-2xl px-5 py-4 shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow">
+      <div className="flex w-full sm:w-auto items-center gap-4 flex-1 min-w-0">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-textPrimary"
+          style={{ background: cor }}
+        >
+          {icons.book}
+        </div>
+        <div className="flex-1 min-w-0">
+          <Link href={`/materias/${m.id}`} className="font-semibold text-[15px] text-textPrimary hover:underline block truncate">
             {m.nome}
           </Link>
+          <p className="text-textMuted text-xs mt-0.5 truncate">
+            {m.professor} {m.descricao ? `· ${m.descricao}` : ""}
+          </p>
+          <div className="sm:hidden block">
+            <HorariosBadges horarios={m.horarios} />
+          </div>
         </div>
-        <p className="text-gray-400 text-sm">
-          {m.professor} {m.sala ? `· Sala ${m.sala}` : ""}
-        </p>
       </div>
-      <div className="flex items-center gap-3">
+      
+      <div className="hidden sm:block flex-1 min-w-0">
         <HorariosBadges horarios={m.horarios} />
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center mt-2 sm:mt-0">
         <button
           onClick={(e) => onDelete(e, m.id, m.nome)}
-          className="text-gray-400 hover:text-red-500 text-xs p-1"
+          className="w-8 h-8 flex items-center justify-center text-textMuted hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
           title="Excluir matéria"
         >
-          🗑️
+          ✕
         </button>
+        <Link
+          href={`/materias/${m.id}`}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm transition-transform hover:scale-105"
+          style={{ background: "#8B6FD8" }}
+        >
+          {icons.arrowRight}
+        </Link>
       </div>
     </div>
   );
@@ -191,8 +228,6 @@ function NovaMateriaForm({ onClose, onCreated }) {
   const [emailProfessor, setEmailProfessor] = useState("");
   const [cor, setCor] = useState("#8B6FD8");
 
-  // Cada horário agora tem seu próprio local, já que a matéria pode
-  // acontecer em salas diferentes dependendo do dia da semana.
   const [horarios, setHorarios] = useState([
     { diaSemana: "1", horaInicio: "", horaFim: "", predio: "", bloco: "", sala: "" },
   ]);
@@ -266,50 +301,54 @@ function NovaMateriaForm({ onClose, onCreated }) {
   }
 
   return (
-    <div className="card mb-6">
-      <h2 className="font-semibold text-lg mb-4">Nova matéria</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
+    <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(40,30,70,0.06)] p-6 mb-8 border border-borderSoft">
+      <h2 className="text-xl font-bold flex items-center gap-2 mb-6 text-textPrimary">
+        Nova Matéria
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid sm:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium mb-1">Nome *</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Nome *</label>
             <input
               required
-              className="input-field"
+              className="input-field w-full"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Cálculo I"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Código</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Código</label>
             <input
-              className="input-field"
+              className="input-field w-full"
               value={codigo}
               onChange={(e) => setCodigo(e.target.value)}
               placeholder="Ex: MAT101"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Professor</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Professor</label>
             <input
-              className="input-field"
+              className="input-field w-full"
               value={professor}
               onChange={(e) => setProfessor(e.target.value)}
+              placeholder="Nome do professor"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Email do professor</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Email do professor</label>
             <input
               type="email"
-              className="input-field"
+              className="input-field w-full"
               value={emailProfessor}
               onChange={(e) => setEmailProfessor(e.target.value)}
+              placeholder="email@instituicao.edu.br"
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Descrição</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Descrição</label>
             <textarea
-              className="input-field"
+              className="input-field w-full"
               rows={2}
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
@@ -317,79 +356,103 @@ function NovaMateriaForm({ onClose, onCreated }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Cor</label>
-            <input
-              type="color"
-              className="w-full h-10 rounded-xl border border-gray-200"
-              value={cor}
-              onChange={(e) => setCor(e.target.value)}
-            />
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Cor de Destaque</label>
+            <div className="flex gap-3">
+              <input
+                type="color"
+                className="w-12 h-12 rounded-xl border border-borderSoft cursor-pointer shrink-0"
+                value={cor}
+                onChange={(e) => setCor(e.target.value)}
+              />
+              <p className="text-xs text-textMuted flex items-center">
+                Selecione uma cor para personalizar esta matéria no seu dashboard e grade.
+              </p>
+            </div>
           </div>
         </div>
 
-        <hr className="border-gray-100" />
-        <p className="text-sm font-medium text-gray-500">
-          Locais e horários (cada dia pode ter um local diferente)
-        </p>
+        <hr className="border-borderSoft my-6" />
+        
+        <div>
+          <h3 className="text-sm font-bold text-textPrimary mb-3">
+            Locais e Horários
+          </h3>
+          <p className="text-xs text-textMuted mb-4">Adicione as informações de sala para cada dia da semana.</p>
+        </div>
 
         {horarios.map((h, i) => (
-          <div key={i} className="border border-borderSoft rounded-xl p-3 space-y-3">
-            <div className="grid sm:grid-cols-3 gap-3">
-              <select
-                className="input-field"
-                value={h.diaSemana}
-                onChange={(e) => updateHorario(i, "diaSemana", e.target.value)}
+          <div key={i} className="border border-borderSoft bg-gray-50/50 rounded-xl p-4 space-y-4 relative">
+            {horarios.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeHorario(i)}
+                className="absolute right-3 top-3 w-6 h-6 flex items-center justify-center rounded-full bg-white border border-borderSoft text-textMuted hover:text-red-500 transition-colors shadow-sm"
+                title="Remover este horário"
               >
-                {DIAS.map((d, idx) => (
-                  <option key={idx} value={idx}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="time"
-                className="input-field"
-                value={h.horaInicio}
-                onChange={(e) => updateHorario(i, "horaInicio", e.target.value)}
-              />
-              <div className="flex gap-2">
+                ✕
+              </button>
+            )}
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">Dia da semana</label>
+                <select
+                  className="input-field w-full"
+                  value={h.diaSemana}
+                  onChange={(e) => updateHorario(i, "diaSemana", e.target.value)}
+                >
+                  {DIAS.map((d, idx) => (
+                    <option key={idx} value={idx}>{d}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">Início</label>
                 <input
                   type="time"
-                  className="input-field"
+                  className="input-field w-full"
+                  value={h.horaInicio}
+                  onChange={(e) => updateHorario(i, "horaInicio", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">Fim</label>
+                <input
+                  type="time"
+                  className="input-field w-full"
                   value={h.horaFim}
                   onChange={(e) => updateHorario(i, "horaFim", e.target.value)}
                 />
-                {horarios.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeHorario(i)}
-                    className="text-gray-400 hover:text-red-500 px-2"
-                    title="Remover este horário"
-                  >
-                    ✕
-                  </button>
-                )}
               </div>
             </div>
-            <div className="grid sm:grid-cols-3 gap-3">
-              <input
-                className="input-field"
-                placeholder="Prédio"
-                value={h.predio}
-                onChange={(e) => updateHorario(i, "predio", e.target.value)}
-              />
-              <input
-                className="input-field"
-                placeholder="Bloco"
-                value={h.bloco}
-                onChange={(e) => updateHorario(i, "bloco", e.target.value)}
-              />
-              <input
-                className="input-field"
-                placeholder="Sala"
-                value={h.sala}
-                onChange={(e) => updateHorario(i, "sala", e.target.value)}
-              />
+            
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">Prédio</label>
+                <input
+                  className="input-field w-full"
+                  placeholder="Ex: Prédio 1"
+                  value={h.predio}
+                  onChange={(e) => updateHorario(i, "predio", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">Bloco</label>
+                <input
+                  className="input-field w-full"
+                  placeholder="Ex: A"
+                  value={h.bloco}
+                  onChange={(e) => updateHorario(i, "bloco", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">Sala</label>
+                <input
+                  className="input-field w-full"
+                  placeholder="Ex: 304"
+                  value={h.sala}
+                  onChange={(e) => updateHorario(i, "sala", e.target.value)}
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -397,22 +460,22 @@ function NovaMateriaForm({ onClose, onCreated }) {
         <button
           type="button"
           onClick={addHorario}
-          className="flex items-center gap-2 text-primary text-sm hover:underline"
+          className="flex items-center gap-2 text-primary font-medium text-sm hover:underline"
         >
           <span className="w-5 h-5 rounded-full bg-primarySoft flex items-center justify-center">+</span>
-          outro local e horário
+          Adicionar outro local e horário
         </button>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
 
-        <div className="flex gap-2">
+        <div className="flex gap-3 pt-4 border-t border-borderSoft mt-6">
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? "Salvando..." : "Salvar matéria"}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 px-4 py-2 hover:text-gray-600"
+            className="px-4 py-2 text-sm font-medium text-textMuted hover:text-textPrimary transition-colors"
           >
             Cancelar
           </button>

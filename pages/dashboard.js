@@ -277,12 +277,10 @@ export default function Dashboard() {
                       className="group rounded-[18px] bg-white overflow-hidden shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow flex flex-col"
                     >
                       <div
-                        className="h-28 flex items-center px-4"
+                        className="h-14 flex items-center px-4"
                         style={{ background: cor }}
                       >
-                        <span className="w-9 h-9 rounded-xl bg-white/60 flex items-center justify-center text-textPrimary">
-                          {icons.book}
-                        </span>
+
                       </div>
                       <div className="p-5 pt-4 flex-1 flex flex-col">
                         <h3 className="font-semibold text-[15px] text-textPrimary">{m.nome}</h3>
