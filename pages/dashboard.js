@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRequireAuth } from "../lib/useAuth";
 import { supabase } from "../lib/supabaseClient";
@@ -27,10 +27,8 @@ const TAREFA_TIPO_PARA_FILTRO = {
   outro: "outro",
 };
 
-// Paleta pastel de apoio para os cards de Matérias/Flashcards quando a matéria não tem cor própria
 const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
-// Função ymd com correção para o fuso horário local
 function ymd(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -41,14 +39,14 @@ function ymd(date) {
 export default function Dashboard() {
   const { user, loading: authLoading } = useRequireAuth();
 
-  // Estados do Dashboard
+  const [profile, setProfile] = useState(null);
   const [materias, setMaterias] = useState([]);
+  const [materiaStats, setMateriaStats] = useState({});
   const [cartoes, setCartoes] = useState([]);
   const [proximos, setProximos] = useState([]);
   const [lembretes, setLembretes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados do Calendário
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -70,6 +68,20 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
+    if (user) fetchProfile();
+  }, [user]);
+
+  async function fetchProfile() {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("nome, foto_url")
+      .eq("id", user.id)
+      .single();
+
+    if (!error) setProfile(data);
+  }
+
+  useEffect(() => {
     if (user) fetchCalendario();
   }, [user, cursor]);
 
@@ -80,14 +92,12 @@ export default function Dashboard() {
     const { data: materiasData } = await supabase
       .from("materias")
       .select("*, horarios(*)")
-      .order("created_at", { ascending: false })
-      .limit(3);
+      .order("created_at", { ascending: false });
 
     const { data: colecoes } = await supabase
       .from("flashcard_colecoes")
       .select("id, nome_colecao, materia_id, cor, materias(nome, cor), created_at")
-      .order("created_at", { ascending: false })
-      .limit(3);
+      .order("created_at", { ascending: false });
 
     const { data: eventosData } = await supabase
       .from("eventos_calendario")
@@ -109,6 +119,37 @@ export default function Dashboard() {
       .order("created_at", { ascending: true })
       .limit(6);
 
+    const materiaIds = (materiasData || []).map((m) => m.id);
+    const stats = {};
+    if (materiaIds.length > 0) {
+      const { data: tarefasPorMateria } = await supabase
+        .from("tarefas")
+        .select("id, concluido, materia_id")
+        .in("materia_id", materiaIds);
+
+      const { data: colecoesPorMateria } = await supabase
+        .from("flashcard_colecoes")
+        .select("materia_id, flashcards(count)")
+        .in("materia_id", materiaIds);
+
+      for (const mid of materiaIds) {
+        const tarefasDaMateria = (tarefasPorMateria || []).filter((t) => t.materia_id === mid);
+        const concluidas = tarefasDaMateria.filter((t) => t.concluido).length;
+        const total = tarefasDaMateria.length;
+
+        const flashcardsTotal = (colecoesPorMateria || [])
+          .filter((c) => c.materia_id === mid)
+          .reduce((sum, c) => sum + (c.flashcards?.[0]?.count ?? 0), 0);
+
+        stats[mid] = {
+          tarefasTotal: total,
+          tarefasConcluidas: concluidas,
+          tarefasPendentes: total - concluidas,
+          flashcardsTotal,
+        };
+      }
+    }
+
     const combinados = [
       ...(eventosData || []).map((e) => ({
         id: `ev-${e.id}`,
@@ -127,7 +168,8 @@ export default function Dashboard() {
       .slice(0, 3);
 
     setMaterias(materiasData || []);
-    setCartoes((colecoes || []).slice(0, 3));
+    setMateriaStats(stats);
+    setCartoes(colecoes || []);
     setProximos(combinados);
     setLembretes(lembretesData || []);
     setLoading(false);
@@ -245,116 +287,18 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <h2 className="text-3xl font-bold flex items-center gap-2 mb-6 text-textPrimary">
-        {icons.home}
-        Dashboard
-      </h2>
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold text-textPrimary">
+          Olá, {profile?.nome || user?.user_metadata?.nome || user?.user_metadata?.full_name || "Lucas"}!
+        </h2>
+        <p className="text-textMuted mt-1">Que tal continuar seus estudos hoje?</p>
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-6 mb-10">
         <div className="lg:col-span-2 space-y-6">
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
-                {icons.book}
-                Minhas Matérias
-              </h2>
-              <Link href="/materias" className="text-sm text-primary hover:underline">
-                ver todas →
-              </Link>
-            </div>
-            {materias.length === 0 ? (
-              <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-6 text-textMuted text-sm text-center">
-                Nenhuma matéria cadastrada ainda.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {materias.map((m, i) => {
-                  const cor = m.cor || PASTEL_COLORS[i % PASTEL_COLORS.length];
-                  return (
-                    <Link
-                      key={m.id}
-                      href={`/materias/${m.id}`}
-                      className="group rounded-[18px] bg-white overflow-hidden shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow flex flex-col"
-                    >
-                      <div
-                        className="h-14 flex items-center px-4"
-                        style={{ background: cor }}
-                      >
+          <MateriasCarousel materias={materias} materiaStats={materiaStats} />
 
-                      </div>
-                      <div className="p-5 pt-4 flex-1 flex flex-col">
-                        <h3 className="font-semibold text-[15px] text-textPrimary">{m.nome}</h3>
-                        {m.professor && (
-                          <p className="text-textMuted text-xs mt-0.5">{m.professor}</p>
-                        )}
-                        {m.sala && <p className="text-textMuted text-xs mt-0.5">Sala {m.sala}</p>}
-                        {m.horarios?.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {m.horarios.map((h) => (
-                              <span key={h.id} className="text-xs bg-primarySoft text-primaryDark rounded-full px-2 py-0.5">
-                                {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][h.dia_semana]}{" "}
-                                {h.hora_inicio?.slice(0,5)}-{h.hora_fim?.slice(0,5)}
-                                {h.sala ? ` · ${h.sala}` : ""}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <div className="mt-auto pt-4 flex justify-end">
-                          <span
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform"
-                            style={{ background: "#8B6FD8" }}
-                          >
-                            {icons.arrowRight}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold flex items-center gap-2 mb-3 text-textPrimary">
-              {icons.layers}
-              Meus Flashcards
-            </h2>
-            {cartoes.length === 0 ? (
-              <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-6 text-textMuted text-sm text-center">
-                Nenhum baralho criado ainda.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {cartoes.map((c, i) => {
-                  const cor = c.cor || c.materias?.cor || PASTEL_COLORS[i % PASTEL_COLORS.length];
-                  return (
-                    <Link
-                      key={c.id}
-                      href={`/materias/${c.materia_id}/flashcards/${c.id}`}
-                      className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow"
-                    >
-                      <span
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-textPrimary"
-                        style={{ background: cor }}
-                      >
-                        {icons.layers}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-textPrimary truncate">{c.nome_colecao}</p>
-                        {c.materias?.nome && (
-                          <p className="text-xs text-textMuted truncate">{c.materias.nome}</p>
-                        )}
-                      </div>
-                      <span className="text-xs font-medium text-primary shrink-0 flex items-center gap-1">
-                        Ver baralho {icons.arrowRight}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+          <FlashcardsList cartoes={cartoes} />
         </div>
 
         <div className="space-y-6">
@@ -582,6 +526,203 @@ export default function Dashboard() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+/* ---------- Minhas Matérias (carrossel) ---------- */
+function MateriasCarousel({ materias, materiaStats }) {
+  const scrollerRef = useRef(null);
+
+  function scrollByAmount(delta) {
+    scrollerRef.current?.scrollBy({ left: delta, behavior: "smooth" });
+  }
+
+  // Precisa ser um listener nativo com { passive: false }.
+  // O onWheel do React é registrado como passivo por padrão,
+  // então e.preventDefault() dentro dele não tem efeito nenhum
+  // (por isso a página continuava rolando verticalmente).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    function handleWheel(e) {
+      // Converte a rolagem vertical do mouse/trackpad em rolagem horizontal do carrossel
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollBy({ left: e.deltaY, behavior: "auto" });
+      }
+    }
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [materias.length]);
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+          {icons.book}
+          Minhas Matérias
+        </h2>
+        {materias.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollByAmount(-320)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
+              aria-label="Rolar para a esquerda"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByAmount(320)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
+              aria-label="Rolar para a direita"
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </div>
+      {materias.length === 0 ? (
+        <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-6 text-textMuted text-sm text-center">
+          Nenhuma matéria cadastrada ainda.
+        </div>
+      ) : (
+        <div
+          ref={scrollerRef}
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-2 [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {materias.map((m, i) => {
+            const cor = m.cor || PASTEL_COLORS[i % PASTEL_COLORS.length];
+            const stats = materiaStats?.[m.id];
+
+            return (
+              <Link
+                key={m.id}
+                href={`/materias/${m.id}`}
+                className="group snap-start shrink-0 w-[85vw] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] rounded-2xl border-l-4 overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
+                style={{
+                  borderLeftColor: cor,
+                  background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
+                }}
+              >
+                <div className="p-4 flex-1 flex flex-col min-w-0">
+                  <span
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
+                    style={{ background: cor }}
+                  >
+                    {icons.book}
+                  </span>
+
+                  <h3 className="font-semibold text-[15px] text-textPrimary mt-3 truncate">{m.nome}</h3>
+                  {m.professor && (
+                    <p className="text-textMuted text-xs mt-0.5 truncate">Prof. {m.professor}</p>
+                  )}
+                  {m.sala && <p className="text-textMuted text-xs mt-0.5 truncate">Sala {m.sala}</p>}
+                  {m.horarios?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2 min-w-0">
+                      {m.horarios.map((h) => (
+                        <span key={h.id} className="text-[11px] bg-white/70 text-primaryDark rounded-full px-2 py-0.5 max-w-full break-words">
+                          {DIAS_SEMANA[h.dia_semana]}{" "}
+                          {h.hora_inicio?.slice(0, 5)}-{h.hora_fim?.slice(0, 5)}
+                          {h.sala ? ` · ${h.sala}` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+
+
+                  <div className="mt-auto pt-3 flex items-center justify-between gap-2 min-w-0">
+                    {stats && (
+                      <div className="flex items-center gap-2 text-[11px] text-textSecondary min-w-0 overflow-hidden">
+                        <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
+                          {icons.check}
+                          {stats.tarefasPendentes}
+                        </span>
+                        <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3 truncate">
+                          {icons.layers}
+                          {stats.flashcardsTotal}
+                        </span>
+                      </div>
+                    )}
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5"
+                      style={{ background: cor }}
+                    >
+                      {icons.arrowRight}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ---------- Meus Flashcards (lista vertical) ---------- */
+function FlashcardsList({ cartoes }) {
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+          {icons.layers}
+          Meus Flashcards
+        </h2>
+      </div>
+      {cartoes.length === 0 ? (
+        <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-6 text-textMuted text-sm text-center">
+          Nenhum baralho criado ainda.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {cartoes.slice(0, 3).map((c, i) => {
+            const cor = c.cor || c.materias?.cor || PASTEL_COLORS[i % PASTEL_COLORS.length];
+            const total = c.flashcards?.[0]?.count ?? 0;
+            const progresso =
+              typeof c.progresso === "number" ? Math.max(0, Math.min(100, c.progresso)) : null;
+
+            return (
+              <Link
+                key={c.id}
+                href={`/materias/${c.materia_id}/flashcards/${c.id}`}
+                className="w-full h-[70px] flex items-center gap-3 bg-white rounded-2xl border-l-4 border border-borderSoft pl-3 pr-4 shadow-[0_2px_10px_rgba(40,30,70,0.04)] hover:shadow-[0_6px_18px_rgba(40,30,70,0.08)] transition-shadow"
+                style={{ borderLeftColor: cor }}
+              >
+                <span
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
+                  style={{ background: cor }}
+                >
+                  {icons.layers}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-textPrimary truncate">{c.nome_colecao}</p>
+                  <p className="text-[11px] text-textMuted truncate">
+                    {c.materias?.nome}
+                    {c.materias?.nome ? " · " : ""}
+                    {total} cartõe{total === 1 ? "" : "s"}
+                  </p>
+                </div>
+                {progresso !== null ? (
+                  <span className="text-[11px] font-semibold shrink-0" style={{ color: cor }}>
+                    {progresso}%
+                  </span>
+                ) : null}
+                <span className="text-primary shrink-0 [&>svg]:w-6 [&>svg]:h-6 font-bold">
+                  {icons.arrowRight}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 

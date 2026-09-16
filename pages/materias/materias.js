@@ -11,6 +11,7 @@ const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 export default function Materias() {
   const { user, loading: authLoading } = useRequireAuth();
   const [materias, setMaterias] = useState([]);
+  const [materiaStats, setMateriaStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState("grid"); // 'grid' | 'list'
@@ -27,6 +28,38 @@ export default function Materias() {
       .order("created_at", { ascending: false });
 
     if (!error) setMaterias(data || []);
+
+    const materiaIds = (data || []).map((m) => m.id);
+    const stats = {};
+    if (materiaIds.length > 0) {
+      const { data: tarefasPorMateria } = await supabase
+        .from("tarefas")
+        .select("id, concluido, materia_id")
+        .in("materia_id", materiaIds);
+
+      const { data: colecoesPorMateria } = await supabase
+        .from("flashcard_colecoes")
+        .select("materia_id, flashcards(count)")
+        .in("materia_id", materiaIds);
+
+      for (const mid of materiaIds) {
+        const tarefasDaMateria = (tarefasPorMateria || []).filter((t) => t.materia_id === mid);
+        const concluidas = tarefasDaMateria.filter((t) => t.concluido).length;
+        const total = tarefasDaMateria.length;
+
+        const flashcardsTotal = (colecoesPorMateria || [])
+          .filter((c) => c.materia_id === mid)
+          .reduce((sum, c) => sum + (c.flashcards?.[0]?.count ?? 0), 0);
+
+        stats[mid] = {
+          tarefasTotal: total,
+          tarefasConcluidas: concluidas,
+          tarefasPendentes: total - concluidas,
+          flashcardsTotal,
+        };
+      }
+    }
+    setMateriaStats(stats);
     setLoading(false);
   }
 
@@ -103,13 +136,13 @@ export default function Materias() {
         // AQUI FOI ALTERADO PARA CABER 4 (lg:grid-cols-4) E 5 EM TELAS GIGANTES (xl:grid-cols-5)
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {materias.map((m, i) => (
-            <MateriaCard key={m.id} m={m} index={i} onDelete={handleDeleteMateria} />
+            <MateriaCard key={m.id} m={m} index={i} stats={materiaStats[m.id]} onDelete={handleDeleteMateria} />
           ))}
         </div>
       ) : (
         <div className="space-y-3">
           {materias.map((m, i) => (
-            <MateriaRow key={m.id} m={m} index={i} onDelete={handleDeleteMateria} />
+            <MateriaRow key={m.id} m={m} index={i} stats={materiaStats[m.id]} onDelete={handleDeleteMateria} />
           ))}
         </div>
       )}
@@ -131,37 +164,54 @@ function HorariosBadges({ horarios }) {
   );
 }
 
-function MateriaCard({ m, index, onDelete }) {
+function MateriaCard({ m, index, stats, onDelete }) {
   const cor = m.cor || PASTEL_COLORS[index % PASTEL_COLORS.length];
 
   return (
-    <div className="group rounded-[16px] bg-white overflow-hidden shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow flex flex-col relative">
-      <div
-        className="h-20 flex items-center px-4 justify-between"
-        style={{ background: cor }}
+    <div
+      className="group relative rounded-2xl border-l-4 overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
+      style={{
+        borderLeftColor: cor,
+        background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
+      }}
+    >
+      <button
+        onClick={(e) => onDelete(e, m.id, m.nome)}
+        className="absolute right-3 top-3 w-7 h-7 rounded-full flex items-center justify-center bg-white/50 hover:bg-white/80 text-textPrimary/80 transition-colors text-xs z-10"
+        title="Excluir matéria"
       >
-        <span className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center text-textPrimary [&>svg]:w-4 [&>svg]:h-4">
+        ✕
+      </button>
+      <Link href={`/materias/${m.id}`} className="p-4 flex-1 flex flex-col min-w-0">
+        <span
+          className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
+          style={{ background: cor }}
+        >
           {icons.book}
         </span>
-        <button
-          onClick={(e) => onDelete(e, m.id, m.nome)}
-          className="w-7 h-7 rounded-full flex items-center justify-center bg-white/30 hover:bg-white/60 text-textPrimary/80 transition-colors text-xs"
-          title="Excluir matéria"
-        >
-          ✕
-        </button>
-      </div>
-      <Link href={`/materias/${m.id}`} className="p-4 pt-3 flex-1 flex flex-col">
-        <h3 className="font-bold text-sm text-textPrimary leading-tight line-clamp-2">{m.nome}</h3>
-        {m.professor && <p className="text-textMuted text-[11px] mt-1 truncate">{m.professor}</p>}
+
+        <h3 className="font-semibold text-[15px] text-textPrimary mt-3 truncate">{m.nome}</h3>
+        {m.professor && <p className="text-textMuted text-xs mt-0.5 truncate">Prof. {m.professor}</p>}
         {m.descricao && <p className="text-textMuted text-[11px] mt-0.5 line-clamp-2">{m.descricao}</p>}
-        
+
         <HorariosBadges horarios={m.horarios} />
-        
-        <div className="mt-auto pt-3 flex justify-end">
+
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2 min-w-0">
+          {stats && (
+            <div className="flex items-center gap-2 text-[11px] text-textSecondary min-w-0 overflow-hidden">
+              <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
+                {icons.check}
+                {stats.tarefasPendentes}
+              </span>
+              <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3 truncate">
+                {icons.layers}
+                {stats.flashcardsTotal}
+              </span>
+            </div>
+          )}
           <span
-            className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform [&>svg]:w-3 [&>svg]:h-3"
-            style={{ background: "#8B6FD8" }}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5"
+            style={{ background: cor }}
           >
             {icons.arrowRight}
           </span>
@@ -171,14 +221,20 @@ function MateriaCard({ m, index, onDelete }) {
   );
 }
 
-function MateriaRow({ m, index, onDelete }) {
+function MateriaRow({ m, index, stats, onDelete }) {
   const cor = m.cor || PASTEL_COLORS[index % PASTEL_COLORS.length];
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-2xl px-5 py-4 shadow-[0_4px_20px_rgba(40,30,70,0.06)] hover:shadow-[0_8px_28px_rgba(40,30,70,0.10)] transition-shadow">
+    <div
+      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-2xl border-l-4 px-5 py-4 shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow"
+      style={{
+        borderLeftColor: cor,
+        background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
+      }}
+    >
       <div className="flex w-full sm:w-auto items-center gap-4 flex-1 min-w-0">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-textPrimary"
+          className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
           style={{ background: cor }}
         >
           {icons.book}
@@ -188,14 +244,26 @@ function MateriaRow({ m, index, onDelete }) {
             {m.nome}
           </Link>
           <p className="text-textMuted text-xs mt-0.5 truncate">
-            {m.professor} {m.descricao ? `· ${m.descricao}` : ""}
+            {m.professor ? `Prof. ${m.professor}` : ""} {m.descricao ? `· ${m.descricao}` : ""}
           </p>
+          {stats && (
+            <div className="flex items-center gap-2.5 text-[11px] text-textSecondary mt-1">
+              <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
+                {icons.check}
+                {stats.tarefasPendentes} tarefa{stats.tarefasPendentes === 1 ? "" : "s"}
+              </span>
+              <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
+                {icons.layers}
+                {stats.flashcardsTotal} flashcard{stats.flashcardsTotal === 1 ? "" : "s"}
+              </span>
+            </div>
+          )}
           <div className="sm:hidden block">
             <HorariosBadges horarios={m.horarios} />
           </div>
         </div>
       </div>
-      
+
       <div className="hidden sm:block flex-1 min-w-0">
         <HorariosBadges horarios={m.horarios} />
       </div>
@@ -203,15 +271,15 @@ function MateriaRow({ m, index, onDelete }) {
       <div className="flex items-center gap-2 shrink-0 self-end sm:self-center mt-2 sm:mt-0">
         <button
           onClick={(e) => onDelete(e, m.id, m.nome)}
-          className="w-8 h-8 flex items-center justify-center text-textMuted hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+          className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white/80 text-textPrimary/80 rounded-full transition-colors text-xs"
           title="Excluir matéria"
         >
           ✕
         </button>
         <Link
           href={`/materias/${m.id}`}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm transition-transform hover:scale-105"
-          style={{ background: "#8B6FD8" }}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm transition-transform hover:scale-105 [&>svg]:w-3.5 [&>svg]:h-3.5"
+          style={{ background: cor }}
         >
           {icons.arrowRight}
         </Link>
