@@ -79,7 +79,7 @@ export default function EstudarFlashcards() {
       <AppLayout>
         <Link
           href={`/materias/${id}/flashcards/${colecaoId}`}
-          className="text-sm text-primary hover:underline"
+          className="text-sm text-primary hover:underline min-w-0 truncate"
         >
           ← {colecao?.nome_colecao}
         </Link>
@@ -94,15 +94,15 @@ export default function EstudarFlashcards() {
 
   return (
     <AppLayout>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-3">
         <Link
           href={`/materias/${id}/flashcards/${colecaoId}`}
-          className="text-sm text-primary hover:underline"
+          className="text-sm text-primary hover:underline min-w-0 truncate"
         >
           ← {colecao?.nome_colecao}
         </Link>
         {!acabou && (
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 shrink-0">
             {index + 1} / {cards.length}
           </span>
         )}
@@ -122,7 +122,7 @@ export default function EstudarFlashcards() {
         <div className="flex flex-col items-center">
           <div
             onClick={() => setFlipped((f) => !f)}
-            className="card w-full max-w-lg h-64 flex items-center justify-center text-center cursor-pointer select-none px-8"
+            className="card w-full max-w-lg min-h-[16rem] flex items-center justify-center text-center cursor-pointer select-none px-5 sm:px-8"
             style={{
               background: flipped ? "#f0eeff" : "white",
               transition: "background 0.15s",
@@ -132,7 +132,7 @@ export default function EstudarFlashcards() {
               <p className="text-xs uppercase tracking-wide text-gray-400 mb-3">
                 {flipped ? "Resposta" : "Pergunta"}
               </p>
-              <p className="text-lg font-medium">
+              <p className="text-lg font-medium break-words">
                 {flipped ? cards[index].verso : cards[index].frente}
               </p>
             </div>
@@ -143,16 +143,16 @@ export default function EstudarFlashcards() {
           </p>
 
           {flipped && (
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-3 sm:gap-4 mt-6 w-full max-w-lg">
               <button
                 onClick={() => proximo(false)}
-                className="border border-red-300 text-red-500 font-medium py-2 px-6 rounded-lg hover:bg-red-50"
+                className="border border-red-300 text-red-500 flex-1 font-medium py-3 px-4 rounded-lg hover:bg-red-50"
               >
                 Não sabia
               </button>
               <button
                 onClick={() => proximo(true)}
-                className="border border-green-300 text-green-600 font-medium py-2 px-6 rounded-lg hover:bg-green-50"
+                className="border border-green-300 text-green-600 flex-1 font-medium py-3 px-4 rounded-lg hover:bg-green-50"
               >
                 Sabia ✓
               </button>

@@ -84,7 +84,7 @@ export default function Materias() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-        <h2 className="text-3xl font-bold flex items-center gap-2 text-textPrimary">
+        <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-textPrimary">
           {icons.book}
           Minhas Matérias
         </h2>
@@ -374,7 +374,7 @@ function NovaMateriaForm({ onClose, onCreated }) {
         Nova Matéria
       </h2>
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className="block text-sm font-medium mb-1.5 text-textPrimary">Nome *</label>
             <input
@@ -460,7 +460,7 @@ function NovaMateriaForm({ onClose, onCreated }) {
                 ✕
               </button>
             )}
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-medium mb-1 text-textSecondary">Dia da semana</label>
                 <select
@@ -493,7 +493,7 @@ function NovaMateriaForm({ onClose, onCreated }) {
               </div>
             </div>
             
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-medium mb-1 text-textSecondary">Prédio</label>
                 <input

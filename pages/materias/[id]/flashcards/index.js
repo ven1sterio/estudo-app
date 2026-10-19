@@ -153,7 +153,7 @@ export default function Flashcards() {
           Nenhum baralho ainda. Crie um para começar a adicionar flashcards.
         </p>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {colecoes.map((c) => (
             <div key={c.id} className="card" style={{ borderLeft: `4px solid ${c.cor || "#8B85F0"}` }}>
               <h2 className="font-semibold text-lg">{c.nome_colecao}</h2>

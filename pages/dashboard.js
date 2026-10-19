@@ -280,6 +280,7 @@ export default function Dashboard() {
     setShowNovoEvento(false);
   }
 
+  const detalheRef = useRef(null);
   const hojeStr = ymd(new Date());
   const eventosDoDiaSelecionado = selectedDay ? eventosPorDia[selectedDay] || [] : [];
 
@@ -288,20 +289,20 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="mb-6">
-        <h2 className="text-3xl font-bold text-textPrimary">
+        <h2 className="text-2xl sm:text-3xl font-bold text-textPrimary">
           Olá, {profile?.nome || user?.user_metadata?.nome || user?.user_metadata?.full_name || "Lucas"}!
         </h2>
         <p className="text-textMuted mt-1">Que tal continuar seus estudos hoje?</p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6 mb-10">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <div className="lg:col-span-2 min-w-0 space-y-6">
           <MateriasCarousel materias={materias} materiaStats={materiaStats} />
 
           <FlashcardsList cartoes={cartoes} />
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">
@@ -407,16 +408,16 @@ export default function Dashboard() {
       {/* SEÇÃO DO CALENDÁRIO */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
             {icons.calendar}
             Calendário
           </h2>
           <div className="flex items-center gap-3">
-            <button onClick={() => mudarMes(-1)} className="text-textMuted hover:text-primary px-2">‹</button>
-            <span className="font-medium w-40 text-center text-textPrimary">
+            <button onClick={() => mudarMes(-1)} className="text-textMuted hover:text-primary px-3 py-1 text-xl">‹</button>
+            <span className="font-medium w-32 sm:w-40 text-center text-sm sm:text-base text-textPrimary">
               {MESES[cursor.getMonth()]} {cursor.getFullYear()}
             </span>
-            <button onClick={() => mudarMes(1)} className="text-textMuted hover:text-primary px-2">›</button>
+            <button onClick={() => mudarMes(1)} className="text-textMuted hover:text-primary px-3 py-1 text-xl">›</button>
           </div>
         </div>
 
@@ -438,7 +439,7 @@ export default function Dashboard() {
         {loadingCalendario ? (
           <p className="text-textMuted">Carregando calendário...</p>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(40,30,70,0.06)] p-4">
               <div className="grid grid-cols-7 text-center text-xs text-textMuted mb-2">
                 {DIAS_SEMANA.map((d) => <div key={d}>{d}</div>)}
@@ -457,9 +458,12 @@ export default function Dashboard() {
                       onClick={() => {
                         setSelectedDay(dataStr);
                         setShowNovoEvento(false);
+                        if (typeof window !== "undefined" && window.innerWidth < 768) {
+                          setTimeout(() => detalheRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+                        }
                       }}
                       className={
-                        "aspect-square rounded-xl border text-left p-1.5 flex flex-col overflow-hidden transition-colors " +
+                        "aspect-square rounded-lg sm:rounded-xl border text-left p-1 sm:p-1.5 flex flex-col overflow-hidden transition-colors " +
                         (isSelected ? "border-primary bg-primarySoft/50" : "border-borderSoft hover:border-primary/40")
                       }
                     >
@@ -477,7 +481,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(40,30,70,0.06)] p-4 h-fit">
+            <div ref={detalheRef} className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(40,30,70,0.06)] p-4 h-fit">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-textPrimary">
                   {selectedDay
@@ -560,7 +564,7 @@ function MateriasCarousel({ materias, materiaStats }) {
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
           {icons.book}
           Minhas Matérias
         </h2>
@@ -592,7 +596,7 @@ function MateriasCarousel({ materias, materiaStats }) {
       ) : (
         <div
           ref={scrollerRef}
-          className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-2 [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 w-full max-w-full overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-smooth pb-2 pt-2 [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {materias.map((m, i) => {
@@ -603,7 +607,7 @@ function MateriasCarousel({ materias, materiaStats }) {
               <Link
                 key={m.id}
                 href={`/materias/${m.id}`}
-                className="group snap-start shrink-0 w-[85vw] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] rounded-2xl border-l-4 overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
+                className="group snap-start shrink-0 w-[85%] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] rounded-2xl border-l-4 overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
                 style={{
                   borderLeftColor: cor,
                   background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
@@ -671,7 +675,7 @@ function FlashcardsList({ cartoes }) {
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
           {icons.layers}
           Meus Flashcards
         </h2>

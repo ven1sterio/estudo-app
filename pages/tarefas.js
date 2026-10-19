@@ -186,7 +186,7 @@ export default function Tarefas() {
     <AppLayout>
       <h1 className="text-2xl font-bold mb-6">Tarefas e Rotina</h1>
 
-      <div className="grid lg:grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ---------- Checklist de Rotina ---------- */}
         <section className="card">
           <h2 className="font-semibold text-lg mb-1">🔁 Checklist de Rotina</h2>
@@ -218,10 +218,10 @@ export default function Tarefas() {
                     onChange={() => toggleLembrete(l)}
                     className="w-4 h-4 accent-primary shrink-0"
                   />
-                  <span className={"flex-1 text-sm " + (l.concluido ? "line-through text-gray-300" : "")}>
+                  <span className={"flex-1 min-w-0 break-words text-sm " + (l.concluido ? "line-through text-gray-300" : "")}>
                     {l.titulo}
                   </span>
-                  <button onClick={() => removeLembrete(l.id)} className="text-gray-400 hover:text-red-500 text-xs">
+                  <button onClick={() => removeLembrete(l.id)} className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2">
                     remover
                   </button>
                 </li>
@@ -232,7 +232,7 @@ export default function Tarefas() {
 
         {/* ---------- Tarefas Acadêmicas ---------- */}
         <section className="card">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
             <h2 className="font-semibold text-lg">📚 Tarefas Acadêmicas</h2>
             <button onClick={() => setShowTarefaForm((s) => !s)} className="btn-primary">
               + Nova tarefa
@@ -264,7 +264,7 @@ export default function Tarefas() {
                   placeholder="Detalhes opcionais"
                 />
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">Tipo</label>
                   <select className="input-field" value={tTipo} onChange={(e) => setTTipo(e.target.value)}>
@@ -330,7 +330,7 @@ export default function Tarefas() {
                     onChange={() => toggleTarefa(t)}
                     className="w-4 h-4 accent-primary shrink-0"
                   />
-                  <span className={"flex-1 text-sm min-w-[140px] " + (t.concluido ? "line-through text-gray-300" : "")}>
+                  <span className={"flex-1 text-sm min-w-[140px] break-words " + (t.concluido ? "line-through text-gray-300" : "")}>
                     {t.titulo}
                     <span className="text-gray-400">
                       {" "}· {t.materias?.nome} ·{" "}
@@ -343,7 +343,7 @@ export default function Tarefas() {
                   <span className={"text-xs px-2 py-0.5 rounded-full shrink-0 " + PRIORIDADES[t.prioridade].classes}>
                     {PRIORIDADES[t.prioridade].label}
                   </span>
-                  <button onClick={() => removeTarefa(t.id)} className="text-gray-400 hover:text-red-500 text-xs shrink-0">
+                  <button onClick={() => removeTarefa(t.id)} className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2 shrink-0">
                     remover
                   </button>
                 </li>
@@ -368,11 +368,11 @@ export default function Tarefas() {
             {provas.map((p) => (
               <li key={`prova-${p.id}`} className="flex items-center gap-3 bg-surface rounded-lg px-3 py-2">
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primarySoft text-primaryDark shrink-0">Prova</span>
-                <span className="flex-1 text-sm">
+                <span className="flex-1 min-w-0 break-words text-sm">
                   {p.titulo}
                   <span className="text-gray-400"> · {p.materias?.nome} · {new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR")}</span>
                 </span>
-                <button onClick={() => removeProva(p.id)} className="text-gray-400 hover:text-red-500 text-xs shrink-0">
+                <button onClick={() => removeProva(p.id)} className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2 shrink-0">
                   remover
                 </button>
               </li>
@@ -380,14 +380,14 @@ export default function Tarefas() {
             {eventosManuais.map((e) => (
               <li key={`evento-${e.id}`} className="flex items-center gap-3 bg-surface rounded-lg px-3 py-2">
                 <span className="text-xs px-2 py-0.5 rounded-full bg-accentPink/60 text-pink-700 shrink-0">Evento</span>
-                <span className="flex-1 text-sm">
+                <span className="flex-1 min-w-0 break-words text-sm">
                   {e.titulo}
                   <span className="text-gray-400">
                     {" "}· {e.materias?.nome ? `${e.materias.nome} · ` : ""}
                     {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}
                   </span>
                 </span>
-                <button onClick={() => removeEventoManual(e.id)} className="text-gray-400 hover:text-red-500 text-xs shrink-0">
+                <button onClick={() => removeEventoManual(e.id)} className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2 shrink-0">
                   remover
                 </button>
               </li>

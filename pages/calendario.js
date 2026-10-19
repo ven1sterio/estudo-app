@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRequireAuth } from "../lib/useAuth";
 import { supabase } from "../lib/supabaseClient";
 import AppLayout from "../components/AppLayout";
@@ -154,6 +154,7 @@ export default function Calendario() {
     setShowNovoEvento(false);
   }
 
+  const detalheRef = useRef(null);
   const hojeStr = ymd(new Date());
   const eventosDoDiaSelecionado = selectedDay ? eventosPorDia[selectedDay] || [] : [];
 
@@ -161,18 +162,18 @@ export default function Calendario() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <h1 className="text-2xl font-bold">calendário</h1>
         <div className="flex items-center gap-3">
-          <button onClick={() => mudarMes(-1)} className="text-gray-400 hover:text-primary px-2">‹</button>
-          <span className="font-medium w-40 text-center">
+          <button onClick={() => mudarMes(-1)} className="text-gray-400 hover:text-primary px-3 py-1 text-xl">‹</button>
+          <span className="font-medium w-32 sm:w-40 text-center">
             {MESES[cursor.getMonth()]} {cursor.getFullYear()}
           </span>
-          <button onClick={() => mudarMes(1)} className="text-gray-400 hover:text-primary px-2">›</button>
+          <button onClick={() => mudarMes(1)} className="text-gray-400 hover:text-primary px-3 py-1 text-xl">›</button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-4 text-sm">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4 text-sm">
         {Object.entries(TIPO_INFO).map(([key, info]) => (
           <label key={key} className="flex items-center gap-2">
             <input
@@ -190,7 +191,7 @@ export default function Calendario() {
       {loading ? (
         <p className="text-gray-400">Carregando...</p>
       ) : (
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
             <div className="grid grid-cols-7 text-center text-xs text-gray-400 mb-2">
               {DIAS_SEMANA.map((d) => <div key={d}>{d}</div>)}
@@ -209,9 +210,12 @@ export default function Calendario() {
                     onClick={() => {
                       setSelectedDay(dataStr);
                       setShowNovoEvento(false);
+                      if (typeof window !== "undefined" && window.innerWidth < 768) {
+                        setTimeout(() => detalheRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+                      }
                     }}
                     className={
-                      "aspect-square rounded-xl border text-left p-1.5 flex flex-col overflow-hidden " +
+                      "aspect-square rounded-lg sm:rounded-xl border text-left p-1 sm:p-1.5 flex flex-col overflow-hidden " +
                       (isSelected ? "border-primary bg-primarySoft/40" : "border-gray-100 hover:border-gray-300")
                     }
                   >
@@ -229,7 +233,7 @@ export default function Calendario() {
             </div>
           </div>
 
-          <div className="card h-fit">
+          <div ref={detalheRef} className="card h-fit">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold">
                 {selectedDay

@@ -26,3 +26,17 @@ body {
 .card:hover {
   @apply shadow-softHover;
 }
+
+/* ---------- Responsividade / mobile ---------- */
+html { -webkit-text-size-adjust: 100%; }
+html, body { max-width: 100%; overflow-x: hidden; }
+
+@media (max-width: 767px) {
+  /* 16px evita o zoom automático do iOS ao focar em campos */
+  .input-field, input, select, textarea { font-size: 16px !important; }
+  .btn-primary, .btn-secondary { min-height: 44px; }
+}
+
+@media (max-width: 639px) {
+  .card { padding: 1rem; }
+}

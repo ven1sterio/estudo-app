@@ -60,27 +60,27 @@ export default function AppLayout({ children }) {
       </aside>
 
       {/* Navbar simplificada (mobile) */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur border-b border-borderSoft px-4 py-3 flex items-center justify-between z-10">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur border-b border-borderSoft px-4 pb-3 pt-[calc(0.75rem_+_env(safe-area-inset-top))] flex items-center justify-between z-10">
         <Link href="/dashboard" className="font-bold text-textPrimary text-base">SIMPLIFY</Link>
         <button onClick={handleLogout} className="text-textSecondary text-sm">Sair</button>
       </div>
 
-      <main className="flex-1 min-w-0 px-4 py-6 pt-20 md:pt-8 md:px-8 pb-24 md:pb-8">
+      <main className="flex-1 min-w-0 px-4 py-6 pt-[calc(4.5rem_+_env(safe-area-inset-top))] md:pt-8 md:px-8 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-8">
         <div className="max-w-6xl mx-auto">{children}</div>
       </main>
 
       {/* Navegação inferior (mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-borderSoft flex justify-around py-2 z-10">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-borderSoft flex justify-around pt-2 pb-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-10">
         {links.map((link) => {
           const active = router.pathname.startsWith(link.href);
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={"flex flex-col items-center gap-0.5 text-xs px-3 py-1 " + (active ? "text-primary" : "text-textMuted")}
+              className={"flex-1 min-w-0 flex flex-col items-center gap-0.5 text-[11px] px-1 py-1 " + (active ? "text-primary" : "text-textMuted")}
             >
               {link.icon}
-              {link.label}
+              <span className="max-w-full truncate">{link.label}</span>
             </Link>
           );
         })}

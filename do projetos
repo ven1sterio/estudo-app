@@ -1,0 +1,252 @@
+[1mdiff --git a/components/AppLayout.js b/components/AppLayout.js[m
+[1mindex 4f33a8a..1210904 100644[m
+[1m--- a/components/AppLayout.js[m
+[1m+++ b/components/AppLayout.js[m
+[36m@@ -60,27 +60,27 @@[m [mexport default function AppLayout({ children }) {[m
+       </aside>[m
+ [m
+       {/* Navbar simplificada (mobile) */}[m
+[31m-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur border-b border-borderSoft px-4 py-3 flex items-center justify-between z-10">[m
+[32m+[m[32m      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur border-b border-borderSoft px-4 pb-3 pt-[calc(0.75rem_+_env(safe-area-inset-top))] flex items-center justify-between z-10">[m
+         <Link href="/dashboard" className="font-bold text-textPrimary text-base">SIMPLIFY</Link>[m
+         <button onClick={handleLogout} className="text-textSecondary text-sm">Sair</button>[m
+       </div>[m
+ [m
+[31m-      <main className="flex-1 min-w-0 px-4 py-6 pt-20 md:pt-8 md:px-8 pb-24 md:pb-8">[m
+[32m+[m[32m      <main className="flex-1 min-w-0 px-4 py-6 pt-[calc(4.5rem_+_env(safe-area-inset-top))] md:pt-8 md:px-8 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-8">[m
+         <div className="max-w-6xl mx-auto">{children}</div>[m
+       </main>[m
+ [m
+       {/* Navegação inferior (mobile) */}[m
+[31m-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-borderSoft flex justify-around py-2 z-10">[m
+[32m+[m[32m      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-borderSoft flex justify-around pt-2 pb-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-10">[m
+         {links.map((link) => {[m
+           const active = router.pathname.startsWith(link.href);[m
+           return ([m
+             <Link[m
+               key={link.href}[m
+               href={link.href}[m
+[31m-              className={"flex flex-col items-center gap-0.5 text-xs px-3 py-1 " + (active ? "text-primary" : "text-textMuted")}[m
+[32m+[m[32m              className={"flex-1 min-w-0 flex flex-col items-center gap-0.5 text-[11px] px-1 py-1 " + (active ? "text-primary" : "text-textMuted")}[m
+             >[m
+               {link.icon}[m
+[31m-              {link.label}[m
+[32m+[m[32m              <span className="max-w-full truncate">{link.label}</span>[m
+             </Link>[m
+           );[m
+         })}[m
+[1mdiff --git a/components/PlanoEnsinoAssistente.js b/components/PlanoEnsinoAssistente.js[m
+[1mindex a95dc71..978716e 100644[m
+[1m--- a/components/PlanoEnsinoAssistente.js[m
+[1m+++ b/components/PlanoEnsinoAssistente.js[m
+[36m@@ -268,15 +268,15 @@[m [mexport default function PlanoEnsinoAssistente() {[m
+     <>[m
+       <button[m
+         onClick={abrir}[m
+[31m-        className="fixed bottom-20 md:bottom-6 right-5 md:right-6 w-14 h-14 rounded-full bg-primary text-white text-2xl shadow-soft flex items-center justify-center hover:bg-primaryDark hover:shadow-softHover transition-all duration-200 z-20"[m
+[32m+[m[32m        className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] md:bottom-6 right-5 md:right-6 w-14 h-14 rounded-full bg-primary text-white text-2xl shadow-soft flex items-center justify-center hover:bg-primaryDark hover:shadow-softHover transition-all duration-200 z-20"[m
+         title="Assistente"[m
+       >[m
+         🤖[m
+       </button>[m
+ [m
+       {open && ([m
+[31m-        <div className="fixed inset-0 flex items-center justify-center z-30 px-4" style={{ background: "rgba(20, 15, 30, 0.35)" }}>[m
+[31m-          <div className="bg-white rounded-[18px] max-w-lg w-full max-h-[85vh] overflow-y-auto p-6" style={{ boxShadow: "0 15px 50px rgba(30, 20, 50, 0.15)" }}>[m
+[32m+[m[32m        <div className="fixed inset-0 flex items-end sm:items-center justify-center z-30 sm:px-4" style={{ background: "rgba(20, 15, 30, 0.35)" }}>[m
+[32m+[m[32m          <div className="bg-white rounded-t-[18px] sm:rounded-[18px] max-w-lg w-full max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto overscroll-contain p-4 sm:p-6 pb-[calc(1rem_+_env(safe-area-inset-bottom))] sm:pb-6" style={{ boxShadow: "0 15px 50px rgba(30, 20, 50, 0.15)" }}>[m
+             <div className="flex items-center justify-between mb-4">[m
+               <h2 className="font-semibold text-lg">🤖 Assistente</h2>[m
+               <button onClick={fechar} className="text-textMuted hover:text-textPrimary">✕</button>[m
+[36m@@ -287,13 +287,13 @@[m [mexport default function PlanoEnsinoAssistente() {[m
+                 <div className="flex bg-surface rounded-xl border border-borderSoft p-1 mb-4">[m
+                   <button[m
+                     onClick={() => trocarModo("plano")}[m
+[31m-                    className={"flex-1 text-sm py-1.5 rounded-lg transition-colors " + (modo === "plano" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}[m
+[32m+[m[32m                    className={"flex-1 text-xs sm:text-sm py-2 rounded-lg transition-colors " + (modo === "plano" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}[m
+                   >[m
+                     Plano de Ensino[m
+                   </button>[m
+                   <button[m
+                     onClick={() => trocarModo("matricula")}[m
+[31m-                    className={"flex-1 text-sm py-1.5 rounded-lg transition-colors " + (modo === "matricula" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}[m
+[32m+[m[32m                    className={"flex-1 text-xs sm:text-sm py-2 rounded-lg transition-colors " + (modo === "matricula" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}[m
+                   >[m
+                     Comprovante de Matrícula[m
+                   </button>[m
+[36m@@ -356,9 +356,9 @@[m [mexport default function PlanoEnsinoAssistente() {[m
+                           onChange={(e) => atualizarAvaliacao(p._id, "incluir", e.target.checked)}[m
+                           className="w-4 h-4 accent-primary mt-2 shrink-0"[m
+                         />[m
+[31m-                        <div className="flex-1 space-y-2">[m
+[32m+[m[32m                        <div className="flex-1 min-w-0 space-y-2">[m
+                           <input className="input-field" value={p.titulo} onChange={(e) => atualizarAvaliacao(p._id, "titulo", e.target.value)} />[m
+[31m-                          <div className="grid grid-cols-2 gap-2">[m
+[32m+[m[32m                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">[m
+                             <select className="input-field" value={p.tipo} onChange={(e) => atualizarAvaliacao(p._id, "tipo", e.target.value)}>[m
+                               {Object.entries(TIPOS).map(([v, l]) => (<option key={v} value={v}>{l}</option>))}[m
+                             </select>[m
+[36m@@ -408,12 +408,12 @@[m [mexport default function PlanoEnsinoAssistente() {[m
+                           onChange={(e) => atualizarDisciplina(d._id, "incluir", e.target.checked)}[m
+                           className="w-4 h-4 accent-primary mt-2.5 shrink-0"[m
+                         />[m
+[31m-                        <div className="flex-1 space-y-2">[m
+[32m+[m[32m                        <div className="flex-1 min-w-0 space-y-2">[m
+                           <div className="grid grid-cols-[1fr_auto] gap-2">[m
+                             <input className="input-field" value={d.nome} onChange={(e) => atualizarDisciplina(d._id, "nome", e.target.value)} placeholder="Nome da matéria" />[m
+                             <input type="color" className="w-10 h-10 rounded-xl border border-borderSoft" value={d.cor} onChange={(e) => atualizarDisciplina(d._id, "cor", e.target.value)} />[m
+                           </div>[m
+[31m-                          <div className="grid grid-cols-2 gap-2">[m
+[32m+[m[32m                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">[m
+                             <input className="input-field" value={d.codigo} onChange={(e) => atualizarDisciplina(d._id, "codigo", e.target.value)} placeholder="Código" />[m
+                             <input className="input-field" value={d.professor} onChange={(e) => atualizarDisciplina(d._id, "professor", e.target.value)} placeholder="Professor" />[m
+                           </div>[m
+[36m@@ -427,7 +427,7 @@[m [mexport default function PlanoEnsinoAssistente() {[m
+                               <span className="text-textMuted w-9 shrink-0">{DIAS[h.diaSemana]}</span>[m
+                               <span className="text-textMuted shrink-0">{h.horaInicio}-{h.horaFim}</span>[m
+                               <input[m
+[31m-                                className="input-field !py-1 !text-sm"[m
+[32m+[m[32m                                className="input-field min-w-0 !py-1.5"[m
+                                 placeholder="Sala"[m
+                                 value={h.sala}[m
+                                 onChange={(e) => atualizarHorarioDisciplina(d._id, idx, "sala", e.target.value)}[m
+[1mdiff --git a/pages/_app.js b/pages/_app.js[m
+[1mindex d60d1d3..f4e75a8 100644[m
+[1m--- a/pages/_app.js[m
+[1m+++ b/pages/_app.js[m
+[36m@@ -1,4 +1,5 @@[m
+ import "../styles/globals.css";[m
+[32m+[m[32mimport Head from "next/head";[m
+ import { Poppins } from "next/font/google";[m
+ [m
+ const poppins = Poppins({[m
+[36m@@ -10,6 +11,9 @@[m [mconst poppins = Poppins({[m
+ export default function App({ Component, pageProps }) {[m
+   return ([m
+     <main className={poppins.className}>[m
+[32m+[m[32m      <Head>[m
+[32m+[m[32m        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />[m
+[32m+[m[32m      </Head>[m
+       <Component {...pageProps} />[m
+     </main>[m
+   );[m
+[1mdiff --git a/pages/calendario.js b/pages/calendario.js[m
+[1mindex 62ae677..cd9d608 100644[m
+[1m--- a/pages/calendario.js[m
+[1m+++ b/pages/calendario.js[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-import { useEffect, useMemo, useState } from "react";[m
+[32m+[m[32mimport { useEffect, useMemo, useRef, useState } from "react";[m
+ import { useRequireAuth } from "../lib/useAuth";[m
+ import { supabase } from "../lib/supabaseClient";[m
+ import AppLayout from "../components/AppLayout";[m
+[36m@@ -154,6 +154,7 @@[m [mexport default function Calendario() {[m
+     setShowNovoEvento(false);[m
+   }[m
+ [m
+[32m+[m[32m  const detalheRef = useRef(null);[m
+   const hojeStr = ymd(new Date());[m
+   const eventosDoDiaSelecionado = selectedDay ? eventosPorDia[selectedDay] || [] : [];[m
+ [m
+[36m@@ -161,18 +162,18 @@[m [mexport default function Calendario() {[m
+ [m
+   return ([m
+     <AppLayout>[m
+[31m-      <div className="flex items-center justify-between mb-6">[m
+[32m+[m[32m      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">[m
+         <h1 className="text-2xl font-bold">calendário</h1>[m
+         <div className="flex items-center gap-3">[m
+[31m-          <button onClick={() => mudarMes(-1)} className="text-gray-400 hover:text-primary px-2">‹</button>[m
+[31m-          <span className="font-medium w-40 text-center">[m
+[32m+[m[32m          <button onClick={() => mudarMes(-1)} className="text-gray-400 hover:text-primary px-3 py-1 text-xl">‹</button>[m
+[32m+[m[32m          <span className="font-medium w-32 sm:w-40 text-center">[m
+             {MESES[cursor.getMonth()]} {cursor.getFullYear()}[m
+           </span>[m
+[31m-          <button onClick={() => mudarMes(1)} className="text-gray-400 hover:text-primary px-2">›</button>[m
+[32m+[m[32m          <button onClick={() => mudarMes(1)} className="text-gray-400 hover:text-primary px-3 py-1 text-xl">›</button>[m
+         </div>[m
+       </div>[m
+ [m
+[31m-      <div className="flex flex-wrap gap-4 mb-4 text-sm">[m
+[32m+[m[32m      <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4 text-sm">[m
+         {Object.entries(TIPO_INFO).map(([key, info]) => ([m
+           <label key={key} className="flex items-center gap-2">[m
+             <input[m
+[36m@@ -190,7 +191,7 @@[m [mexport default function Calendario() {[m
+       {loading ? ([m
+         <p className="text-gray-400">Carregando...</p>[m
+       ) : ([m
+[31m-        <div className="grid md:grid-cols-3 gap-6">[m
+[32m+[m[32m        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">[m
+           <div className="md:col-span-2">[m
+             <div className="grid grid-cols-7 text-center text-xs text-gray-400 mb-2">[m
+               {DIAS_SEMANA.map((d) => <div key={d}>{d}</div>)}[m
+[36m@@ -209,9 +210,12 @@[m [mexport default function Calendario() {[m
+                     onClick={() => {[m
+                       setSelectedDay(dataStr);[m
+                       setShowNovoEvento(false);[m
+[32m+[m[32m                      if (typeof window !== "undefined" && window.innerWidth < 768) {[m
+[32m+[m[32m                        setTimeout(() => detalheRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 60);[m
+[32m+[m[32m                      }[m
+                     }}[m
+                     className={[m
+[31m-                      "aspect-square rounded-xl border text-left p-1.5 flex flex-col overflow-hidden " +[m
+[32m+[m[32m                      "aspect-square rounded-lg sm:rounded-xl border text-left p-1 sm:p-1.5 flex flex-col overflow-hidden " +[m
+                       (isSelected ? "border-primary bg-primarySoft/40" : "border-gray-100 hover:border-gray-300")[m
+                     }[m
+                   >[m
+[36m@@ -229,7 +233,7 @@[m [mexport default function Calendario() {[m
+             </div>[m
+           </div>[m
+ [m
+[31m-          <div className="card h-fit">[m
+[32m+[m[32m          <div ref={detalheRef} className="card h-fit">[m
+             <div className="flex items-center justify-between mb-3">[m
+               <h2 className="font-semibold">[m
+                 {selectedDay[m
+[1mdiff --git a/pages/dashboard.js b/pages/dashboard.js[m
+[1mindex 6aa4076..223debf 100644[m
+[1m--- a/pages/dashboard.js[m
+[1m+++ b/pages/dashboard.js[m
+[36m@@ -280,6 +280,7 @@[m [mexport default function Dashboard() {[m
+     setShowNovoEvento(false);[m
+   }[m
+ [m
+[32m+[m[32m  const detalheRef = useRef(null);[m
+   const hojeStr = ymd(new Date());[m
+   const eventosDoDiaSelecionado = selectedDay ? eventosPorDia[selectedDay] || [] : [];[m
+ [m
+[36m@@ -288,20 +289,20 @@[m [mexport default function Dashboard() {[m
+   return ([m
+     <AppLayout>[m
+       <div className="mb-6">[m
+[31m-        <h2 className="text-3xl font-bold text-textPrimary">[m
+[32m+[m[32m        <h2 className="text-2xl sm:text-3xl font-bold text-textPrimary">[m
+           Olá, {profile?.nome || user?.user_metadata?.nome || user?.user_metadata?.full_name || "Lucas"}![m
+         </h2>[m
+         <p className="text-textMuted mt-1">Que tal continuar seus estudos hoje?</p>[m
+       </div>[m
+ [m
+[31m-      <div className="grid lg:grid-cols-3 gap-6 mb-10">[m
+[31m-        <div className="lg:col-span-2 space-y-6">[m
+[32m+[m[32m      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">[m
+[32m+[m[32m        <div className="lg:col-span-2 min-w-0 space-y-6">[m
+           <MateriasCarousel materias={materias} materiaStats={materiaStats} />[m
+ [m
+           <FlashcardsList cartoes={cartoes} />[m
+         </div>[m
+ [m
+[31m-        <div className="space-y-6">[m
+[32m+[m[32m        <div className="min-w-0 space-y-6">[m
+           <section>[m
+             <div className="flex items-center justify-between mb-3">[m
+               <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">[m
+[36m@@ -407,16 +408,16 @@[m [mexport default function Dashboard() {[m
+       {/* SEÇÃO DO CALENDÁRIO */}[m
+       <div>[m
+         <div className="flex items-center justify-between mb-6">[m
+[31m-          <h2 className="text-2xl font-bold flex items-center gap-2 text-textPrimary">[m
+[32m+[m[32m          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">[m
+             {icons.calendar}[m
+             Calendário[m
+           </h

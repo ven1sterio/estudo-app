@@ -268,15 +268,15 @@ export default function PlanoEnsinoAssistente() {
     <>
       <button
         onClick={abrir}
-        className="fixed bottom-20 md:bottom-6 right-5 md:right-6 w-14 h-14 rounded-full bg-primary text-white text-2xl shadow-soft flex items-center justify-center hover:bg-primaryDark hover:shadow-softHover transition-all duration-200 z-20"
+        className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] md:bottom-6 right-5 md:right-6 w-14 h-14 rounded-full bg-primary text-white text-2xl shadow-soft flex items-center justify-center hover:bg-primaryDark hover:shadow-softHover transition-all duration-200 z-20"
         title="Assistente"
       >
         🤖
       </button>
 
       {open && (
-        <div className="fixed inset-0 flex items-center justify-center z-30 px-4" style={{ background: "rgba(20, 15, 30, 0.35)" }}>
-          <div className="bg-white rounded-[18px] max-w-lg w-full max-h-[85vh] overflow-y-auto p-6" style={{ boxShadow: "0 15px 50px rgba(30, 20, 50, 0.15)" }}>
+        <div className="fixed inset-0 flex items-end sm:items-center justify-center z-30 sm:px-4" style={{ background: "rgba(20, 15, 30, 0.35)" }}>
+          <div className="bg-white rounded-t-[18px] sm:rounded-[18px] max-w-lg w-full max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto overscroll-contain p-4 sm:p-6 pb-[calc(1rem_+_env(safe-area-inset-bottom))] sm:pb-6" style={{ boxShadow: "0 15px 50px rgba(30, 20, 50, 0.15)" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-lg">🤖 Assistente</h2>
               <button onClick={fechar} className="text-textMuted hover:text-textPrimary">✕</button>
@@ -287,13 +287,13 @@ export default function PlanoEnsinoAssistente() {
                 <div className="flex bg-surface rounded-xl border border-borderSoft p-1 mb-4">
                   <button
                     onClick={() => trocarModo("plano")}
-                    className={"flex-1 text-sm py-1.5 rounded-lg transition-colors " + (modo === "plano" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}
+                    className={"flex-1 text-xs sm:text-sm py-2 rounded-lg transition-colors " + (modo === "plano" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}
                   >
                     Plano de Ensino
                   </button>
                   <button
                     onClick={() => trocarModo("matricula")}
-                    className={"flex-1 text-sm py-1.5 rounded-lg transition-colors " + (modo === "matricula" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}
+                    className={"flex-1 text-xs sm:text-sm py-2 rounded-lg transition-colors " + (modo === "matricula" ? "bg-white shadow-sm text-primary font-semibold" : "text-textMuted")}
                   >
                     Comprovante de Matrícula
                   </button>
@@ -356,9 +356,9 @@ export default function PlanoEnsinoAssistente() {
                           onChange={(e) => atualizarAvaliacao(p._id, "incluir", e.target.checked)}
                           className="w-4 h-4 accent-primary mt-2 shrink-0"
                         />
-                        <div className="flex-1 space-y-2">
+                        <div className="flex-1 min-w-0 space-y-2">
                           <input className="input-field" value={p.titulo} onChange={(e) => atualizarAvaliacao(p._id, "titulo", e.target.value)} />
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <select className="input-field" value={p.tipo} onChange={(e) => atualizarAvaliacao(p._id, "tipo", e.target.value)}>
                               {Object.entries(TIPOS).map(([v, l]) => (<option key={v} value={v}>{l}</option>))}
                             </select>
@@ -408,12 +408,12 @@ export default function PlanoEnsinoAssistente() {
                           onChange={(e) => atualizarDisciplina(d._id, "incluir", e.target.checked)}
                           className="w-4 h-4 accent-primary mt-2.5 shrink-0"
                         />
-                        <div className="flex-1 space-y-2">
+                        <div className="flex-1 min-w-0 space-y-2">
                           <div className="grid grid-cols-[1fr_auto] gap-2">
                             <input className="input-field" value={d.nome} onChange={(e) => atualizarDisciplina(d._id, "nome", e.target.value)} placeholder="Nome da matéria" />
                             <input type="color" className="w-10 h-10 rounded-xl border border-borderSoft" value={d.cor} onChange={(e) => atualizarDisciplina(d._id, "cor", e.target.value)} />
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <input className="input-field" value={d.codigo} onChange={(e) => atualizarDisciplina(d._id, "codigo", e.target.value)} placeholder="Código" />
                             <input className="input-field" value={d.professor} onChange={(e) => atualizarDisciplina(d._id, "professor", e.target.value)} placeholder="Professor" />
                           </div>
@@ -427,7 +427,7 @@ export default function PlanoEnsinoAssistente() {
                               <span className="text-textMuted w-9 shrink-0">{DIAS[h.diaSemana]}</span>
                               <span className="text-textMuted shrink-0">{h.horaInicio}-{h.horaFim}</span>
                               <input
-                                className="input-field !py-1 !text-sm"
+                                className="input-field min-w-0 !py-1.5"
                                 placeholder="Sala"
                                 value={h.sala}
                                 onChange={(e) => atualizarHorarioDisciplina(d._id, idx, "sala", e.target.value)}

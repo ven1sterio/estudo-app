@@ -108,8 +108,8 @@ export default function GerenciarCartoes() {
         </Link>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{colecao?.nome_colecao}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h1 className="text-2xl font-bold break-words min-w-0">{colecao?.nome_colecao}</h1>
         <Link
           href={`/materias/${id}/flashcards/${colecaoId}/estudar`}
           className="btn-primary"
@@ -170,11 +170,11 @@ export default function GerenciarCartoes() {
         <div className="space-y-2">
           {cards.map((c) => (
             <div key={c.id} className="card flex items-start justify-between gap-4">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 break-words">
                 <p className="text-sm font-medium">{c.frente}</p>
                 <p className="text-sm text-gray-500 mt-1">{c.verso}</p>
               </div>
-              <div className="flex gap-3 text-xs shrink-0">
+              <div className="flex flex-col sm:flex-row items-end gap-2 sm:gap-3 text-xs shrink-0">
                 <button
                   onClick={() => handleEdit(c)}
                   className="text-primary hover:underline"

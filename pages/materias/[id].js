@@ -185,14 +185,14 @@ export default function MateriaDetalhe() {
 
   return (
     <AppLayout>
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ---------- Coluna principal ---------- */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 min-w-0 space-y-6">
           {/* Cabeçalho */}
           <div className="card" style={{ borderLeft: `4px solid ${materia.cor || "#8B85F0"}` }}>
             <div className="flex justify-between items-start flex-wrap gap-2">
-              <div>
-                <h1 className="text-2xl font-bold">{materia.nome}</h1>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold break-words">{materia.nome}</h1>
                 <p className="text-gray-400">
                   {materia.codigo && `${materia.codigo} · `}
                   {materia.professor}
@@ -220,7 +220,7 @@ export default function MateriaDetalhe() {
           </div>
 
           {/* Baralhos de flashcards */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-2xl font-bold flex items-center gap-2 mb-3 text-textPrimary">Flashcards </h2>
             <Link href={`/materias/${id}/flashcards`} className="btn-primary">
               + Novo baralho
@@ -301,13 +301,13 @@ export default function MateriaDetalhe() {
               <ul className="space-y-1">
                 {materiaisDaPlaylist.map((m) => (
                   <li key={m.id} className="flex items-center justify-between bg-surface rounded-lg px-3 py-2 text-sm">
-                    <a href={m.arquivo_url} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">{m.titulo}</a>
-                    <button onClick={() => handleDeleteMaterial(m.id, m.arquivo_url)} className="text-gray-400 hover:text-red-500 text-xs ml-3">remover</button>
+                    <a href={m.arquivo_url} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate min-w-0">{m.titulo}</a>
+                    <button onClick={() => handleDeleteMaterial(m.id, m.arquivo_url)} className="text-gray-400 hover:text-red-500 text-xs ml-3 p-2 -m-2 shrink-0">remover</button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {materiaisDaPlaylist.map((m) => (
                   <div key={m.id} className="border border-gray-100 rounded-xl p-3 bg-surface">
                     <a href={m.arquivo_url} target="_blank" rel="noreferrer" className="text-primary text-sm hover:underline block truncate">📄 {m.titulo}</a>
@@ -332,7 +332,7 @@ export default function MateriaDetalhe() {
               <ul className="space-y-2">
                 {atividadesLista.map((a) => (
                   <li key={a.id} className="text-sm flex justify-between">
-                    <span>{materia.nome} · <span className="text-primary">{a.titulo}</span></span>
+                    <span className="min-w-0 break-words">{materia.nome} · <span className="text-primary">{a.titulo}</span></span>
                     <span className="text-xs text-gray-400 shrink-0 ml-2">
                       {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                     </span>
@@ -354,7 +354,7 @@ export default function MateriaDetalhe() {
                 {lembretes.map((l) => (
                   <li key={l.id} className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={l.concluido} onChange={() => toggleLembrete(l)} className="w-4 h-4 accent-primary shrink-0" />
-                    <span className={l.concluido ? "line-through text-gray-300" : ""}>{l.titulo}</span>
+                    <span className={"min-w-0 break-words " + (l.concluido ? "line-through text-gray-300" : "")}>{l.titulo}</span>
                   </li>
                 ))}
               </ul>
