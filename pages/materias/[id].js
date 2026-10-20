@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRequireAuth } from "../../lib/useAuth";
 import { supabase } from "../../lib/supabaseClient";
 import AppLayout from "../../components/AppLayout";
+import VisualizadorArquivo, { caminhoNoStorage } from "../../components/VisualizadorArquivo";
 import { icons } from "../../components/icons";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -106,6 +107,8 @@ export default function MateriaDetalhe() {
     router.push("/materias");
   }
 
+  const [arquivoAberto, setArquivoAberto] = useState(null);
+
   async function handleUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -143,7 +146,7 @@ export default function MateriaDetalhe() {
 
   async function handleDeleteMaterial(materialId, arquivoUrl) {
     if (!confirm("Remover este material?")) return;
-    const path = arquivoUrl.split("/materiais/")[1];
+    const path = caminhoNoStorage(arquivoUrl);
     if (path) await supabase.storage.from("materiais").remove([path]);
     await supabase.from("materiais").delete().eq("id", materialId);
     fetchTudo();
@@ -301,7 +304,7 @@ export default function MateriaDetalhe() {
               <ul className="space-y-1">
                 {materiaisDaPlaylist.map((m) => (
                   <li key={m.id} className="flex items-center justify-between bg-surface rounded-lg px-3 py-2 text-sm">
-                    <a href={m.arquivo_url} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate min-w-0">{m.titulo}</a>
+                    <button type="button" onClick={() => setArquivoAberto(m)} className="text-primary hover:underline truncate min-w-0 text-left">{m.titulo}</button>
                     <button onClick={() => handleDeleteMaterial(m.id, m.arquivo_url)} className="text-gray-400 hover:text-red-500 text-xs ml-3 p-2 -m-2 shrink-0">remover</button>
                   </li>
                 ))}
@@ -310,7 +313,7 @@ export default function MateriaDetalhe() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {materiaisDaPlaylist.map((m) => (
                   <div key={m.id} className="border border-gray-100 rounded-xl p-3 bg-surface">
-                    <a href={m.arquivo_url} target="_blank" rel="noreferrer" className="text-primary text-sm hover:underline block truncate">📄 {m.titulo}</a>
+                    <button type="button" onClick={() => setArquivoAberto(m)} className="text-primary text-sm hover:underline block truncate w-full text-left">📄 {m.titulo}</button>
                     <button onClick={() => handleDeleteMaterial(m.id, m.arquivo_url)} className="text-gray-400 hover:text-red-500 text-xs mt-2">remover</button>
                   </div>
                 ))}
@@ -362,6 +365,14 @@ export default function MateriaDetalhe() {
           </section>
         </div>
       </div>
+
+      {arquivoAberto && (
+        <VisualizadorArquivo
+          titulo={arquivoAberto.titulo}
+          url={arquivoAberto.arquivo_url}
+          onClose={() => setArquivoAberto(null)}
+        />
+      )}
     </AppLayout>
   );
 }
