@@ -35,6 +35,11 @@ function urlDeDownload(url, titulo) {
   return url + (url.includes("?") ? "&" : "?") + "download=" + encodeURIComponent(titulo || "arquivo");
 }
 
+function extensaoDe(titulo = "", url = "") {
+  const fonte = (titulo || "").includes(".") ? titulo : url;
+  return fonte.split("?")[0].split(".").pop().toLowerCase();
+}
+
 /* ---------------------------------- PDF ---------------------------------- */
 
 function PaginaPdf({ doc, numero, razao, largura }) {
@@ -158,6 +163,60 @@ function VisualizadorPdf({ path, zoom, onErro }) {
   );
 }
 
+/* --------------------------------- DOCX ---------------------------------- */
+// Renderiza .docx 100% no navegador via docx-preview.
+// O import é dinâmico dentro do useEffect para não quebrar o SSR.
+function VisualizadorDocx({ path, onErro }) {
+  const containerRef = useRef(null);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    (async () => {
+      try {
+        // 1) Baixa o arquivo do bucket como Blob
+        const { data, error } = await supabase.storage.from(BUCKET).download(path);
+        if (error) throw error;
+        if (cancelado || !containerRef.current) return;
+
+        // 2) Importa a lib só no navegador
+        const { renderAsync } = await import("docx-preview");
+        if (cancelado || !containerRef.current) return;
+
+        // 3) Limpa o container e renderiza (cada página vira uma "folha" HTML)
+        containerRef.current.innerHTML = "";
+        await renderAsync(data, containerRef.current, undefined, {
+          className: "docx-preview-wrapper",
+          inWrapper: true,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: false,
+          renderHeaders: true,
+          renderFooters: true,
+        });
+      } catch (e) {
+        console.error(e);
+        if (!cancelado) onErro?.("Não foi possível abrir este arquivo .docx.");
+      } finally {
+        if (!cancelado) setCarregando(false);
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="min-h-full bg-gray-100">
+      {carregando && (
+        <p className="text-center text-sm text-gray-500 py-10">Carregando documento…</p>
+      )}
+      <div ref={containerRef} className="docx-container" />
+    </div>
+  );
+}
+
 /* --------------------------------- Texto --------------------------------- */
 
 function VisualizadorTexto({ path, onErro }) {
@@ -185,6 +244,7 @@ const ZOOMS = [1, 1.25, 1.5, 2, 3];
 
 export default function VisualizadorArquivo({ titulo, url, onClose }) {
   const tipo = tipoDoArquivo(titulo) !== "outro" ? tipoDoArquivo(titulo) : tipoDoArquivo(url);
+  const ext = extensaoDe(titulo, url);
   const path = caminhoNoStorage(url);
   const [erro, setErro] = useState("");
   const [zoomIdx, setZoomIdx] = useState(0);
@@ -229,13 +289,19 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
       </div>
     );
   } else if (tipo === "office") {
-    corpo = (
-      <iframe
-        title={titulo}
-        src={"https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(url)}
-        className="w-full h-full border-0 bg-white"
-      />
-    );
+    // .docx agora é renderizado nativamente no navegador.
+    // Os demais formatos Office (.doc, .ppt, .xls, .odt, etc.) continuam no Office Online Viewer.
+    if (ext === "docx" && path) {
+      corpo = <VisualizadorDocx path={path} onErro={handleErro} />;
+    } else {
+      corpo = (
+        <iframe
+          title={titulo}
+          src={"https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(url)}
+          className="w-full h-full border-0 bg-white"
+        />
+      );
+    }
   } else {
     corpo = (
       <div className="min-h-full flex flex-col items-center justify-center text-center p-6 gap-3">
