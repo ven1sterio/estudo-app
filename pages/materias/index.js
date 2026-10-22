@@ -1,67 +1,57 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../lib/useAuth";
 import { supabase } from "../../lib/supabaseClient";
 import AppLayout from "../../components/AppLayout";
+import Skeleton from "../../components/Skeleton";
 import { icons } from "../../components/icons";
+import {
+  swrKeys,
+  fetchMaterias,
+  fetchTarefas,
+  fetchColecoes,
+} from "../../lib/fetchers";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
 export default function Materias() {
   const { user, loading: authLoading } = useRequireAuth();
-  const [materias, setMaterias] = useState([]);
-  const [materiaStats, setMateriaStats] = useState({});
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [view, setView] = useState("grid"); // 'grid' | 'list'
+  const [view, setView] = useState("grid");
 
-  useEffect(() => {
-    if (user) fetchMaterias();
-  }, [user]);
+  const { data: materias = [], isLoading: lM } = useSWR(
+    user ? swrKeys.materias : null,
+    fetchMaterias
+  );
+  const { data: tarefas = [] } = useSWR(
+    user ? swrKeys.tarefas : null,
+    fetchTarefas
+  );
+  const { data: colecoes = [] } = useSWR(
+    user ? swrKeys.colecoes : null,
+    fetchColecoes
+  );
 
-  async function fetchMaterias() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("materias")
-      .select("*, horarios(*)")
-      .order("created_at", { ascending: false });
-
-    if (!error) setMaterias(data || []);
-
-    const materiaIds = (data || []).map((m) => m.id);
+  // Stats derivados em memória — zero queries extras
+  const materiaStats = useMemo(() => {
     const stats = {};
-    if (materiaIds.length > 0) {
-      const { data: tarefasPorMateria } = await supabase
-        .from("tarefas")
-        .select("id, concluido, materia_id")
-        .in("materia_id", materiaIds);
-
-      const { data: colecoesPorMateria } = await supabase
-        .from("flashcard_colecoes")
-        .select("materia_id, flashcards(count)")
-        .in("materia_id", materiaIds);
-
-      for (const mid of materiaIds) {
-        const tarefasDaMateria = (tarefasPorMateria || []).filter((t) => t.materia_id === mid);
-        const concluidas = tarefasDaMateria.filter((t) => t.concluido).length;
-        const total = tarefasDaMateria.length;
-
-        const flashcardsTotal = (colecoesPorMateria || [])
-          .filter((c) => c.materia_id === mid)
-          .reduce((sum, c) => sum + (c.flashcards?.[0]?.count ?? 0), 0);
-
-        stats[mid] = {
-          tarefasTotal: total,
-          tarefasConcluidas: concluidas,
-          tarefasPendentes: total - concluidas,
-          flashcardsTotal,
-        };
-      }
+    for (const m of materias) {
+      const tarefasM = tarefas.filter((t) => t.materia_id === m.id);
+      const concluidas = tarefasM.filter((t) => t.concluido).length;
+      const flashcardsTotal = colecoes
+        .filter((c) => c.materia_id === m.id)
+        .reduce((sum, c) => sum + (c.flashcards?.[0]?.count ?? 0), 0);
+      stats[m.id] = {
+        tarefasTotal: tarefasM.length,
+        tarefasConcluidas: concluidas,
+        tarefasPendentes: tarefasM.length - concluidas,
+        flashcardsTotal,
+      };
     }
-    setMateriaStats(stats);
-    setLoading(false);
-  }
+    return stats;
+  }, [materias, tarefas, colecoes]);
 
   async function handleDeleteMateria(e, materiaId, nome) {
     e.preventDefault();
@@ -69,17 +59,22 @@ export default function Materias() {
 
     if (!confirm(`Tem certeza que deseja excluir a matéria "${nome}"?`)) return;
 
-    const { error } = await supabase.from("materias").delete().eq("id", materiaId);
+    // Otimista: remove da lista imediatamente
+    globalMutate(
+      swrKeys.materias,
+      (prev) => prev?.filter((m) => m.id !== materiaId),
+      false
+    );
 
+    const { error } = await supabase.from("materias").delete().eq("id", materiaId);
     if (error) {
       alert("Erro ao excluir matéria: " + error.message);
-      return;
     }
-
-    fetchMaterias();
+    // Revalida do servidor (mesmo em erro, pra ficar consistente)
+    globalMutate(swrKeys.materias);
   }
 
-  if (authLoading || !user) return null;
+  if (authLoading) return null;
 
   return (
     <AppLayout>
@@ -88,14 +83,16 @@ export default function Materias() {
           {icons.book}
           Minhas Matérias
         </h2>
-        
+
         <div className="flex items-center gap-3">
           <div className="flex bg-white rounded-xl border border-borderSoft p-1 shadow-sm">
             <button
               onClick={() => setView("grid")}
               className={
                 "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors " +
-                (view === "grid" ? "bg-primarySoft text-primaryDark" : "text-textMuted hover:text-textPrimary")
+                (view === "grid"
+                  ? "bg-primarySoft text-primaryDark"
+                  : "text-textMuted hover:text-textPrimary")
               }
             >
               Grade
@@ -104,13 +101,18 @@ export default function Materias() {
               onClick={() => setView("list")}
               className={
                 "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors " +
-                (view === "list" ? "bg-primarySoft text-primaryDark" : "text-textMuted hover:text-textPrimary")
+                (view === "list"
+                  ? "bg-primarySoft text-primaryDark"
+                  : "text-textMuted hover:text-textPrimary")
               }
             >
               Lista
             </button>
           </div>
-          <button onClick={() => setShowForm(true)} className="btn-primary shadow-sm flex items-center gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-primary shadow-sm flex items-center gap-2"
+          >
             + Nova matéria
           </button>
         </div>
@@ -121,28 +123,45 @@ export default function Materias() {
           onClose={() => setShowForm(false)}
           onCreated={() => {
             setShowForm(false);
-            fetchMaterias();
+            globalMutate(swrKeys.materias);
           }}
         />
       )}
 
-      {loading ? (
-        <p className="text-textMuted">Carregando...</p>
+      {lM ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-[210px] w-full" />
+          ))}
+        </div>
       ) : materias.length === 0 ? (
         <div className="rounded-2xl bg-white border border-dashed border-borderSoft p-10 text-textMuted text-center">
-          Você ainda não cadastrou nenhuma matéria. Clique em <span className="font-semibold text-textPrimary">"+ Nova matéria"</span> para começar.
+          Você ainda não cadastrou nenhuma matéria. Clique em{" "}
+          <span className="font-semibold text-textPrimary">"+ Nova matéria"</span>{" "}
+          para começar.
         </div>
       ) : view === "grid" ? (
-        // AQUI FOI ALTERADO PARA CABER 4 (lg:grid-cols-4) E 5 EM TELAS GIGANTES (xl:grid-cols-5)
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {materias.map((m, i) => (
-            <MateriaCard key={m.id} m={m} index={i} stats={materiaStats[m.id]} onDelete={handleDeleteMateria} />
+            <MateriaCard
+              key={m.id}
+              m={m}
+              index={i}
+              stats={materiaStats[m.id]}
+              onDelete={handleDeleteMateria}
+            />
           ))}
         </div>
       ) : (
         <div className="space-y-3">
           {materias.map((m, i) => (
-            <MateriaRow key={m.id} m={m} index={i} stats={materiaStats[m.id]} onDelete={handleDeleteMateria} />
+            <MateriaRow
+              key={m.id}
+              m={m}
+              index={i}
+              stats={materiaStats[m.id]}
+              onDelete={handleDeleteMateria}
+            />
           ))}
         </div>
       )}
@@ -155,8 +174,12 @@ function HorariosBadges({ horarios }) {
   return (
     <div className="flex flex-wrap gap-1 mt-2 min-w-0">
       {horarios.map((h) => (
-        <span key={h.id} className="text-[10px] bg-primarySoft text-primaryDark rounded-md px-1.5 py-0.5 max-w-full break-words">
-          {DIAS[h.dia_semana]} {h.hora_inicio?.slice(0, 5)}-{h.hora_fim?.slice(0, 5)}
+        <span
+          key={h.id}
+          className="text-[10px] bg-primarySoft text-primaryDark rounded-md px-1.5 py-0.5 max-w-full break-words"
+        >
+          {DIAS[h.dia_semana]} {h.hora_inicio?.slice(0, 5)}-
+          {h.hora_fim?.slice(0, 5)}
           {h.sala ? ` · ${h.sala}` : ""}
         </span>
       ))}
@@ -190,9 +213,17 @@ function MateriaCard({ m, index, stats, onDelete }) {
           {icons.book}
         </span>
 
-        <h3 className="font-semibold text-[15px] text-textPrimary mt-3 truncate">{m.nome}</h3>
-        {m.professor && <p className="text-textMuted text-xs mt-0.5 truncate">Prof. {m.professor}</p>}
-        {m.descricao && <p className="text-textMuted text-[11px] mt-0.5 line-clamp-2">{m.descricao}</p>}
+        <h3 className="font-semibold text-[15px] text-textPrimary mt-3 truncate">
+          {m.nome}
+        </h3>
+        {m.professor && (
+          <p className="text-textMuted text-xs mt-0.5 truncate">Prof. {m.professor}</p>
+        )}
+        {m.descricao && (
+          <p className="text-textMuted text-[11px] mt-0.5 line-clamp-2">
+            {m.descricao}
+          </p>
+        )}
 
         <HorariosBadges horarios={m.horarios} />
 
@@ -240,21 +271,27 @@ function MateriaRow({ m, index, stats, onDelete }) {
           {icons.book}
         </div>
         <div className="flex-1 min-w-0">
-          <Link href={`/materias/${m.id}`} className="font-semibold text-[15px] text-textPrimary hover:underline block truncate">
+          <Link
+            href={`/materias/${m.id}`}
+            className="font-semibold text-[15px] text-textPrimary hover:underline block truncate"
+          >
             {m.nome}
           </Link>
           <p className="text-textMuted text-xs mt-0.5 truncate">
-            {m.professor ? `Prof. ${m.professor}` : ""} {m.descricao ? `· ${m.descricao}` : ""}
+            {m.professor ? `Prof. ${m.professor}` : ""}{" "}
+            {m.descricao ? `· ${m.descricao}` : ""}
           </p>
           {stats && (
             <div className="flex items-center gap-2.5 text-[11px] text-textSecondary mt-1">
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
                 {icons.check}
-                {stats.tarefasPendentes} tarefa{stats.tarefasPendentes === 1 ? "" : "s"}
+                {stats.tarefasPendentes} tarefa
+                {stats.tarefasPendentes === 1 ? "" : "s"}
               </span>
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
                 {icons.layers}
-                {stats.flashcardsTotal} flashcard{stats.flashcardsTotal === 1 ? "" : "s"}
+                {stats.flashcardsTotal} flashcard
+                {stats.flashcardsTotal === 1 ? "" : "s"}
               </span>
             </div>
           )}
@@ -304,15 +341,18 @@ function NovaMateriaForm({ onClose, onCreated }) {
   const [loading, setLoading] = useState(false);
 
   function addHorario() {
-    setHorarios((h) => [...h, { diaSemana: "1", horaInicio: "", horaFim: "", predio: "", bloco: "", sala: "" }]);
+    setHorarios((h) => [
+      ...h,
+      { diaSemana: "1", horaInicio: "", horaFim: "", predio: "", bloco: "", sala: "" },
+    ]);
   }
-
   function removeHorario(i) {
     setHorarios((h) => h.filter((_, idx) => idx !== i));
   }
-
   function updateHorario(i, field, value) {
-    setHorarios((h) => h.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)));
+    setHorarios((h) =>
+      h.map((row, idx) => (idx === i ? { ...row, [field]: value } : row))
+    );
   }
 
   async function handleSubmit(e) {
@@ -404,7 +444,9 @@ function NovaMateriaForm({ onClose, onCreated }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Email do professor</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">
+              Email do professor
+            </label>
             <input
               type="email"
               className="input-field w-full"
@@ -424,7 +466,9 @@ function NovaMateriaForm({ onClose, onCreated }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5 text-textPrimary">Cor de Destaque</label>
+            <label className="block text-sm font-medium mb-1.5 text-textPrimary">
+              Cor de Destaque
+            </label>
             <div className="flex gap-3">
               <input
                 type="color"
@@ -440,16 +484,19 @@ function NovaMateriaForm({ onClose, onCreated }) {
         </div>
 
         <hr className="border-borderSoft my-6" />
-        
+
         <div>
-          <h3 className="text-sm font-bold text-textPrimary mb-3">
-            Locais e Horários
-          </h3>
-          <p className="text-xs text-textMuted mb-4">Adicione as informações de sala para cada dia da semana.</p>
+          <h3 className="text-sm font-bold text-textPrimary mb-3">Locais e Horários</h3>
+          <p className="text-xs text-textMuted mb-4">
+            Adicione as informações de sala para cada dia da semana.
+          </p>
         </div>
 
         {horarios.map((h, i) => (
-          <div key={i} className="border border-borderSoft bg-gray-50/50 rounded-xl p-4 space-y-4 relative">
+          <div
+            key={i}
+            className="border border-borderSoft bg-gray-50/50 rounded-xl p-4 space-y-4 relative"
+          >
             {horarios.length > 1 && (
               <button
                 type="button"
@@ -462,14 +509,18 @@ function NovaMateriaForm({ onClose, onCreated }) {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium mb-1 text-textSecondary">Dia da semana</label>
+                <label className="block text-xs font-medium mb-1 text-textSecondary">
+                  Dia da semana
+                </label>
                 <select
                   className="input-field w-full"
                   value={h.diaSemana}
                   onChange={(e) => updateHorario(i, "diaSemana", e.target.value)}
                 >
                   {DIAS.map((d, idx) => (
-                    <option key={idx} value={idx}>{d}</option>
+                    <option key={idx} value={idx}>
+                      {d}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -492,7 +543,7 @@ function NovaMateriaForm({ onClose, onCreated }) {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-medium mb-1 text-textSecondary">Prédio</label>
@@ -530,11 +581,17 @@ function NovaMateriaForm({ onClose, onCreated }) {
           onClick={addHorario}
           className="flex items-center gap-2 text-primary font-medium text-sm hover:underline"
         >
-          <span className="w-5 h-5 rounded-full bg-primarySoft flex items-center justify-center">+</span>
+          <span className="w-5 h-5 rounded-full bg-primarySoft flex items-center justify-center">
+            +
+          </span>
           Adicionar outro local e horário
         </button>
 
-        {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+        {error && (
+          <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100">
+            {error}
+          </p>
+        )}
 
         <div className="flex gap-3 pt-4 border-t border-borderSoft mt-6">
           <button type="submit" disabled={loading} className="btn-primary">

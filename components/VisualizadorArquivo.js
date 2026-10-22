@@ -20,7 +20,6 @@ export function tipoDoArquivo(nome = "") {
   return "outro";
 }
 
-// Caminho do arquivo dentro do bucket, a partir da URL pública salva no banco.
 export function caminhoNoStorage(url = "") {
   const parte = url.split(`/${BUCKET}/`)[1];
   if (!parte) return null;
@@ -82,7 +81,9 @@ function PaginaPdf({ doc, numero, razao, largura }) {
         task = page.render({ canvasContext: canvas.getContext("2d"), viewport: vp });
         await task.promise;
       } catch (e) {
-        if (e?.name !== "RenderingCancelledException") console.error("Erro ao desenhar página do PDF", e);
+        if (e?.name !== "RenderingCancelledException") {
+          console.error("Erro ao desenhar página do PDF", e);
+        }
       }
     })();
     return () => {
@@ -128,17 +129,44 @@ function VisualizadorPdf({ path, zoom, onErro }) {
         const { data, error } = await supabase.storage.from(BUCKET).download(path);
         if (error) throw error;
         const buffer = await data.arrayBuffer();
-        const mod = await import("pdfjs-dist/legacy/build/pdf");
-        const pdfjs = mod.GlobalWorkerOptions ? mod : mod.default;
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-        pdf = await pdfjs.getDocument({ data: buffer }).promise;
+
+        // pdfjs-dist v4+: os arquivos são .mjs (ESM).
+        // Mantemos fallback para v3 caso o usuário não tenha migrado ainda.
+        let pdfjsLib;
+        try {
+          pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+        } catch {
+          pdfjsLib = await import("pdfjs-dist/legacy/build/pdf");
+        }
+
+        // v4 expõe exports nomeados diretos; v3 (CJS) precisa de `.default`.
+        const pdfjs = pdfjsLib.getDocument ? pdfjsLib : pdfjsLib.default;
+        if (!pdfjs?.getDocument) {
+          throw new Error(
+            "pdfjs-dist não encontrado. Rode `npm install pdfjs-dist@4.2.67`."
+          );
+        }
+
+        // O worker precisa existir em /public/pdf.worker.min.mjs
+        // (copie de node_modules/pdfjs-dist/build/pdf.worker.min.mjs
+        //  ou legacy/build/pdf.worker.min.mjs).
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+
+        // Já temos o buffer completo em memória — desliga streaming/auto-fetch
+        // para evitar requisições desnecessárias.
+        pdf = await pdfjs.getDocument({
+          data: buffer,
+          disableAutoFetch: true,
+          disableStream: true,
+        }).promise;
+
         if (cancelado) return;
         const p1 = await pdf.getPage(1);
         const vp = p1.getViewport({ scale: 1 });
         setInfo({ paginas: pdf.numPages, razao: vp.height / vp.width });
         setDoc(pdf);
       } catch (e) {
-        console.error(e);
+        console.error("Erro ao carregar PDF:", e);
         if (!cancelado) onErro?.("Não foi possível abrir este PDF aqui.");
       } finally {
         if (!cancelado) setCarregando(false);
@@ -154,18 +182,25 @@ function VisualizadorPdf({ path, zoom, onErro }) {
 
   return (
     <div ref={containerRef} className="p-2 min-h-full">
-      {carregando && <p className="text-center text-sm text-gray-500 py-10">Carregando PDF…</p>}
+      {carregando && (
+        <p className="text-center text-sm text-gray-500 py-10">Carregando PDF…</p>
+      )}
       {doc && info &&
         Array.from({ length: info.paginas }, (_, i) => (
-          <PaginaPdf key={i + 1} doc={doc} numero={i + 1} razao={info.razao} largura={larguraPagina} />
+          <PaginaPdf
+            key={i + 1}
+            doc={doc}
+            numero={i + 1}
+            razao={info.razao}
+            largura={larguraPagina}
+          />
         ))}
     </div>
   );
 }
 
 /* --------------------------------- DOCX ---------------------------------- */
-// Renderiza .docx 100% no navegador via docx-preview.
-// O import é dinâmico dentro do useEffect para não quebrar o SSR.
+
 function VisualizadorDocx({ path, onErro }) {
   const containerRef = useRef(null);
   const [carregando, setCarregando] = useState(true);
@@ -175,16 +210,13 @@ function VisualizadorDocx({ path, onErro }) {
 
     (async () => {
       try {
-        // 1) Baixa o arquivo do bucket como Blob
         const { data, error } = await supabase.storage.from(BUCKET).download(path);
         if (error) throw error;
         if (cancelado || !containerRef.current) return;
 
-        // 2) Importa a lib só no navegador
         const { renderAsync } = await import("docx-preview");
         if (cancelado || !containerRef.current) return;
 
-        // 3) Limpa o container e renderiza (cada página vira uma "folha" HTML)
         containerRef.current.innerHTML = "";
         await renderAsync(data, containerRef.current, undefined, {
           className: "docx-preview-wrapper",
@@ -228,14 +260,27 @@ function VisualizadorTexto({ path, onErro }) {
       if (cancelado) return;
       if (error) return onErro?.("Não foi possível abrir este arquivo aqui.");
       const t = await data.text();
-      if (!cancelado) setTexto(t.length > 500000 ? t.slice(0, 500000) + "\n\n… (arquivo grande, mostrando o início)" : t);
+      if (!cancelado) {
+        setTexto(
+          t.length > 500000
+            ? t.slice(0, 500000) + "\n\n… (arquivo grande, mostrando o início)"
+            : t
+        );
+      }
     })();
     return () => {
       cancelado = true;
     };
   }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (texto === null) return <p className="text-center text-sm text-gray-500 py-10">Carregando…</p>;
-  return <pre className="p-4 text-sm whitespace-pre-wrap break-words bg-white min-h-full">{texto}</pre>;
+
+  if (texto === null) {
+    return <p className="text-center text-sm text-gray-500 py-10">Carregando…</p>;
+  }
+  return (
+    <pre className="p-4 text-sm whitespace-pre-wrap break-words bg-white min-h-full">
+      {texto}
+    </pre>
+  );
 }
 
 /* ------------------------------- Principal ------------------------------- */
@@ -243,7 +288,8 @@ function VisualizadorTexto({ path, onErro }) {
 const ZOOMS = [1, 1.25, 1.5, 2, 3];
 
 export default function VisualizadorArquivo({ titulo, url, onClose }) {
-  const tipo = tipoDoArquivo(titulo) !== "outro" ? tipoDoArquivo(titulo) : tipoDoArquivo(url);
+  const tipo =
+    tipoDoArquivo(titulo) !== "outro" ? tipoDoArquivo(titulo) : tipoDoArquivo(url);
   const ext = extensaoDe(titulo, url);
   const path = caminhoNoStorage(url);
   const [erro, setErro] = useState("");
@@ -269,7 +315,12 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
     corpo = (
       <div className="min-h-full flex items-center justify-center p-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt={titulo} className="max-w-full max-h-full object-contain" onError={() => setErro("Não foi possível carregar a imagem.")} />
+        <img
+          src={url}
+          alt={titulo}
+          className="max-w-full max-h-full object-contain"
+          onError={() => setErro("Não foi possível carregar a imagem.")}
+        />
       </div>
     );
   } else if (tipo === "pdf" && path) {
@@ -289,15 +340,16 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
       </div>
     );
   } else if (tipo === "office") {
-    // .docx agora é renderizado nativamente no navegador.
-    // Os demais formatos Office (.doc, .ppt, .xls, .odt, etc.) continuam no Office Online Viewer.
     if (ext === "docx" && path) {
       corpo = <VisualizadorDocx path={path} onErro={handleErro} />;
     } else {
       corpo = (
         <iframe
           title={titulo}
-          src={"https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(url)}
+          src={
+            "https://view.officeapps.live.com/op/embed.aspx?src=" +
+            encodeURIComponent(url)
+          }
           className="w-full h-full border-0 bg-white"
         />
       );
@@ -306,29 +358,64 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
     corpo = (
       <div className="min-h-full flex flex-col items-center justify-center text-center p-6 gap-3">
         <p className="text-gray-600 text-sm">Este tipo de arquivo não tem pré-visualização.</p>
-        <a href={urlDeDownload(url, titulo)} className="btn-primary">Baixar arquivo</a>
+        <a href={urlDeDownload(url, titulo)} className="btn-primary">
+          Baixar arquivo
+        </a>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex sm:p-6" onClick={onClose} role="dialog" aria-modal="true" aria-label={titulo}>
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex sm:p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={titulo}
+    >
       <div
         className="flex flex-col w-full max-w-5xl mx-auto h-[100dvh] sm:h-[calc(100dvh-3rem)] bg-surface sm:rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 bg-white border-b border-borderSoft px-3 pb-2 pt-[calc(0.5rem_+_env(safe-area-inset-top))] sm:pt-2">
-          <p className="flex-1 min-w-0 truncate text-sm font-medium" title={titulo}>{titulo}</p>
+          <p className="flex-1 min-w-0 truncate text-sm font-medium" title={titulo}>
+            {titulo}
+          </p>
 
           {tipo === "pdf" && !erro && (
             <div className="flex items-center gap-1 shrink-0">
-              <button className="w-9 h-9 rounded-lg bg-primarySoft text-primaryDark disabled:opacity-40" disabled={zoomIdx === 0} onClick={() => setZoomIdx((z) => Math.max(0, z - 1))} aria-label="Diminuir zoom">−</button>
-              <button className="w-9 h-9 rounded-lg bg-primarySoft text-primaryDark disabled:opacity-40" disabled={zoomIdx === ZOOMS.length - 1} onClick={() => setZoomIdx((z) => Math.min(ZOOMS.length - 1, z + 1))} aria-label="Aumentar zoom">+</button>
+              <button
+                className="w-9 h-9 rounded-lg bg-primarySoft text-primaryDark disabled:opacity-40"
+                disabled={zoomIdx === 0}
+                onClick={() => setZoomIdx((z) => Math.max(0, z - 1))}
+                aria-label="Diminuir zoom"
+              >
+                −
+              </button>
+              <button
+                className="w-9 h-9 rounded-lg bg-primarySoft text-primaryDark disabled:opacity-40"
+                disabled={zoomIdx === ZOOMS.length - 1}
+                onClick={() => setZoomIdx((z) => Math.min(ZOOMS.length - 1, z + 1))}
+                aria-label="Aumentar zoom"
+              >
+                +
+              </button>
             </div>
           )}
 
-          <a href={urlDeDownload(url, titulo)} className="shrink-0 text-xs px-3 h-9 inline-flex items-center rounded-lg border border-borderSoft text-textMuted hover:text-primary">Baixar</a>
-          <button onClick={onClose} className="shrink-0 w-9 h-9 rounded-lg text-xl text-textMuted hover:text-primary" aria-label="Fechar">×</button>
+          <a
+            href={urlDeDownload(url, titulo)}
+            className="shrink-0 text-xs px-3 h-9 inline-flex items-center rounded-lg border border-borderSoft text-textMuted hover:text-primary"
+          >
+            Baixar
+          </a>
+          <button
+            onClick={onClose}
+            className="shrink-0 w-9 h-9 rounded-lg text-xl text-textMuted hover:text-primary"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
         </div>
 
         <div className="flex-1 min-h-0 overflow-auto overscroll-contain bg-gray-100">
@@ -336,7 +423,9 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
           {erro && (
             <div className="min-h-full flex flex-col items-center justify-center text-center p-6 gap-3">
               <p className="text-sm text-red-500">{erro}</p>
-              <a href={urlDeDownload(url, titulo)} className="btn-primary">Baixar arquivo</a>
+              <a href={urlDeDownload(url, titulo)} className="btn-primary">
+                Baixar arquivo
+              </a>
             </div>
           )}
         </div>
