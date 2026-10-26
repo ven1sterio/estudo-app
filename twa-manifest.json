@@ -1,6 +1,6 @@
 {
-  "packageId": "com.simplify.estudos",
-  "host": "seudominio.com",
+  "packageId": "app.vercel.estudo_app_alpha.twa",
+  "host": "estudo-app-alpha.vercel.app",
   "name": "SIMPLIFY — Estudos",
   "launcherName": "SIMPLIFY",
   "display": "standalone",
@@ -13,8 +13,8 @@
   "backgroundColor": "#FAFAFC",
   "enableNotifications": false,
   "startUrl": "/dashboard",
-  "iconUrl": "https://seudominio.com/icons/icon-512.png",
-  "maskableIconUrl": "https://seudominio.com/icons/icon-512-maskable.png",
+  "iconUrl": "https://estudo-app-alpha.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://estudo-app-alpha.vercel.app/icons/icon-512-maskable.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
@@ -27,17 +27,17 @@
       "name": "Tarefas",
       "shortName": "Tarefas",
       "url": "/tarefas",
-      "chosenIconUrl": "https://seudominio.com/icons/icon-192.png"
+      "chosenIconUrl": "https://estudo-app-alpha.vercel.app/icons/icon-192.png"
     },
     {
       "name": "Flashcards",
       "shortName": "Cartões",
       "url": "/flashcards",
-      "chosenIconUrl": "https://seudominio.com/icons/icon-192.png"
+      "chosenIconUrl": "https://estudo-app-alpha.vercel.app/icons/icon-192.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://seudominio.com/manifest.json",
+  "webManifestUrl": "https://estudo-app-alpha.vercel.app/manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "playBilling": { "enabled": false },
@@ -49,7 +49,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://seudominio.com/",
+  "fullScopeUrl": "https://estudo-app-alpha.vercel.app/",
   "minSdkVersion": 21,
   "orientation": "portrait"
 }
