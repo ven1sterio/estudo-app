@@ -6,7 +6,6 @@ import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
 import {
   swrKeys,
-  fetchEventosRange,
   fetcherEventosRange,
   ymd,
 } from "../lib/fetchers";
@@ -31,6 +30,7 @@ const TAREFA_TIPO_PARA_FILTRO = {
 
 export default function Calendario() {
   const { user, loading: authLoading } = useRequireAuth();
+  const uid = user?.id;
 
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
@@ -42,7 +42,7 @@ export default function Calendario() {
   const fimMes = ymd(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0));
 
   const { data: range, isLoading } = useSWR(
-    user ? swrKeys.eventosRange(inicioMes, fimMes) : null,
+    uid ? swrKeys.eventosRange(uid, inicioMes, fimMes) : null,
     fetcherEventosRange,
     { keepPreviousData: false }
   );
@@ -80,7 +80,7 @@ export default function Calendario() {
 
   async function handleCriarEvento({ titulo, descricao, tipo, cor }) {
     await supabase.from("eventos_calendario").insert({
-      user_id: user.id,
+      user_id: uid,
       titulo,
       descricao,
       tipo,
@@ -89,9 +89,9 @@ export default function Calendario() {
       origem: "manual",
     });
     setShowNovoEvento(false);
-    globalMutate(swrKeys.eventosRange(inicioMes, fimMes));
-    globalMutate(swrKeys.eventosProximos);
-    globalMutate(swrKeys.eventosManuais);
+    globalMutate(swrKeys.eventosRange(uid, inicioMes, fimMes));
+    globalMutate(swrKeys.eventosProximos(uid));
+    globalMutate(swrKeys.eventosManuais(uid));
   }
 
   const eventosFiltrados = useMemo(
@@ -139,6 +139,7 @@ export default function Calendario() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => mudarMes(-1)}
+            aria-label="Mês anterior"
             className="text-gray-400 hover:text-primary px-3 py-1 text-xl"
           >
             ‹
@@ -148,6 +149,7 @@ export default function Calendario() {
           </span>
           <button
             onClick={() => mudarMes(1)}
+            aria-label="Próximo mês"
             className="text-gray-400 hover:text-primary px-3 py-1 text-xl"
           >
             ›
@@ -169,6 +171,7 @@ export default function Calendario() {
             <span
               className="inline-block w-2 h-2 rounded-full"
               style={{ background: info.cor }}
+              aria-hidden="true"
             />
             {info.label}
           </label>
@@ -235,6 +238,7 @@ export default function Calendario() {
                           key={e.id}
                           className="w-1.5 h-1.5 rounded-full"
                           style={{ background: e.cor }}
+                          aria-hidden="true"
                         />
                       ))}
                     </div>
@@ -257,6 +261,7 @@ export default function Calendario() {
               {selectedDay && (
                 <button
                   onClick={() => setShowNovoEvento((s) => !s)}
+                  aria-label="Novo evento"
                   className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
                   title="Novo evento"
                 >
@@ -283,6 +288,7 @@ export default function Calendario() {
                     <span
                       className="w-2 h-2 rounded-full mt-1.5 shrink-0"
                       style={{ background: e.cor }}
+                      aria-hidden="true"
                     />
                     <div>
                       <p className="text-sm font-medium">{e.titulo}</p>
@@ -353,6 +359,7 @@ function NovoEventoForm({ onCancel, onCreate }) {
           className="w-12 h-10 rounded-xl border border-gray-200 shrink-0"
           value={cor}
           onChange={(e) => setCor(e.target.value)}
+          aria-label="Cor do evento"
         />
       </div>
       <div className="flex gap-2">

@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../lib/useAuth";
+import { useConfirm } from "../components/ConfirmDialog";
+import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabaseClient";
 import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
+import EmptyState from "../components/EmptyState";
 import {
   swrKeys,
   fetchMaterias,
@@ -13,106 +16,169 @@ import {
   fetchEventosManuais,
 } from "../lib/fetchers";
 
-const PRIORIDADES = {
-  alta: { label: "Alta", classes: "bg-red-100 text-red-500" },
-  media: { label: "Média", classes: "bg-accentYellow/60 text-yellow-700" },
-  baixa: { label: "Baixa", classes: "bg-accentGreen/60 text-green-700" },
+const TIPOS = {
+  prova: "Prova",
+  atividade: "Atividade",
+  trabalho: "Trabalho",
+  seminario: "Seminário",
+  lista: "Lista",
+  outro: "Outro",
 };
 
-const TIPOS = {
-  prova: "Prova", atividade: "Atividade", trabalho: "Trabalho",
-  seminario: "Seminário", lista: "Lista", outro: "Outro",
+const PRIORIDADES = {
+  alta: { label: "Alta", classe: "text-danger" },
+  media: { label: "Média", classe: "text-warning" },
+  baixa: { label: "Baixa", classe: "text-textMuted" },
 };
+
+function hojeStr() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+}
+
+function dataRelativa(dateStr) {
+  if (!dateStr) return "";
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const alvo = new Date(dateStr + "T00:00:00");
+  const diff = Math.round((alvo - hoje) / 86400000);
+  if (diff === 0) return "hoje";
+  if (diff === 1) return "amanhã";
+  if (diff === -1) return "ontem";
+  if (diff < -1) return `atrasada ${Math.abs(diff)}d`;
+  if (diff <= 7) return `em ${diff} dias`;
+  return alvo.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+const VIEWS = [
+  { key: "todas", label: "Tudo" },
+  { key: "hoje", label: "Hoje" },
+  { key: "semana", label: "Esta semana" },
+  { key: "feitas", label: "Feitas" },
+];
 
 export default function Tarefas() {
   const { user, loading: authLoading } = useRequireAuth();
+  const uid = user?.id;
+  const confirm = useConfirm();
+  const { showToast } = useToast();
 
-  const { data: materias = [], isLoading: lM } = useSWR(
-    user ? swrKeys.materias : null,
-    fetchMaterias
+  const { data: materias = [] } = useSWR(
+    uid ? swrKeys.materias(uid) : null,
+    () => fetchMaterias(uid)
   );
   const { data: tarefas = [], isLoading: lT } = useSWR(
-    user ? swrKeys.tarefas : null,
-    fetchTarefas
+    uid ? swrKeys.tarefas(uid) : null,
+    () => fetchTarefas(uid)
   );
   const { data: lembretes = [], isLoading: lL } = useSWR(
-    user ? swrKeys.lembretes : null,
-    fetchLembretes
+    uid ? swrKeys.lembretes(uid) : null,
+    () => fetchLembretes(uid)
   );
   const { data: provas = [] } = useSWR(
-    user ? swrKeys.provas : null,
-    fetchProvas
+    uid ? swrKeys.provas(uid) : null,
+    () => fetchProvas(uid)
   );
   const { data: eventosManuais = [] } = useSWR(
-    user ? swrKeys.eventosManuais : null,
-    fetchEventosManuais
+    uid ? swrKeys.eventosManuais(uid) : null,
+    () => fetchEventosManuais(uid)
   );
 
-  const loading = lM || lT || lL;
-
-  const [showTarefaForm, setShowTarefaForm] = useState(false);
-  const [tTitulo, setTTitulo] = useState("");
-  const [tDescricao, setTDescricao] = useState("");
-  const [tMateria, setTMateria] = useState("");
-  const [tData, setTData] = useState("");
-  const [tPrioridade, setTPrioridade] = useState("media");
-  const [tTipo, setTTipo] = useState("atividade");
-  const [savingTarefa, setSavingTarefa] = useState(false);
-
+  const [view, setView] = useState("todas");
+  const [addOpen, setAddOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState({});
   const [novoLembrete, setNovoLembrete] = useState("");
   const [savingLembrete, setSavingLembrete] = useState(false);
 
-  const [error, setError] = useState("");
+  const hoje = hojeStr();
+  const limiteSemana = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
+  }, []);
 
-  useEffect(() => {
-    if (materias.length && !tMateria) setTMateria(materias[0].id);
-  }, [materias, tMateria]);
-
-  async function removeProva(id) {
-    if (!confirm("Remover esta prova? O evento no calendário também será removido.")) return;
-    await supabase.from("provas").delete().eq("id", id);
-    globalMutate(swrKeys.provas);
-    globalMutate(swrKeys.eventosRange ? null : null); // força refetch de meses
-    // Invalida qualquer cache de eventos_range
-    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
-  }
-
-  async function removeEventoManual(id) {
-    if (!confirm("Remover este evento do calendário?")) return;
-    await supabase.from("eventos_calendario").delete().eq("id", id);
-    globalMutate(swrKeys.eventosManuais);
-    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
-  }
-
-  async function handleAddTarefa(e) {
-    e.preventDefault();
-    setError("");
-    setSavingTarefa(true);
-    const { error } = await supabase.from("tarefas").insert({
-      user_id: user.id,
-      materia_id: tMateria,
-      titulo: tTitulo,
-      descricao: tDescricao,
-      data_entrega: tData,
-      prioridade: tPrioridade,
-      tipo: tTipo,
+  const tarefasFiltradas = useMemo(() => {
+    return tarefas.filter((t) => {
+      if (view === "hoje") return !t.concluido && t.data_entrega === hoje;
+      if (view === "semana")
+        return (
+          !t.concluido &&
+          t.data_entrega >= hoje &&
+          t.data_entrega <= limiteSemana
+        );
+      if (view === "feitas") return t.concluido;
+      return true;
     });
-    setSavingTarefa(false);
-    if (error) return setError(error.message);
-    setTTitulo("");
-    setTDescricao("");
-    setTData("");
-    setTPrioridade("media");
-    setTTipo("atividade");
-    setShowTarefaForm(false);
-    globalMutate(swrKeys.tarefas);
+  }, [tarefas, view, hoje, limiteSemana]);
+
+  const grupos = useMemo(() => {
+    const mapa = {};
+    for (const t of tarefasFiltradas) {
+      const mat = materias.find((m) => m.id === t.materia_id);
+      const key = mat?.id || "_sem";
+      if (!mapa[key]) {
+        mapa[key] = {
+          id: key,
+          nome: mat?.nome || "Sem matéria",
+          cor: mat?.cor || "#A3A0A8",
+          tarefas: [],
+        };
+      }
+      mapa[key].tarefas.push(t);
+    }
+    for (const g of Object.values(mapa)) {
+      g.tarefas.sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
+    }
+    return Object.values(mapa).sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [tarefasFiltradas, materias]);
+
+  const totalPendentes = tarefas.filter((t) => !t.concluido).length;
+  const totalHoje = tarefas.filter(
+    (t) => !t.concluido && t.data_entrega === hoje
+  ).length;
+
+  /* -------------------- handlers -------------------- */
+
+  async function handleAddTarefa({ titulo, materiaId, data, tipo, prioridade }) {
+    if (!uid || !materiaId) return false;
+
+    const { error } = await supabase.from("tarefas").insert({
+      user_id: uid,
+      materia_id: materiaId,
+      titulo,
+      data_entrega: data,
+      tipo,
+      prioridade,
+    });
+
+    if (error) {
+      showToast("Erro ao criar tarefa: " + error.message, "error");
+      return false;
+    }
+    globalMutate(swrKeys.tarefas(uid));
+    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    showToast("Tarefa criada.", "success");
+    return true;
+  }
+
+  async function handleUpdateTarefa(id, patch) {
+    globalMutate(
+      swrKeys.tarefas(uid),
+      (prev) => prev?.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+      false
+    );
+    const { error } = await supabase.from("tarefas").update(patch).eq("id", id);
+    if (error) {
+      showToast("Erro ao atualizar tarefa: " + error.message, "error");
+    }
+    globalMutate(swrKeys.tarefas(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
   }
 
   async function toggleTarefa(tarefa) {
-    // otimista
     globalMutate(
-      swrKeys.tarefas,
+      swrKeys.tarefas(uid),
       (prev) =>
         prev?.map((t) =>
           t.id === tarefa.id ? { ...t, concluido: !t.concluido } : t
@@ -123,13 +189,21 @@ export default function Tarefas() {
       .from("tarefas")
       .update({ concluido: !tarefa.concluido })
       .eq("id", tarefa.id);
-    globalMutate(swrKeys.tarefas);
+    globalMutate(swrKeys.tarefas(uid));
   }
 
   async function removeTarefa(id) {
+    const ok = await confirm({
+      title: "Remover tarefa",
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
     await supabase.from("tarefas").delete().eq("id", id);
-    globalMutate(swrKeys.tarefas);
+    globalMutate(swrKeys.tarefas(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    showToast("Tarefa removida.", "success");
   }
 
   async function handleAddLembrete(e) {
@@ -138,15 +212,16 @@ export default function Tarefas() {
     setSavingLembrete(true);
     await supabase
       .from("tarefas_rotina")
-      .insert({ user_id: user.id, titulo: novoLembrete });
+      .insert({ user_id: uid, titulo: novoLembrete });
     setNovoLembrete("");
     setSavingLembrete(false);
-    globalMutate(swrKeys.lembretes);
+    globalMutate(swrKeys.lembretes(uid));
+    showToast("Lembrete adicionado.", "success");
   }
 
   async function toggleLembrete(lembrete) {
     globalMutate(
-      swrKeys.lembretes,
+      swrKeys.lembretes(uid),
       (prev) =>
         prev?.map((l) =>
           l.id === lembrete.id ? { ...l, concluido: !l.concluido } : l
@@ -157,67 +232,211 @@ export default function Tarefas() {
       .from("tarefas_rotina")
       .update({ concluido: !lembrete.concluido })
       .eq("id", lembrete.id);
-    globalMutate(swrKeys.lembretes);
+    globalMutate(swrKeys.lembretes(uid));
   }
 
   async function removeLembrete(id) {
+    const ok = await confirm({
+      title: "Remover lembrete",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
     await supabase.from("tarefas_rotina").delete().eq("id", id);
-    globalMutate(swrKeys.lembretes);
+    globalMutate(swrKeys.lembretes(uid));
+    showToast("Lembrete removido.", "success");
+  }
+
+  async function removeProva(id) {
+    const ok = await confirm({
+      title: "Remover prova",
+      description: "O evento no calendário também será removido.",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
+    await supabase.from("provas").delete().eq("id", id);
+    globalMutate(swrKeys.provas(uid));
+    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    showToast("Prova removida.", "success");
+  }
+
+  async function removeEventoManual(id) {
+    const ok = await confirm({
+      title: "Remover evento",
+      description: "O evento será removido do calendário.",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
+    await supabase.from("eventos_calendario").delete().eq("id", id);
+    globalMutate(swrKeys.eventosManuais(uid));
+    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    showToast("Evento removido.", "success");
   }
 
   if (authLoading) return null;
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-bold mb-6">Tarefas e Rotina</h1>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-textPrimary">
+              Tarefas
+            </h1>
+            <p className="text-textMuted mt-1 text-sm">
+              {totalPendentes} pendente{totalPendentes === 1 ? "" : "s"}
+              {totalHoje > 0 ? ` · ${totalHoje} para hoje` : ""}
+            </p>
+          </div>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="btn-primary flex items-center gap-2"
+            disabled={materias.length === 0}
+            title={
+              materias.length === 0
+                ? "Cadastre uma matéria primeiro"
+                : "Nova tarefa"
+            }
+          >
+            + Nova tarefa
+          </button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <section className="card">
-          <h2 className="font-semibold text-lg mb-1">🔁 Checklist de Rotina</h2>
-          <p className="text-gray-400 text-sm mb-4">
-            Hábitos recorrentes que não pertencem a nenhuma matéria específica.
-          </p>
+      {/* Views */}
+      <div className="flex items-center gap-1 mb-5 overflow-x-auto scrollbar-none">
+        {VIEWS.map((v) => (
+          <button
+            key={v.key}
+            onClick={() => setView(v.key)}
+            className={
+              "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap " +
+              (view === v.key
+                ? "bg-primarySoft text-primaryDark"
+                : "text-textMuted hover:bg-primaryExtraSoft")
+            }
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
 
-          <form onSubmit={handleAddLembrete} className="flex gap-2 mb-4">
+      {/* Nova tarefa inline */}
+      {addOpen && (
+        <AddTarefaInline
+          materias={materias}
+          onCancel={() => setAddOpen(false)}
+          onSave={handleAddTarefa}
+        />
+      )}
+
+      {/* Lista agrupada */}
+      {lT ? (
+        <div className="space-y-2">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      ) : grupos.length === 0 ? (
+        <EmptyState
+          icon="✓"
+          title={
+            view === "feitas"
+              ? "Nada concluído ainda"
+              : view === "hoje"
+              ? "Nada para hoje 🎉"
+              : "Nenhuma tarefa por aqui"
+          }
+          description={
+            view === "feitas"
+              ? "As tarefas concluídas aparecem aqui."
+              : "Quando você criar tarefas acadêmicas, elas aparecem nesta lista agrupadas por matéria."
+          }
+          action={
+            materias.length > 0 ? (
+              <button onClick={() => setAddOpen(true)} className="btn-primary">
+                + Nova tarefa
+              </button>
+            ) : null
+          }
+        />
+      ) : (
+        <div className="space-y-6">
+          {grupos.map((g) => (
+            <TarefaGrupo
+              key={g.id}
+              grupo={g}
+              collapsed={!!collapsed[g.id]}
+              onToggleCollapse={() =>
+                setCollapsed((c) => ({ ...c, [g.id]: !c[g.id] }))
+              }
+              onToggleTarefa={toggleTarefa}
+              onRemoveTarefa={removeTarefa}
+              onUpdateTarefa={handleUpdateTarefa}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Rotina */}
+      <div className="mt-12">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-2 h-2 rounded-full bg-info" />
+          <h2 className="text-sm font-semibold text-textMuted uppercase tracking-wide">
+            Rotina diária
+          </h2>
+        </div>
+        <div className="card">
+          <form onSubmit={handleAddLembrete} className="flex gap-2 mb-3">
             <input
               className="input-field"
-              placeholder='Ex: "Revisar anotações por 30 min"'
+              placeholder="Adicionar lembrete à rotina..."
               value={novoLembrete}
               onChange={(e) => setNovoLembrete(e.target.value)}
             />
-            <button type="submit" disabled={savingLembrete} className="btn-primary shrink-0">
-              + Adicionar
+            <button
+              type="submit"
+              disabled={savingLembrete || !novoLembrete.trim()}
+              className="btn-primary shrink-0"
+            >
+              Adicionar
             </button>
           </form>
-
           {lL ? (
             <Skeleton className="h-10 w-full" />
           ) : lembretes.length === 0 ? (
-            <p className="text-gray-400 text-sm">Nenhum lembrete ainda.</p>
+            <p className="text-textMuted text-sm">
+              Nenhum hábito cadastrado ainda.
+            </p>
           ) : (
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               {lembretes.map((l) => (
                 <li
                   key={l.id}
-                  className="flex items-center gap-3 bg-surface rounded-lg px-3 py-2"
+                  className="group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-primaryExtraSoft transition-colors"
                 >
-                  <input
-                    type="checkbox"
-                    checked={l.concluido}
-                    onChange={() => toggleLembrete(l)}
-                    className="w-4 h-4 accent-primary shrink-0"
+                  <NotionCheckbox
+                    done={l.concluido}
+                    onToggle={() => toggleLembrete(l)}
+                    label={l.titulo}
                   />
                   <span
                     className={
                       "flex-1 min-w-0 break-words text-sm " +
-                      (l.concluido ? "line-through text-gray-300" : "")
+                      (l.concluido
+                        ? "line-through text-textMuted"
+                        : "text-textPrimary")
                     }
                   >
                     {l.titulo}
                   </span>
                   <button
                     onClick={() => removeLembrete(l.id)}
-                    className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2"
+                    aria-label="Remover lembrete"
+                    className="opacity-0 group-hover:opacity-100 text-textMuted hover:text-danger text-xs px-2 py-1 rounded transition-opacity"
                   >
                     remover
                   </button>
@@ -225,227 +444,385 @@ export default function Tarefas() {
               ))}
             </ul>
           )}
-        </section>
-
-        <section className="card">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-            <h2 className="font-semibold text-lg">📚 Tarefas Acadêmicas</h2>
-            <button onClick={() => setShowTarefaForm((s) => !s)} className="btn-primary">
-              + Nova tarefa
-            </button>
-          </div>
-          <p className="text-gray-400 text-sm mb-4">
-            Associadas a uma matéria, com tipo, data de entrega e prioridade.
-          </p>
-
-          {showTarefaForm && (
-            <form
-              onSubmit={handleAddTarefa}
-              className="space-y-3 mb-5 border border-gray-100 rounded-xl p-4"
-            >
-              <div>
-                <label className="block text-sm font-medium mb-1">Título</label>
-                <input
-                  required
-                  className="input-field"
-                  value={tTitulo}
-                  onChange={(e) => setTTitulo(e.target.value)}
-                  placeholder="Ex: Entregar lista de exercícios"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Descrição</label>
-                <textarea
-                  className="input-field"
-                  rows={2}
-                  value={tDescricao}
-                  onChange={(e) => setTDescricao(e.target.value)}
-                  placeholder="Detalhes opcionais"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tipo</label>
-                  <select
-                    className="input-field"
-                    value={tTipo}
-                    onChange={(e) => setTTipo(e.target.value)}
-                  >
-                    {Object.entries(TIPOS).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Matéria</label>
-                  <select
-                    required
-                    className="input-field"
-                    value={tMateria}
-                    onChange={(e) => setTMateria(e.target.value)}
-                  >
-                    {materias.length === 0 && <option value="">Nenhuma matéria</option>}
-                    {materias.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Data de entrega</label>
-                  <input
-                    type="date"
-                    required
-                    className="input-field"
-                    value={tData}
-                    onChange={(e) => setTData(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Prioridade</label>
-                  <select
-                    className="input-field"
-                    value={tPrioridade}
-                    onChange={(e) => setTPrioridade(e.target.value)}
-                  >
-                    <option value="alta">Alta</option>
-                    <option value="media">Média</option>
-                    <option value="baixa">Baixa</option>
-                  </select>
-                </div>
-              </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button
-                type="submit"
-                disabled={savingTarefa || !materias.length}
-                className="btn-primary"
-              >
-                {savingTarefa ? "Salvando..." : "Salvar tarefa"}
-              </button>
-              {!materias.length && (
-                <p className="text-gray-400 text-xs">
-                  Cadastre uma matéria antes de criar tarefas acadêmicas.
-                </p>
-              )}
-            </form>
-          )}
-
-          {loading ? (
-            <Skeleton className="h-10 w-full" />
-          ) : tarefas.length === 0 ? (
-            <p className="text-gray-400 text-sm">Nenhuma tarefa cadastrada ainda.</p>
-          ) : (
-            <ul className="space-y-1">
-              {tarefas.map((t) => (
-                <li
-                  key={t.id}
-                  className="flex items-center gap-3 bg-surface rounded-lg px-3 py-2 flex-wrap"
-                >
-                  <input
-                    type="checkbox"
-                    checked={t.concluido}
-                    onChange={() => toggleTarefa(t)}
-                    className="w-4 h-4 accent-primary shrink-0"
-                  />
-                  <span
-                    className={
-                      "flex-1 text-sm min-w-[140px] break-words " +
-                      (t.concluido ? "line-through text-gray-300" : "")
-                    }
-                  >
-                    {t.titulo}
-                    <span className="text-gray-400">
-                      {" "}· {t.materias?.nome} ·{" "}
-                      {new Date(t.data_entrega + "T00:00:00").toLocaleDateString("pt-BR")}
-                    </span>
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primarySoft text-primaryDark shrink-0">
-                    {TIPOS[t.tipo] || "Atividade"}
-                  </span>
-                  <span
-                    className={
-                      "text-xs px-2 py-0.5 rounded-full shrink-0 " +
-                      PRIORIDADES[t.prioridade]?.classes
-                    }
-                  >
-                    {PRIORIDADES[t.prioridade]?.label}
-                  </span>
-                  <button
-                    onClick={() => removeTarefa(t.id)}
-                    className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2 shrink-0"
-                  >
-                    remover
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        </div>
       </div>
 
-      <section className="card mt-6">
-        <h2 className="font-semibold text-lg mb-1">🗓️ Provas e Eventos</h2>
-        <p className="text-gray-400 text-sm mb-4">
-          Provas cadastradas na matéria, eventos criados pelo Assistente de Plano
-          de Ensino e eventos criados diretamente no calendário.
-        </p>
-
-        {provas.length === 0 && eventosManuais.length === 0 ? (
-          <p className="text-gray-400 text-sm">Nada por aqui ainda.</p>
-        ) : (
-          <ul className="space-y-1">
-            {provas.map((p) => (
-              <li
-                key={`prova-${p.id}`}
-                className="flex items-center gap-3 bg-surface rounded-lg px-3 py-2"
-              >
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primarySoft text-primaryDark shrink-0">
-                  Prova
-                </span>
-                <span className="flex-1 min-w-0 break-words text-sm">
-                  {p.titulo}
-                  <span className="text-gray-400">
-                    {" "}· {p.materias?.nome} ·{" "}
-                    {new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR")}
-                  </span>
-                </span>
-                <button
-                  onClick={() => removeProva(p.id)}
-                  className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2 shrink-0"
+      {/* Provas e eventos */}
+      <div className="mt-10">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-2 h-2 rounded-full bg-primary" />
+          <h2 className="text-sm font-semibold text-textMuted uppercase tracking-wide">
+            Provas e eventos
+          </h2>
+        </div>
+        <div className="card">
+          {provas.length === 0 && eventosManuais.length === 0 ? (
+            <p className="text-textMuted text-sm">Nada por aqui ainda.</p>
+          ) : (
+            <ul className="space-y-1">
+              {provas.map((p) => (
+                <li
+                  key={`prova-${p.id}`}
+                  className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-primaryExtraSoft transition-colors"
                 >
-                  remover
-                </button>
-              </li>
-            ))}
-            {eventosManuais.map((e) => (
-              <li
-                key={`evento-${e.id}`}
-                className="flex items-center gap-3 bg-surface rounded-lg px-3 py-2"
-              >
-                <span className="text-xs px-2 py-0.5 rounded-full bg-accentPink/60 text-pink-700 shrink-0">
-                  Evento
-                </span>
-                <span className="flex-1 min-w-0 break-words text-sm">
-                  {e.titulo}
-                  <span className="text-gray-400">
-                    {" "}· {e.materias?.nome ? `${e.materias.nome} · ` : ""}
-                    {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primarySoft text-primaryDark shrink-0">
+                    Prova
                   </span>
-                </span>
-                <button
-                  onClick={() => removeEventoManual(e.id)}
-                  className="text-gray-400 hover:text-red-500 text-xs p-2 -m-2 shrink-0"
+                  <span className="flex-1 min-w-0 break-words text-sm text-textPrimary">
+                    {p.titulo}
+                    <span className="text-textMuted">
+                      {" "}
+                      · {p.materias?.nome} · {dataRelativa(p.data)}
+                    </span>
+                  </span>
+                  <button
+                    onClick={() => removeProva(p.id)}
+                    className="text-textMuted hover:text-danger text-xs px-2 py-1"
+                  >
+                    remover
+                  </button>
+                </li>
+              ))}
+              {eventosManuais.map((e) => (
+                <li
+                  key={`evento-${e.id}`}
+                  className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-primaryExtraSoft transition-colors"
                 >
-                  remover
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-accentPink/60 text-pink-700 dark:text-pink-300 shrink-0">
+                    Evento
+                  </span>
+                  <span className="flex-1 min-w-0 break-words text-sm text-textPrimary">
+                    {e.titulo}
+                    <span className="text-textMuted">
+                      {" "}
+                      · {e.materias?.nome ? `${e.materias.nome} · ` : ""}
+                      {dataRelativa(e.data)}
+                    </span>
+                  </span>
+                  <button
+                    onClick={() => removeEventoManual(e.id)}
+                    className="text-textMuted hover:text-danger text-xs px-2 py-1"
+                  >
+                    remover
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </AppLayout>
+  );
+}
+
+/* ------------------------ Subcomponentes ------------------------ */
+
+function NotionCheckbox({ done, onToggle, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={
+        "shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all " +
+        (done
+          ? "bg-success border-success text-white"
+          : "border-textMuted/40 hover:border-primary")
+      }
+      aria-label={done ? `Marcar "${label}" como pendente` : `Marcar "${label}" como concluída`}
+    >
+      {done && (
+        <svg
+          viewBox="0 0 24 24"
+          className="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m5 12 5 5L20 7" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+function TarefaGrupo({
+  grupo,
+  collapsed,
+  onToggleCollapse,
+  onToggleTarefa,
+  onRemoveTarefa,
+  onUpdateTarefa,
+}) {
+  const done = grupo.tarefas.filter((t) => t.concluido).length;
+  const total = grupo.tarefas.length;
+
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        className="flex items-center gap-2 mb-1 w-full text-left group"
+        aria-expanded={!collapsed}
+      >
+        <span
+          className="text-textMuted text-xs transition-transform inline-block w-3"
+          style={{ transform: collapsed ? "rotate(-90deg)" : "rotate(0)" }}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ background: grupo.cor }}
+          aria-hidden="true"
+        />
+        <h2 className="font-semibold text-textPrimary truncate">
+          {grupo.nome}
+        </h2>
+        <span className="text-textMuted text-xs shrink-0">
+          {done > 0 ? `${done}/${total}` : `${total}`}
+        </span>
+      </button>
+
+      {!collapsed && (
+        <div className="pl-5 space-y-0.5">
+          {grupo.tarefas.map((t) => (
+            <TarefaRow
+              key={t.id}
+              tarefa={t}
+              onToggle={() => onToggleTarefa(t)}
+              onRemove={() => onRemoveTarefa(t.id)}
+              onUpdate={(patch) => onUpdateTarefa(t.id, patch)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TarefaRow({ tarefa, onToggle, onRemove, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [titulo, setTitulo] = useState(tarefa.titulo);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  useEffect(() => {
+    setTitulo(tarefa.titulo);
+  }, [tarefa.titulo]);
+
+  function commitEdit() {
+    const novo = titulo.trim();
+    if (novo && novo !== tarefa.titulo) {
+      onUpdate({ titulo: novo });
+    } else {
+      setTitulo(tarefa.titulo);
+    }
+    setEditing(false);
+  }
+
+  const prio = PRIORIDADES[tarefa.prioridade];
+
+  return (
+    <div className="group flex items-start gap-3 rounded-lg px-2 py-1.5 hover:bg-primaryExtraSoft transition-colors">
+      <div className="mt-0.5">
+        <NotionCheckbox
+          done={tarefa.concluido}
+          onToggle={onToggle}
+          label={tarefa.titulo}
+        />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <input
+            ref={inputRef}
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitEdit();
+              } else if (e.key === "Escape") {
+                setTitulo(tarefa.titulo);
+                setEditing(false);
+              }
+            }}
+            className="w-full bg-transparent border-b border-primary outline-none text-sm text-textPrimary py-0.5"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => !tarefa.concluido && setEditing(true)}
+            className={
+              "text-left w-full text-sm leading-snug break-words " +
+              (tarefa.concluido
+                ? "line-through text-textMuted cursor-default"
+                : "text-textPrimary hover:text-primary")
+            }
+            title={tarefa.concluido ? "" : "Clique para editar"}
+          >
+            {tarefa.titulo}
+          </button>
+        )}
+
+        <div className="flex items-center gap-1.5 text-xs text-textMuted mt-0.5 flex-wrap">
+          <span>{dataRelativa(tarefa.data_entrega)}</span>
+          {prio && tarefa.prioridade !== "baixa" && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className={prio.classe}>{prio.label}</span>
+            </>
+          )}
+          {tarefa.tipo && tarefa.tipo !== "atividade" && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{TIPOS[tarefa.tipo] || tarefa.tipo}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="relative shrink-0">
+        <button
+          type="button"
+          onClick={() => setMenuOpen((m) => !m)}
+          className="w-7 h-7 rounded flex items-center justify-center text-textMuted hover:bg-surface opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+          aria-label="Mais ações"
+        >
+          ⋯
+        </button>
+        {menuOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setMenuOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-[#262430] border border-borderSoft rounded-lg shadow-lg z-20 py-1 min-w-[150px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setEditing(true);
+                }}
+                className="w-full text-left px-3 py-1.5 text-sm text-textPrimary hover:bg-primaryExtraSoft"
+              >
+                Renomear
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onRemove();
+                }}
+                className="w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-danger/10"
+              >
+                Remover
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddTarefaInline({ materias, onCancel, onSave }) {
+  const [titulo, setTitulo] = useState("");
+  const [materiaId, setMateriaId] = useState(materias[0]?.id || "");
+  const [data, setData] = useState(hojeStr());
+  const [tipo, setTipo] = useState("atividade");
+  const [prioridade, setPrioridade] = useState("media");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!titulo.trim() || !materiaId) return;
+    setSaving(true);
+    const ok = await onSave({
+      titulo: titulo.trim(),
+      materiaId,
+      data,
+      tipo,
+      prioridade,
+    });
+    setSaving(false);
+    if (ok) {
+      setTitulo("");
+      onCancel();
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="card mb-5 space-y-3">
+      <input
+        autoFocus
+        required
+        className="input-field font-medium"
+        placeholder="O que precisa ser feito?"
+        value={titulo}
+        onChange={(e) => setTitulo(e.target.value)}
+      />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <select
+          className="input-field"
+          value={materiaId}
+          onChange={(e) => setMateriaId(e.target.value)}
+        >
+          {materias.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.nome}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          className="input-field"
+          value={data}
+          onChange={(e) => setData(e.target.value)}
+        />
+        <select
+          className="input-field"
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value)}
+        >
+          {Object.entries(TIPOS).map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+        </select>
+        <select
+          className="input-field"
+          value={prioridade}
+          onChange={(e) => setPrioridade(e.target.value)}
+        >
+          <option value="alta">Alta</option>
+          <option value="media">Média</option>
+          <option value="baixa">Baixa</option>
+        </select>
+      </div>
+      <div className="flex gap-2 justify-end">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-textMuted px-3"
+        >
+          Cancelar
+        </button>
+        <button type="submit" disabled={saving} className="btn-primary">
+          {saving ? "Salvando..." : "Adicionar"}
+        </button>
+      </div>
+    </form>
   );
 }

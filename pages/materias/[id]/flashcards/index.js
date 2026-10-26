@@ -1,9 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../../../lib/useAuth";
+import { useConfirm } from "../../../../components/ConfirmDialog";
+import { useToast } from "../../../../components/Toast";
 import { supabase } from "../../../../lib/supabaseClient";
 import AppLayout from "../../../../components/AppLayout";
+import Skeleton from "../../../../components/Skeleton";
+import {
+  swrKeys,
+  fetchMateriaDetalhe,
+  fetchColecoesDaMateria,
+} from "../../../../lib/fetchers";
 
 function formatRevisao(data) {
   if (!data) return "nunca revisado";
@@ -16,10 +25,21 @@ export default function Flashcards() {
   const { user, loading: authLoading } = useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
+  const uid = user?.id;
+  const confirm = useConfirm();
+  const { showToast } = useToast();
 
-  const [materia, setMateria] = useState(null);
-  const [colecoes, setColecoes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const ready = !!user && !!id;
+
+  const { data: materia } = useSWR(
+    ready ? swrKeys.materiaDetalhe(id) : null,
+    () => fetchMateriaDetalhe(id)
+  );
+  const { data: colecoes = [], isLoading } = useSWR(
+    ready ? swrKeys.colecoesMateria(id) : null,
+    () => fetchColecoesDaMateria(id)
+  );
+
   const [showForm, setShowForm] = useState(false);
   const [novoNome, setNovoNome] = useState("");
   const [novaDescricao, setNovaDescricao] = useState("");
@@ -27,50 +47,30 @@ export default function Flashcards() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (user && id) fetchTudo();
-  }, [user, id]);
-
-  async function fetchTudo() {
-    setLoading(true);
-    const { data: materiaData } = await supabase
-      .from("materias")
-      .select("id, nome, cor")
-      .eq("id", id)
-      .single();
-
-    const { data: colecoesData } = await supabase
-      .from("flashcard_colecoes")
-      .select("*, flashcards(count)")
-      .eq("materia_id", id)
-      .order("created_at", { ascending: false });
-
-    setMateria(materiaData);
-    setColecoes(colecoesData || []);
-    setLoading(false);
-  }
-
   async function handleCreate(e) {
     e.preventDefault();
     setError("");
     setSaving(true);
 
     const {
-      data: { user },
+      data: { user: authUser },
     } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("flashcard_colecoes").insert({
-      materia_id: id,
-      user_id: user.id,
-      nome_colecao: novoNome,
-      descricao: novaDescricao,
-      cor: novaCor,
-    });
+    const { error: insertError } = await supabase
+      .from("flashcard_colecoes")
+      .insert({
+        materia_id: id,
+        user_id: authUser.id,
+        nome_colecao: novoNome,
+        descricao: novaDescricao,
+        cor: novaCor,
+      });
 
     setSaving(false);
 
-    if (error) {
-      setError(error.message);
+    if (insertError) {
+      setError(insertError.message);
+      showToast("Erro ao criar baralho.", "error");
       return;
     }
 
@@ -78,21 +78,34 @@ export default function Flashcards() {
     setNovaDescricao("");
     setNovaCor("#8B85F0");
     setShowForm(false);
-    fetchTudo();
+    globalMutate(swrKeys.colecoesMateria(id));
+    globalMutate(swrKeys.colecoes(uid));
+    showToast("Baralho criado.", "success");
   }
 
   async function handleDelete(colecaoId) {
-    if (!confirm("Remover este baralho e todos os cartões dele?")) return;
+    const ok = await confirm({
+      title: "Remover baralho",
+      description: "Todos os cartões deste baralho serão removidos.",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
     await supabase.from("flashcard_colecoes").delete().eq("id", colecaoId);
-    fetchTudo();
+    globalMutate(swrKeys.colecoesMateria(id));
+    globalMutate(swrKeys.colecoes(uid));
+    showToast("Baralho removido.", "success");
   }
 
-  if (authLoading || loading) return null;
+  if (authLoading) return null;
 
   return (
     <AppLayout>
       <div className="mb-6">
-        <Link href={`/materias/${id}`} className="text-sm text-primary hover:underline">
+        <Link
+          href={`/materias/${id}`}
+          className="text-sm text-primary hover:underline"
+        >
           ← {materia?.nome}
         </Link>
       </div>
@@ -134,6 +147,7 @@ export default function Flashcards() {
               className="w-24 h-10 rounded-xl border border-gray-200"
               value={novaCor}
               onChange={(e) => setNovaCor(e.target.value)}
+              aria-label="Cor do baralho"
             />
           </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -141,34 +155,59 @@ export default function Flashcards() {
             <button type="submit" disabled={saving} className="btn-primary">
               {saving ? "Salvando..." : "Criar"}
             </button>
-            <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 px-2 py-2">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="text-gray-400 px-2 py-2"
+            >
               Cancelar
             </button>
           </div>
         </form>
       )}
 
-      {colecoes.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      ) : colecoes.length === 0 ? (
         <p className="text-gray-400">
           Nenhum baralho ainda. Crie um para começar a adicionar flashcards.
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {colecoes.map((c) => (
-            <div key={c.id} className="card" style={{ borderLeft: `4px solid ${c.cor || "#8B85F0"}` }}>
+            <div
+              key={c.id}
+              className="card"
+              style={{ borderLeft: `4px solid ${c.cor || "#8B85F0"}` }}
+            >
               <h2 className="font-semibold text-lg">{c.nome_colecao}</h2>
-              {c.descricao && <p className="text-gray-500 text-sm mt-0.5">{c.descricao}</p>}
+              {c.descricao && (
+                <p className="text-gray-500 text-sm mt-0.5">{c.descricao}</p>
+              )}
               <p className="text-gray-400 text-xs mt-1">
-                {c.flashcards?.[0]?.count ?? 0} cartão(ões) · {formatRevisao(c.ultima_revisao)}
+                {c.flashcards?.[0]?.count ?? 0} cartão(ões) ·{" "}
+                {formatRevisao(c.ultima_revisao)}
               </p>
               <div className="flex gap-4 text-sm mt-3">
-                <Link href={`/materias/${id}/flashcards/${c.id}`} className="text-primary hover:underline">
+                <Link
+                  href={`/materias/${id}/flashcards/${c.id}`}
+                  className="text-primary hover:underline"
+                >
                   Gerenciar cartões
                 </Link>
-                <Link href={`/materias/${id}/flashcards/${c.id}/estudar`} className="text-primary hover:underline">
+                <Link
+                  href={`/materias/${id}/flashcards/${c.id}/estudar`}
+                  className="text-primary hover:underline"
+                >
                   Estudar
                 </Link>
-                <button onClick={() => handleDelete(c.id)} className="text-gray-400 hover:text-red-500 ml-auto">
+                <button
+                  onClick={() => handleDelete(c.id)}
+                  className="text-gray-400 hover:text-red-500 ml-auto"
+                >
                   remover
                 </button>
               </div>

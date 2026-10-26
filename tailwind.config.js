@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
@@ -28,7 +29,7 @@ module.exports = {
         accentLilac: "#E9E1FF",
       },
       borderRadius: {
-        xl2: "1.125rem", // ~18px, "cards"
+        xl2: "1.125rem",
       },
       boxShadow: {
         soft: "0 4px 20px rgba(40, 30, 70, 0.06)",

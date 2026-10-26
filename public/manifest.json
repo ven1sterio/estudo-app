@@ -1,0 +1,20 @@
+{
+  "name": "SIMPLIFY — Estudos",
+  "short_name": "SIMPLIFY",
+  "description": "Organize matérias, materiais, flashcards, tarefas e calendário em um só lugar.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAFC",
+  "theme_color": "#8B6FD8",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../lib/useAuth";
+import { useConfirm } from "../../components/ConfirmDialog";
+import { useToast } from "../../components/Toast";
 import { supabase } from "../../lib/supabaseClient";
 import AppLayout from "../../components/AppLayout";
 import Skeleton from "../../components/Skeleton";
@@ -18,23 +20,26 @@ const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
 export default function Materias() {
   const { user, loading: authLoading } = useRequireAuth();
+  const uid = user?.id;
+  const confirm = useConfirm();
+  const { showToast } = useToast();
+
   const [showForm, setShowForm] = useState(false);
-  const [view, setView] = useState("grid");
+  const [view, setView] = useState("grid"); // 'grid' | 'list'
 
   const { data: materias = [], isLoading: lM } = useSWR(
-    user ? swrKeys.materias : null,
-    fetchMaterias
+    uid ? swrKeys.materias(uid) : null,
+    () => fetchMaterias(uid)
   );
   const { data: tarefas = [] } = useSWR(
-    user ? swrKeys.tarefas : null,
-    fetchTarefas
+    uid ? swrKeys.tarefas(uid) : null,
+    () => fetchTarefas(uid)
   );
   const { data: colecoes = [] } = useSWR(
-    user ? swrKeys.colecoes : null,
-    fetchColecoes
+    uid ? swrKeys.colecoes(uid) : null,
+    () => fetchColecoes(uid)
   );
 
-  // Stats derivados em memória — zero queries extras
   const materiaStats = useMemo(() => {
     const stats = {};
     for (const m of materias) {
@@ -57,21 +62,27 @@ export default function Materias() {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!confirm(`Tem certeza que deseja excluir a matéria "${nome}"?`)) return;
+    const ok = await confirm({
+      title: "Excluir matéria",
+      description: `Tem certeza que deseja excluir a matéria "${nome}"? Todos os materiais, flashcards e tarefas vinculados serão removidos.`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!ok) return;
 
-    // Otimista: remove da lista imediatamente
     globalMutate(
-      swrKeys.materias,
+      swrKeys.materias(uid),
       (prev) => prev?.filter((m) => m.id !== materiaId),
       false
     );
 
     const { error } = await supabase.from("materias").delete().eq("id", materiaId);
     if (error) {
-      alert("Erro ao excluir matéria: " + error.message);
+      showToast("Erro ao excluir matéria: " + error.message, "error");
+    } else {
+      showToast("Matéria excluída.", "success");
     }
-    // Revalida do servidor (mesmo em erro, pra ficar consistente)
-    globalMutate(swrKeys.materias);
+    globalMutate(swrKeys.materias(uid));
   }
 
   if (authLoading) return null;
@@ -80,11 +91,11 @@ export default function Materias() {
     <AppLayout>
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-textPrimary">
-          {icons.book}
+          <span aria-hidden="true">{icons.book}</span>
           Minhas Matérias
         </h2>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex bg-white rounded-xl border border-borderSoft p-1 shadow-sm">
             <button
               onClick={() => setView("grid")}
@@ -109,6 +120,9 @@ export default function Materias() {
               Lista
             </button>
           </div>
+          <Link href="/materias/semana" className="btn-secondary">
+            Ver semana
+          </Link>
           <button
             onClick={() => setShowForm(true)}
             className="btn-primary shadow-sm flex items-center gap-2"
@@ -123,7 +137,8 @@ export default function Materias() {
           onClose={() => setShowForm(false)}
           onCreated={() => {
             setShowForm(false);
-            globalMutate(swrKeys.materias);
+            globalMutate(swrKeys.materias(uid));
+            showToast("Matéria criada.", "success");
           }}
         />
       )}
@@ -176,7 +191,7 @@ function HorariosBadges({ horarios }) {
       {horarios.map((h) => (
         <span
           key={h.id}
-          className="text-[10px] bg-primarySoft text-primaryDark rounded-md px-1.5 py-0.5 max-w-full break-words"
+          className="text-[10px] bg-white/60 dark:bg-black/20 text-textPrimary dark:text-textPrimary rounded-md px-1.5 py-0.5 max-w-full break-words"
         >
           {DIAS[h.dia_semana]} {h.hora_inicio?.slice(0, 5)}-
           {h.hora_fim?.slice(0, 5)}
@@ -192,16 +207,14 @@ function MateriaCard({ m, index, stats, onDelete }) {
 
   return (
     <div
-      className="group relative rounded-2xl border-l-4 overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
-      style={{
-        borderLeftColor: cor,
-        background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
-      }}
+      className="group relative card-tinted rounded-2xl shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
+      style={{ "--cor": cor }}
     >
       <button
         onClick={(e) => onDelete(e, m.id, m.nome)}
-        className="absolute right-3 top-3 w-7 h-7 rounded-full flex items-center justify-center bg-white/50 hover:bg-white/80 text-textPrimary/80 transition-colors text-xs z-10"
+        className="absolute right-3 top-3 w-7 h-7 rounded-full flex items-center justify-center bg-white/60 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 text-textPrimary transition-colors text-xs z-10"
         title="Excluir matéria"
+        aria-label={`Excluir matéria ${m.nome}`}
       >
         ✕
       </button>
@@ -209,6 +222,7 @@ function MateriaCard({ m, index, stats, onDelete }) {
         <span
           className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
           style={{ background: cor }}
+          aria-hidden="true"
         >
           {icons.book}
         </span>
@@ -217,10 +231,10 @@ function MateriaCard({ m, index, stats, onDelete }) {
           {m.nome}
         </h3>
         {m.professor && (
-          <p className="text-textMuted text-xs mt-0.5 truncate">Prof. {m.professor}</p>
+          <p className="text-textSecondary text-xs mt-0.5 truncate">Prof. {m.professor}</p>
         )}
         {m.descricao && (
-          <p className="text-textMuted text-[11px] mt-0.5 line-clamp-2">
+          <p className="text-textSecondary text-[11px] mt-0.5 line-clamp-2">
             {m.descricao}
           </p>
         )}
@@ -229,7 +243,7 @@ function MateriaCard({ m, index, stats, onDelete }) {
 
         <div className="mt-auto pt-3 flex items-center justify-between gap-2 min-w-0">
           {stats && (
-            <div className="flex items-center gap-2 text-[11px] text-textSecondary min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 text-[11px] text-textPrimary/70 dark:text-textSecondary min-w-0 overflow-hidden">
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
                 {icons.check}
                 {stats.tarefasPendentes}
@@ -243,6 +257,7 @@ function MateriaCard({ m, index, stats, onDelete }) {
           <span
             className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5"
             style={{ background: cor }}
+            aria-hidden="true"
           >
             {icons.arrowRight}
           </span>
@@ -257,16 +272,14 @@ function MateriaRow({ m, index, stats, onDelete }) {
 
   return (
     <div
-      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-2xl border-l-4 px-5 py-4 shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow"
-      style={{
-        borderLeftColor: cor,
-        background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
-      }}
+      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 card-tinted rounded-2xl px-5 py-4 shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow"
+      style={{ "--cor": cor }}
     >
       <div className="flex w-full sm:w-auto items-center gap-4 flex-1 min-w-0">
         <div
           className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
           style={{ background: cor }}
+          aria-hidden="true"
         >
           {icons.book}
         </div>
@@ -277,12 +290,12 @@ function MateriaRow({ m, index, stats, onDelete }) {
           >
             {m.nome}
           </Link>
-          <p className="text-textMuted text-xs mt-0.5 truncate">
+          <p className="text-textSecondary text-xs mt-0.5 truncate">
             {m.professor ? `Prof. ${m.professor}` : ""}{" "}
             {m.descricao ? `· ${m.descricao}` : ""}
           </p>
           {stats && (
-            <div className="flex items-center gap-2.5 text-[11px] text-textSecondary mt-1">
+            <div className="flex items-center gap-2.5 text-[11px] text-textPrimary/70 dark:text-textSecondary mt-1">
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
                 {icons.check}
                 {stats.tarefasPendentes} tarefa
@@ -308,8 +321,9 @@ function MateriaRow({ m, index, stats, onDelete }) {
       <div className="flex items-center gap-2 shrink-0 self-end sm:self-center mt-2 sm:mt-0">
         <button
           onClick={(e) => onDelete(e, m.id, m.nome)}
-          className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white/80 text-textPrimary/80 rounded-full transition-colors text-xs"
+          className="w-8 h-8 flex items-center justify-center bg-white/60 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 text-textPrimary rounded-full transition-colors text-xs"
           title="Excluir matéria"
+          aria-label={`Excluir matéria ${m.nome}`}
         >
           ✕
         </button>
@@ -317,6 +331,7 @@ function MateriaRow({ m, index, stats, onDelete }) {
           href={`/materias/${m.id}`}
           className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm transition-transform hover:scale-105 [&>svg]:w-3.5 [&>svg]:h-3.5"
           style={{ background: cor }}
+          aria-label={`Abrir matéria ${m.nome}`}
         >
           {icons.arrowRight}
         </Link>
@@ -475,6 +490,7 @@ function NovaMateriaForm({ onClose, onCreated }) {
                 className="w-12 h-12 rounded-xl border border-borderSoft cursor-pointer shrink-0"
                 value={cor}
                 onChange={(e) => setCor(e.target.value)}
+                aria-label="Cor de destaque"
               />
               <p className="text-xs text-textMuted flex items-center">
                 Selecione uma cor para personalizar esta matéria no seu dashboard e grade.
@@ -503,6 +519,7 @@ function NovaMateriaForm({ onClose, onCreated }) {
                 onClick={() => removeHorario(i)}
                 className="absolute right-3 top-3 w-6 h-6 flex items-center justify-center rounded-full bg-white border border-borderSoft text-textMuted hover:text-red-500 transition-colors shadow-sm"
                 title="Remover este horário"
+                aria-label="Remover este horário"
               >
                 ✕
               </button>

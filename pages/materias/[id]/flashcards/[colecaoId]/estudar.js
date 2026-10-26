@@ -1,9 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../../../../lib/useAuth";
+import { useToast } from "../../../../../components/Toast";
 import { supabase } from "../../../../../lib/supabaseClient";
 import AppLayout from "../../../../../components/AppLayout";
+import Skeleton from "../../../../../components/Skeleton";
+import { calcularProximoReview, estaParaRevisar } from "../../../../../lib/sm2";
+
+const swrKeyColecao = (colecaoId) => ["colecao", colecaoId];
+const swrKeyCards = (colecaoId) => ["cards", colecaoId];
+
+async function fetchColecao(colecaoId) {
+  const { data, error } = await supabase
+    .from("flashcard_colecoes")
+    .select("*")
+    .eq("id", colecaoId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function fetchCards(colecaoId) {
+  const { data, error } = await supabase
+    .from("flashcards")
+    .select("*")
+    .eq("colecao_id", colecaoId);
+  if (error) throw error;
+  return data || [];
+}
 
 function shuffle(arr) {
   const a = [...arr];
@@ -14,67 +40,94 @@ function shuffle(arr) {
   return a;
 }
 
+function hojeStr() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function EstudarFlashcards() {
   const { user, loading: authLoading } = useRequireAuth();
   const router = useRouter();
   const { id, colecaoId } = router.query;
+  const { showToast } = useToast();
 
-  const [colecao, setColecao] = useState(null);
-  const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const ready = !!user && !!colecaoId;
+
+  const { data: colecao } = useSWR(
+    ready ? swrKeyColecao(colecaoId) : null,
+    () => fetchColecao(colecaoId)
+  );
+  const { data: cardsRaw = [], isLoading } = useSWR(
+    ready ? swrKeyCards(colecaoId) : null,
+    () => fetchCards(colecaoId)
+  );
+
+  const [fila, setFila] = useState([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [sabidos, setSabidos] = useState(0);
+  const inicioRef = useRef(null);
 
+  // Monta a fila uma vez por sessão, priorizando cartões pendentes de revisão.
   useEffect(() => {
-    if (user && colecaoId) fetchTudo();
-  }, [user, colecaoId]);
+    if (inicioRef.current) return;
+    if (!cardsRaw || cardsRaw.length === 0) return;
+    inicioRef.current = true;
 
-  async function fetchTudo() {
-    setLoading(true);
-
-    const { data: colecaoData } = await supabase
-      .from("flashcard_colecoes")
-      .select("*")
-      .eq("id", colecaoId)
-      .single();
-
-    const { data: cardsData } = await supabase
-      .from("flashcards")
-      .select("*")
-      .eq("colecao_id", colecaoId);
-
-    setColecao(colecaoData);
-    setCards(shuffle(cardsData || []));
-    setLoading(false);
-  }
+    const hoje = hojeStr();
+    const pendentes = cardsRaw.filter((c) => estaParaRevisar(c, hoje));
+    const base = pendentes.length > 0 ? pendentes : cardsRaw;
+    setFila(shuffle(base));
+  }, [cardsRaw]);
 
   function proximo(soube) {
+    const cartaoAtual = fila[index];
     if (soube) setSabidos((s) => s + 1);
+
+    if (cartaoAtual) {
+      const update = calcularProximoReview(cartaoAtual, soube);
+      supabase
+        .from("flashcards")
+        .update(update)
+        .eq("id", cartaoAtual.id)
+        .then(() => {});
+    }
+
     setFlipped(false);
     setTimeout(() => setIndex((i) => i + 1), 150);
   }
 
-  function reiniciar() {
-    setCards((c) => shuffle(c));
-    setIndex(0);
-    setFlipped(false);
-    setSabidos(0);
+  const acabou = fila.length > 0 && index >= fila.length;
+
+  // Ao finalizar, atualiza ultima_revisao da coleção (para o card do dashboard).
+  useEffect(() => {
+    if (!acabou || !colecaoId) return;
+    supabase
+      .from("flashcard_colecoes")
+      .update({ ultima_revisao: new Date().toISOString() })
+      .eq("id", colecaoId)
+      .then(() => {
+        globalMutate(swrKeyColecao(colecaoId));
+        globalMutate(["flashcard_colecoes", user?.id]);
+      });
+  }, [acabou, colecaoId, user?.id]);
+
+  const total = fila.length;
+  const pendentesHoje = useMemo(() => {
+    const hoje = hojeStr();
+    return cardsRaw.filter((c) => estaParaRevisar(c, hoje)).length;
+  }, [cardsRaw]);
+
+  if (authLoading || isLoading) {
+    return (
+      <AppLayout>
+        <Skeleton className="h-64 w-full max-w-lg mx-auto" />
+      </AppLayout>
+    );
   }
 
-  useEffect(() => {
-    if (index >= cards.length && cards.length > 0) {
-      supabase
-        .from("flashcard_colecoes")
-        .update({ ultima_revisao: new Date().toISOString() })
-        .eq("id", colecaoId)
-        .then(() => {});
-    }
-  }, [index]);
-
-  if (authLoading || loading) return null;
-
-  if (cards.length === 0) {
+  if (cardsRaw.length === 0) {
     return (
       <AppLayout>
         <Link
@@ -90,8 +143,6 @@ export default function EstudarFlashcards() {
     );
   }
 
-  const acabou = index >= cards.length;
-
   return (
     <AppLayout>
       <div className="mb-6 flex items-center justify-between gap-3">
@@ -103,25 +154,59 @@ export default function EstudarFlashcards() {
         </Link>
         {!acabou && (
           <span className="text-sm text-gray-500 shrink-0">
-            {index + 1} / {cards.length}
+            {index + 1} / {total}
           </span>
         )}
       </div>
+
+      {!acabou && pendentesHoje > 0 && index === 0 && (
+        <p className="text-xs text-textMuted text-center mb-4">
+          {pendentesHoje} cartão(ões) para revisar hoje · {total} na fila desta
+          sessão
+        </p>
+      )}
 
       {acabou ? (
         <div className="card text-center py-12">
           <h2 className="text-2xl font-bold mb-2">Sessão concluída! 🎉</h2>
           <p className="text-gray-500 mb-6">
-            Você acertou {sabidos} de {cards.length} cartões.
+            Você acertou {sabidos} de {total} cartões.
           </p>
-          <button onClick={reiniciar} className="btn-primary">
-            Estudar novamente
-          </button>
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => router.push(
+                `/materias/${id}/flashcards/${colecaoId}`
+              )}
+              className="border border-borderSoft rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-surface transition-colors"
+            >
+              Voltar
+            </button>
+            <button
+              onClick={() => {
+                inicioRef.current = false;
+                setFila(shuffle(cardsRaw));
+                setIndex(0);
+                setFlipped(false);
+                setSabidos(0);
+              }}
+              className="btn-primary"
+            >
+              Estudar novamente
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center">
           <div
             onClick={() => setFlipped((f) => !f)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                setFlipped((f) => !f);
+              }
+            }}
             className="card w-full max-w-lg min-h-[16rem] flex items-center justify-center text-center cursor-pointer select-none px-5 sm:px-8"
             style={{
               background: flipped ? "#f0eeff" : "white",
@@ -133,13 +218,14 @@ export default function EstudarFlashcards() {
                 {flipped ? "Resposta" : "Pergunta"}
               </p>
               <p className="text-lg font-medium break-words">
-                {flipped ? cards[index].verso : cards[index].frente}
+                {flipped ? fila[index]?.verso : fila[index]?.frente}
               </p>
             </div>
           </div>
 
           <p className="text-gray-400 text-sm mt-3">
-            Clique no cartão para {flipped ? "ver a pergunta" : "ver a resposta"}
+            Clique no cartão (ou aperte espaço) para{" "}
+            {flipped ? "ver a pergunta" : "ver a resposta"}
           </p>
 
           {flipped && (

@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabaseClient";
 import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
 import { icons } from "../components/icons";
+import { diasConsecutivos, hojeIso } from "../lib/streak";
 import {
   swrKeys,
   fetchProfile,
@@ -14,7 +15,7 @@ import {
   fetchTarefas,
   fetchLembretes,
   fetchEventosProximos,
-  fetchEventosRange,
+  fetchDiasRevisao,
   fetcherEventosRange,
   ymd,
 } from "../lib/fetchers";
@@ -41,34 +42,37 @@ const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useRequireAuth();
+  const uid = user?.id;
 
-  /* -------- Dados cacheados entre páginas -------- */
   const { data: profile } = useSWR(
-    user ? swrKeys.profile(user.id) : null,
-    () => fetchProfile(user.id)
+    uid ? swrKeys.profile(uid) : null,
+    () => fetchProfile(uid)
   );
   const { data: materias, isLoading: lMaterias } = useSWR(
-    user ? swrKeys.materias : null,
-    fetchMaterias
+    uid ? swrKeys.materias(uid) : null,
+    () => fetchMaterias(uid)
   );
   const { data: colecoes } = useSWR(
-    user ? swrKeys.colecoes : null,
-    fetchColecoes
+    uid ? swrKeys.colecoes(uid) : null,
+    () => fetchColecoes(uid)
   );
   const { data: tarefas } = useSWR(
-    user ? swrKeys.tarefas : null,
-    fetchTarefas
+    uid ? swrKeys.tarefas(uid) : null,
+    () => fetchTarefas(uid)
   );
   const { data: lembretes } = useSWR(
-    user ? swrKeys.lembretes : null,
-    fetchLembretes
+    uid ? swrKeys.lembretes(uid) : null,
+    () => fetchLembretes(uid)
   );
   const { data: eventosProximos } = useSWR(
-    user ? swrKeys.eventosProximos : null,
-    fetchEventosProximos
+    uid ? swrKeys.eventosProximos(uid) : null,
+    () => fetchEventosProximos(uid)
+  );
+  const { data: diasRevisao } = useSWR(
+    uid ? swrKeys.diasRevisao(uid) : null,
+    fetchDiasRevisao
   );
 
-  /* -------- Calendário (mês corrente) -------- */
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -78,9 +82,9 @@ export default function Dashboard() {
   const fimMes = ymd(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0));
 
   const { data: eventosRange, isLoading: lCal } = useSWR(
-    user ? swrKeys.eventosRange(inicioMes, fimMes) : null,
+    uid ? swrKeys.eventosRange(uid, inicioMes, fimMes) : null,
     fetcherEventosRange,
-    { keepPreviousData: false } // evita mostrar eventos do mês anterior
+    { keepPreviousData: false }
   );
 
   const [selectedDay, setSelectedDay] = useState(null);
@@ -90,7 +94,11 @@ export default function Dashboard() {
   });
   const detalheRef = useRef(null);
 
-  /* -------- Derivados (memo) -------- */
+  const streak = useMemo(
+    () => diasConsecutivos(diasRevisao || [], hojeIso()),
+    [diasRevisao]
+  );
+
   const materiaStats = useMemo(() => {
     const stats = {};
     if (!materias) return stats;
@@ -195,7 +203,7 @@ export default function Dashboard() {
 
   async function handleCriarEvento({ titulo, descricao, tipo, cor }) {
     await supabase.from("eventos_calendario").insert({
-      user_id: user.id,
+      user_id: uid,
       titulo,
       descricao,
       tipo,
@@ -204,15 +212,13 @@ export default function Dashboard() {
       origem: "manual",
     });
     setShowNovoEvento(false);
-    // revalida só o que mudou — nada de refetch global
-    globalMutate(swrKeys.eventosRange(inicioMes, fimMes));
-    globalMutate(swrKeys.eventosProximos);
+    globalMutate(swrKeys.eventosRange(uid, inicioMes, fimMes));
+    globalMutate(swrKeys.eventosProximos(uid));
   }
 
   async function toggleLembrete(l) {
-    // otimista: atualiza UI e cache imediatamente
     globalMutate(
-      swrKeys.lembretes,
+      swrKeys.lembretes(uid),
       (prev) =>
         prev?.map((x) =>
           x.id === l.id ? { ...x, concluido: !x.concluido } : x
@@ -223,11 +229,10 @@ export default function Dashboard() {
       .from("tarefas_rotina")
       .update({ concluido: !l.concluido })
       .eq("id", l.id);
-    globalMutate(swrKeys.lembretes);
+    globalMutate(swrKeys.lembretes(uid));
   }
 
   if (authLoading) {
-    // Auth resolve do localStorage em ~1ms — esse skeleton é raríssimo
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Skeleton className="w-40 h-8" />
@@ -243,13 +248,31 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-textPrimary">
-          Olá, {nomeUsuario}!
-        </h2>
-        <p className="text-textMuted mt-1">
-          Que tal continuar seus estudos hoje?
-        </p>
+      <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-textPrimary">
+            Olá, {nomeUsuario}!
+          </h2>
+          <p className="text-textMuted mt-1">
+            Que tal continuar seus estudos hoje?
+          </p>
+        </div>
+        {streak > 0 && (
+          <div
+            className="bg-white rounded-2xl shadow-soft px-4 py-2.5 flex items-center gap-2 shrink-0"
+            title="Dias seguidos revisando flashcards"
+          >
+            <span className="text-2xl" aria-hidden="true">🔥</span>
+            <div>
+              <p className="text-lg font-bold text-textPrimary leading-none">
+                {streak} dia{streak === 1 ? "" : "s"}
+              </p>
+              <p className="text-[11px] text-textMuted leading-tight mt-0.5">
+                de estudo seguido{streak === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
@@ -269,10 +292,11 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">
-                {icons.check} Atividades
+                <span aria-hidden="true">{icons.check}</span> Atividades
               </h2>
               <Link
                 href="/tarefas"
+                aria-label="Ir para tarefas"
                 className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
               >
                 +
@@ -298,6 +322,7 @@ export default function Dashboard() {
                           "w-9 h-9 rounded-full flex items-center justify-center shrink-0 " +
                           (destaque ? "bg-white/20 text-white" : "bg-primarySoft text-primaryDark")
                         }
+                        aria-hidden="true"
                       >
                         {icons.check}
                       </span>
@@ -342,10 +367,11 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">
-                {icons.bell} Lembretes
+                <span aria-hidden="true">{icons.bell}</span> Lembretes
               </h2>
               <Link
                 href="/tarefas"
+                aria-label="Ir para tarefas"
                 className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
               >
                 +
@@ -389,11 +415,12 @@ export default function Dashboard() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
-            {icons.calendar} Calendário
+            <span aria-hidden="true">{icons.calendar}</span> Calendário
           </h2>
           <div className="flex items-center gap-3">
             <button
               onClick={() => mudarMes(-1)}
+              aria-label="Mês anterior"
               className="text-textMuted hover:text-primary px-3 py-1 text-xl"
             >
               ‹
@@ -403,6 +430,7 @@ export default function Dashboard() {
             </span>
             <button
               onClick={() => mudarMes(1)}
+              aria-label="Próximo mês"
               className="text-textMuted hover:text-primary px-3 py-1 text-xl"
             >
               ›
@@ -422,6 +450,7 @@ export default function Dashboard() {
               <span
                 className="inline-block w-2 h-2 rounded-full"
                 style={{ background: info.cor }}
+                aria-hidden="true"
               />
               {info.label}
             </label>
@@ -485,6 +514,7 @@ export default function Dashboard() {
                             key={e.id}
                             className="w-1.5 h-1.5 rounded-full"
                             style={{ background: e.cor }}
+                            aria-hidden="true"
                           />
                         ))}
                       </div>
@@ -507,8 +537,8 @@ export default function Dashboard() {
                 {selectedDay && (
                   <button
                     onClick={() => setShowNovoEvento((s) => !s)}
+                    aria-label="Novo evento"
                     className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
-                    title="Novo evento"
                   >
                     +
                   </button>
@@ -533,6 +563,7 @@ export default function Dashboard() {
                       <span
                         className="w-2 h-2 rounded-full mt-1.5 shrink-0"
                         style={{ background: e.cor }}
+                        aria-hidden="true"
                       />
                       <div>
                         <p className="text-sm font-medium text-textPrimary">{e.titulo}</p>
@@ -556,7 +587,6 @@ export default function Dashboard() {
   );
 }
 
-/* ---------- Matérias carrossel ---------- */
 function MateriasCarousel({ materias, materiaStats }) {
   const scrollerRef = useRef(null);
 
@@ -581,7 +611,7 @@ function MateriasCarousel({ materias, materiaStats }) {
     <section>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
-          {icons.book} Minhas Matérias
+          <span aria-hidden="true">{icons.book}</span> Minhas Matérias
         </h2>
         {materias.length > 1 && (
           <div className="flex items-center gap-2">
@@ -621,16 +651,14 @@ function MateriasCarousel({ materias, materiaStats }) {
               <Link
                 key={m.id}
                 href={`/materias/${m.id}`}
-                className="group snap-start shrink-0 w-[85%] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] rounded-2xl border-l-4 overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
-                style={{
-                  borderLeftColor: cor,
-                  background: `linear-gradient(135deg, ${cor}3D 0%, ${cor}14 45%, #FFFFFF 100%)`,
-                }}
+                className="group card-tinted snap-start shrink-0 w-[85%] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] rounded-2xl overflow-hidden shadow-[0_4px_18px_rgba(40,30,70,0.05)] hover:shadow-[0_8px_24px_rgba(40,30,70,0.09)] transition-shadow flex flex-col min-h-[210px]"
+                style={{ "--cor": cor }}
               >
                 <div className="p-4 flex-1 flex flex-col min-w-0">
                   <span
                     className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
                     style={{ background: cor }}
+                    aria-hidden="true"
                   >
                     {icons.book}
                   </span>
@@ -638,12 +666,12 @@ function MateriasCarousel({ materias, materiaStats }) {
                     {m.nome}
                   </h3>
                   {m.professor && (
-                    <p className="text-textMuted text-xs mt-0.5 truncate">
+                    <p className="text-textSecondary text-xs mt-0.5 truncate">
                       Prof. {m.professor}
                     </p>
                   )}
                   {m.sala && (
-                    <p className="text-textMuted text-xs mt-0.5 truncate">
+                    <p className="text-textSecondary text-xs mt-0.5 truncate">
                       Sala {m.sala}
                     </p>
                   )}
@@ -652,7 +680,7 @@ function MateriasCarousel({ materias, materiaStats }) {
                       {m.horarios.map((h) => (
                         <span
                           key={h.id}
-                          className="text-[11px] bg-white/70 text-primaryDark rounded-full px-2 py-0.5 max-w-full break-words"
+                          className="text-[11px] bg-white/60 dark:bg-black/20 text-textPrimary dark:text-textPrimary rounded-full px-2 py-0.5 max-w-full break-words"
                         >
                           {DIAS_SEMANA[h.dia_semana]}{" "}
                           {h.hora_inicio?.slice(0, 5)}-{h.hora_fim?.slice(0, 5)}
@@ -663,7 +691,7 @@ function MateriasCarousel({ materias, materiaStats }) {
                   )}
                   <div className="mt-auto pt-3 flex items-center justify-between gap-2 min-w-0">
                     {stats && (
-                      <div className="flex items-center gap-2 text-[11px] text-textSecondary min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-2 text-[11px] text-textPrimary/70 dark:text-textSecondary min-w-0 overflow-hidden">
                         <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
                           {icons.check}
                           {stats.tarefasPendentes}
@@ -677,6 +705,7 @@ function MateriasCarousel({ materias, materiaStats }) {
                     <span
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5"
                       style={{ background: cor }}
+                      aria-hidden="true"
                     >
                       {icons.arrowRight}
                     </span>
@@ -691,13 +720,12 @@ function MateriasCarousel({ materias, materiaStats }) {
   );
 }
 
-/* ---------- Flashcards ---------- */
 function FlashcardsList({ cartoes }) {
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
-          {icons.layers} Meus Flashcards
+          <span aria-hidden="true">{icons.layers}</span> Meus Flashcards
         </h2>
       </div>
       {cartoes.length === 0 ? (
@@ -723,6 +751,7 @@ function FlashcardsList({ cartoes }) {
                 <span
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white [&>svg]:w-5 [&>svg]:h-5"
                   style={{ background: cor }}
+                  aria-hidden="true"
                 >
                   {icons.layers}
                 </span>
@@ -744,7 +773,7 @@ function FlashcardsList({ cartoes }) {
                     {progresso}%
                   </span>
                 )}
-                <span className="text-primary shrink-0 [&>svg]:w-6 [&>svg]:h-6 font-bold">
+                <span className="text-primary shrink-0 [&>svg]:w-6 [&>svg]:h-6 font-bold" aria-hidden="true">
                   {icons.arrowRight}
                 </span>
               </Link>
@@ -804,6 +833,7 @@ function NovoEventoForm({ onCancel, onCreate }) {
           className="w-12 h-10 rounded-xl border border-gray-200 shrink-0"
           value={cor}
           onChange={(e) => setCor(e.target.value)}
+          aria-label="Cor do evento"
         />
       </div>
       <div className="flex gap-2">

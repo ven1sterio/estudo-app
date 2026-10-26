@@ -5,6 +5,7 @@
 body {
   background-color: #FAFAFC;
   color: #25232A;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .btn-primary {
@@ -27,12 +28,60 @@ body {
   @apply shadow-softHover;
 }
 
+/* ============================================================
+   CARD COM TINT (matérias e afins)
+   Fundo sólido + gradiente sutil via pseudo-elemento.
+   ============================================================ */
+.card-tinted {
+  position: relative;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-left: 4px solid var(--cor, #8B85F0);
+}
+.card-tinted::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    var(--cor, #8B85F0) 0%,
+    transparent 60%
+  );
+  opacity: 0.08;
+  pointer-events: none;
+}
+html.dark .card-tinted {
+  background-color: #1f1e26;
+}
+html.dark .card-tinted::before {
+  opacity: 0.15; /* Mais sutil no escuro para não cansar a vista */
+}
+
+/* ---------- Utilitários ---------- */
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ---------- Animações ---------- */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ---------- Responsividade / mobile ---------- */
 html { -webkit-text-size-adjust: 100%; }
 html, body { max-width: 100%; overflow-x: hidden; }
 
 @media (max-width: 767px) {
-  /* 16px evita o zoom automático do iOS ao focar em campos */
   .input-field, input, select, textarea { font-size: 16px !important; }
   .btn-primary, .btn-secondary { min-height: 44px; }
 }
@@ -41,7 +90,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .card { padding: 1rem; }
 }
 
-/* ===== Páginas renderizadas pelo docx-preview ===== */
+/* ===== docx-preview ===== */
 .docx-container .docx-wrapper {
   background: #f3f3f5 !important;
   padding: 12px !important;
@@ -56,3 +105,73 @@ html, body { max-width: 100%; overflow-x: hidden; }
   margin: 0 !important;
   max-width: 100%;
 }
+
+/* ============================================================
+   DARK MODE
+   ============================================================ */
+html.dark { color-scheme: dark; }
+
+html.dark body {
+  background-color: #14131a;
+  color: #e8e6ec;
+}
+
+/* Superfícies */
+html.dark .bg-white { background-color: #1f1e26; }
+html.dark .bg-surface { background-color: #14131a; }
+html.dark .bg-primarySoft { background-color: #2a2540; }
+html.dark .bg-primaryExtraSoft { background-color: #1c1a26; }
+html.dark .bg-gray-50,
+html.dark .bg-gray-50\/50 { background-color: #1a1922; }
+html.dark .bg-gray-100 { background-color: #221f2c; }
+
+/* Tipografia */
+html.dark .text-textPrimary { color: #e8e6ec; }
+html.dark .text-textSecondary { color: #a8a4b3; }
+html.dark .text-textMuted { color: #7a7684; }
+html.dark .text-primaryDark { color: #B9A5F0; }
+html.dark .text-gray-300 { color: #5a5763; }
+html.dark .text-gray-400,
+html.dark .text-gray-500,
+html.dark .text-gray-600 { color: #8a8694; }
+html.dark .text-gray-700 { color: #b6b1c0; }
+
+/* Bordas */
+html.dark .border-borderSoft { border-color: #2f2d3a; }
+html.dark .border-gray-100 { border-color: #2a2933; }
+html.dark .border-gray-200 { border-color: #2f2d3a; }
+html.dark .border-gray-300 { border-color: #3a3745; }
+
+/* Cards e inputs */
+html.dark .card {
+  background-color: #1f1e26;
+  border-color: #2f2d3a;
+}
+html.dark .input-field {
+  background-color: #262430;
+  border-color: #35323f;
+  color: #e8e6ec;
+}
+html.dark .input-field::placeholder { color: #7a7684; }
+html.dark .input-field:focus { border-color: #8B6FD8; }
+
+/* Sombras */
+html.dark .shadow-soft { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); }
+html.dark .shadow-softHover { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); }
+
+/* Badges coloridos */
+html.dark .bg-accentYellow\/60 { background-color: rgba(242, 184, 102, 0.22); }
+html.dark .bg-accentGreen\/60  { background-color: rgba(114, 198, 154, 0.22); }
+html.dark .bg-accentPink\/60   { background-color: rgba(233, 155, 196, 0.22); }
+html.dark .bg-accentBlue\/60   { background-color: rgba(112, 168, 222, 0.22); }
+
+html.dark .text-yellow-700 { color: #f3c979; }
+html.dark .text-green-700  { color: #8fd8ac; }
+html.dark .text-pink-700   { color: #eba2c4; }
+
+/* Hover da lista de tarefas no dark */
+html.dark .hover\:bg-surface:hover { background-color: #2a2933; }
+
+/* Previews */
+html.dark .docx-container .docx-wrapper { background: #14131a !important; }
+html.dark .docx-container .docx-wrapper > section.docx { background: #1f1e26; }

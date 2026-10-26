@@ -3,6 +3,9 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../lib/useAuth";
+import { useConfirm } from "../../components/ConfirmDialog";
+import { useToast } from "../../components/Toast";
+import Modal from "../../components/Modal";
 import { supabase } from "../../lib/supabaseClient";
 import AppLayout from "../../components/AppLayout";
 import Skeleton from "../../components/Skeleton";
@@ -29,10 +32,21 @@ function formatRevisao(data) {
   return `revisado há ${dias} dia${dias > 1 ? "s" : ""}`;
 }
 
+function fmtData(s) {
+  if (!s) return "";
+  return new Date(s + "T00:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
 export default function MateriaDetalhe() {
   const { user, loading: authLoading } = useRequireAuth();
   const router = useRouter();
   const { id } = router.query;
+  const uid = user?.id;
+  const confirm = useConfirm();
+  const { showToast } = useToast();
 
   const ready = !!user && !!id;
 
@@ -57,8 +71,8 @@ export default function MateriaDetalhe() {
     () => fetchProvasDaMateria(id)
   );
   const { data: lembretes = [] } = useSWR(
-    user ? swrKeys.lembretes : null,
-    fetchLembretes
+    uid ? swrKeys.lembretes(uid) : null,
+    () => fetchLembretes(uid)
   );
 
   const [uploading, setUploading] = useState(false);
@@ -72,14 +86,145 @@ export default function MateriaDetalhe() {
   const [error, setError] = useState("");
   const [arquivoAberto, setArquivoAberto] = useState(null);
 
+  // -------- Edição de matéria --------
+  const [showEdit, setShowEdit] = useState(false);
+  const [formMat, setFormMat] = useState(null);
+  const [formHorarios, setFormHorarios] = useState([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // -------- Form rápido de prova --------
+  const [showProvaForm, setShowProvaForm] = useState(false);
+  const [provaTitulo, setProvaTitulo] = useState("");
+  const [provaData, setProvaData] = useState("");
+  const [savingProva, setSavingProva] = useState(false);
+
   const playlists = useMemo(() => {
     const existentes = new Set(materiais.map((m) => m.topico || "Geral"));
     existentes.add("Geral");
     return Array.from(existentes);
   }, [materiais]);
 
+  /* -------------------- Handlers de matéria -------------------- */
+
+  function abrirEdicao() {
+    if (!materia) return;
+    setFormMat({
+      nome: materia.nome || "",
+      codigo: materia.codigo || "",
+      professor: materia.professor || "",
+      email_professor: materia.email_professor || "",
+      descricao: materia.descricao || "",
+      cor: materia.cor || "#8B6FD8",
+    });
+    setFormHorarios(
+      (materia.horarios || []).map((h) => ({
+        _id: h.id,
+        dia_semana: h.dia_semana,
+        hora_inicio: (h.hora_inicio || "").slice(0, 5),
+        hora_fim: (h.hora_fim || "").slice(0, 5),
+        predio: h.predio || "",
+        bloco: h.bloco || "",
+        sala: h.sala || "",
+      }))
+    );
+    setShowEdit(true);
+  }
+
+  function addHorarioEdit() {
+    setFormHorarios((hs) => [
+      ...hs,
+      {
+        _id: null,
+        dia_semana: 1,
+        hora_inicio: "",
+        hora_fim: "",
+        predio: "",
+        bloco: "",
+        sala: "",
+      },
+    ]);
+  }
+
+  function removeHorarioEdit(idx) {
+    setFormHorarios((hs) => hs.filter((_, i) => i !== idx));
+  }
+
+  function updateHorarioEdit(idx, campo, valor) {
+    setFormHorarios((hs) =>
+      hs.map((h, i) => (i === idx ? { ...h, [campo]: valor } : h))
+    );
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    if (!formMat) return;
+    setSavingEdit(true);
+
+    const { error: matErr } = await supabase
+      .from("materias")
+      .update({
+        nome: formMat.nome,
+        codigo: formMat.codigo,
+        professor: formMat.professor,
+        email_professor: formMat.email_professor,
+        descricao: formMat.descricao,
+        cor: formMat.cor,
+      })
+      .eq("id", id);
+
+    if (matErr) {
+      setSavingEdit(false);
+      showToast("Erro ao salvar matéria: " + matErr.message, "error");
+      return;
+    }
+
+    // Horários: estratégia simples = apagar os antigos e inserir os novos.
+    const { error: delErr } = await supabase
+      .from("horarios")
+      .delete()
+      .eq("materia_id", id);
+    if (delErr) {
+      setSavingEdit(false);
+      showToast("Erro ao atualizar horários: " + delErr.message, "error");
+      return;
+    }
+
+    const validos = formHorarios.filter((h) => h.hora_inicio && h.hora_fim);
+    if (validos.length > 0) {
+      const { error: insErr } = await supabase.from("horarios").insert(
+        validos.map((h) => ({
+          materia_id: id,
+          dia_semana: Number(h.dia_semana),
+          hora_inicio: h.hora_inicio,
+          hora_fim: h.hora_fim,
+          predio: h.predio || null,
+          bloco: h.bloco || null,
+          sala: h.sala || null,
+        }))
+      );
+      if (insErr) {
+        setSavingEdit(false);
+        showToast("Erro ao salvar horários: " + insErr.message, "error");
+        return;
+      }
+    }
+
+    setSavingEdit(false);
+    setShowEdit(false);
+    globalMutate(swrKeys.materiaDetalhe(id));
+    globalMutate(swrKeys.materias(uid));
+    showToast("Matéria atualizada.", "success");
+  }
+
   async function handleDeleteMateria() {
-    if (!confirm(`Tem certeza que deseja excluir a matéria "${materia.nome}"?`)) return;
+    const ok = await confirm({
+      title: "Excluir matéria",
+      description: `Tem certeza que deseja excluir a matéria "${materia.nome}"?`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!ok) return;
+
     setDeletingMateria(true);
     const { error: deleteError } = await supabase
       .from("materias")
@@ -88,23 +233,23 @@ export default function MateriaDetalhe() {
     if (deleteError) {
       setError(deleteError.message);
       setDeletingMateria(false);
+      showToast("Erro ao excluir: " + deleteError.message, "error");
       return;
     }
-    // invalida todos os caches relacionados antes de navegar
-    globalMutate(swrKeys.materias);
+    globalMutate(swrKeys.materias(uid));
+    showToast("Matéria excluída.", "success");
     router.push("/materias");
   }
 
+  /* -------------------- Materiais -------------------- */
+
   async function handleUpload(e) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !uid) return;
     setError("");
     setUploading(true);
 
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-    const filePath = `${authUser.id}/${id}/${Date.now()}_${file.name}`;
+    const filePath = `${uid}/${id}/${Date.now()}_${file.name}`;
 
     const { error: uploadError } = await supabase.storage
       .from("materiais")
@@ -112,6 +257,7 @@ export default function MateriaDetalhe() {
     if (uploadError) {
       setError(uploadError.message);
       setUploading(false);
+      showToast("Falha no upload: " + uploadError.message, "error");
       return;
     }
 
@@ -121,7 +267,7 @@ export default function MateriaDetalhe() {
 
     const { error: insertError } = await supabase.from("materiais").insert({
       materia_id: id,
-      user_id: authUser.id,
+      user_id: uid,
       titulo: file.name,
       arquivo_url: publicUrl,
       topico: playlistAtiva,
@@ -130,17 +276,23 @@ export default function MateriaDetalhe() {
     setUploading(false);
     if (insertError) {
       setError(insertError.message);
+      showToast("Erro ao registrar arquivo: " + insertError.message, "error");
       return;
     }
     e.target.value = "";
     globalMutate(swrKeys.materiaisMateria(id));
+    showToast("Arquivo enviado.", "success");
   }
 
   async function handleDeleteMaterial(materialId, arquivoUrl) {
-    if (!confirm("Remover este material?")) return;
+    const ok = await confirm({
+      title: "Remover material",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
     const path = caminhoNoStorage(arquivoUrl);
     if (path) await supabase.storage.from("materiais").remove([path]);
-    // otimista: remove imediatamente
     globalMutate(
       swrKeys.materiaisMateria(id),
       (prev) => prev?.filter((m) => m.id !== materialId),
@@ -148,6 +300,7 @@ export default function MateriaDetalhe() {
     );
     await supabase.from("materiais").delete().eq("id", materialId);
     globalMutate(swrKeys.materiaisMateria(id));
+    showToast("Material removido.", "success");
   }
 
   function handleCriarPlaylist(e) {
@@ -158,9 +311,16 @@ export default function MateriaDetalhe() {
     setShowNovaPlaylist(false);
   }
 
+  /* -------------------- Baralhos -------------------- */
+
   async function handleDeleteBaralho(colecaoId) {
-    if (!confirm("Remover este baralho e todos os cartões dele?")) return;
-    // otimista
+    const ok = await confirm({
+      title: "Remover baralho",
+      description: "Todos os cartões deste baralho serão removidos.",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
     globalMutate(
       swrKeys.colecoesMateria(id),
       (prev) => prev?.filter((c) => c.id !== colecaoId),
@@ -168,12 +328,15 @@ export default function MateriaDetalhe() {
     );
     await supabase.from("flashcard_colecoes").delete().eq("id", colecaoId);
     globalMutate(swrKeys.colecoesMateria(id));
-    globalMutate(swrKeys.colecoes); // dashboard
+    globalMutate(swrKeys.colecoes(uid));
+    showToast("Baralho removido.", "success");
   }
+
+  /* -------------------- Lembretes -------------------- */
 
   async function toggleLembrete(l) {
     globalMutate(
-      swrKeys.lembretes,
+      swrKeys.lembretes(uid),
       (prev) =>
         prev?.map((x) =>
           x.id === l.id ? { ...x, concluido: !x.concluido } : x
@@ -184,8 +347,55 @@ export default function MateriaDetalhe() {
       .from("tarefas_rotina")
       .update({ concluido: !l.concluido })
       .eq("id", l.id);
-    globalMutate(swrKeys.lembretes);
+    globalMutate(swrKeys.lembretes(uid));
   }
+
+  /* -------------------- Provas (form rápido) -------------------- */
+
+  async function handleAddProva(e) {
+    e.preventDefault();
+    if (!provaTitulo.trim() || !provaData) return;
+    setSavingProva(true);
+
+    const { error: err } = await supabase.from("provas").insert({
+      materia_id: id,
+      user_id: uid,
+      titulo: provaTitulo.trim(),
+      data: provaData,
+    });
+
+    setSavingProva(false);
+
+    if (err) {
+      showToast("Erro ao criar prova: " + err.message, "error");
+      return;
+    }
+
+    setProvaTitulo("");
+    setProvaData("");
+    setShowProvaForm(false);
+    globalMutate(swrKeys.provasMateria(id));
+    globalMutate(swrKeys.provas(uid));
+    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    showToast("Prova criada e adicionada ao calendário.", "success");
+  }
+
+  async function handleDeleteProva(provaId) {
+    const ok = await confirm({
+      title: "Remover prova",
+      description: "O evento no calendário também será removido.",
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
+    await supabase.from("provas").delete().eq("id", provaId);
+    globalMutate(swrKeys.provasMateria(id));
+    globalMutate(swrKeys.provas(uid));
+    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    showToast("Prova removida.", "success");
+  }
+
+  /* -------------------- Render -------------------- */
 
   if (authLoading) return null;
 
@@ -222,13 +432,14 @@ export default function MateriaDetalhe() {
       id: `prova-${p.id}`,
       titulo: p.titulo,
       data: p.data,
-      link: null,
+      isProva: true,
+      provaId: p.id,
     })),
     ...tarefas.map((t) => ({
       id: `tarefa-${t.id}`,
       titulo: t.titulo,
       data: t.data_entrega,
-      link: "/tarefas",
+      isProva: false,
     })),
   ].sort((a, b) => a.data.localeCompare(b.data));
 
@@ -249,13 +460,21 @@ export default function MateriaDetalhe() {
                   {materia.professor}
                 </p>
               </div>
-              <button
-                onClick={handleDeleteMateria}
-                disabled={deletingMateria}
-                className="text-red-500 hover:text-red-700 text-sm font-medium border border-red-200 hover:border-red-400 rounded-xl px-3 py-1.5 transition-colors disabled:opacity-50"
-              >
-                {deletingMateria ? "Excluindo..." : "Excluir matéria"}
-              </button>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={abrirEdicao}
+                  className="text-primary border border-primarySoft hover:border-primary text-sm font-medium rounded-xl px-3 py-1.5 transition-colors"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={handleDeleteMateria}
+                  disabled={deletingMateria}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium border border-red-200 hover:border-red-400 rounded-xl px-3 py-1.5 transition-colors disabled:opacity-50"
+                >
+                  {deletingMateria ? "Excluindo..." : "Excluir"}
+                </button>
+              </div>
             </div>
             {materia.descricao && (
               <p className="text-gray-500 text-sm mt-2">{materia.descricao}</p>
@@ -300,13 +519,13 @@ export default function MateriaDetalhe() {
             </div>
           )}
 
-          {/* Materiais */}
           <div className="card">
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 className="font-semibold text-lg">📎 Materiais</h2>
               <div className="flex bg-surface rounded-xl border border-gray-200 p-1">
                 <button
                   onClick={() => setView("grid")}
+                  aria-label="Visualização em grade"
                   className={
                     "px-3 py-1 rounded-lg text-sm " +
                     (view === "grid"
@@ -318,6 +537,7 @@ export default function MateriaDetalhe() {
                 </button>
                 <button
                   onClick={() => setView("list")}
+                  aria-label="Visualização em lista"
                   className={
                     "px-3 py-1 rounded-lg text-sm " +
                     (view === "list"
@@ -441,6 +661,7 @@ export default function MateriaDetalhe() {
               </h2>
               <Link
                 href="/tarefas"
+                aria-label="Ir para tarefas"
                 className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
               >
                 +
@@ -451,16 +672,82 @@ export default function MateriaDetalhe() {
             ) : (
               <ul className="space-y-2">
                 {atividadesLista.map((a) => (
-                  <li key={a.id} className="text-sm flex justify-between">
+                  <li key={a.id} className="text-sm flex justify-between gap-2">
                     <span className="min-w-0 break-words">
-                      {materia.nome} · <span className="text-primary">{a.titulo}</span>
+                      {a.isProva ? "📝 " : ""}
+                      <span className="text-primary">{a.titulo}</span>
                     </span>
-                    <span className="text-xs text-gray-400 shrink-0 ml-2">
-                      {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                      })}
+                    <span className="text-xs text-gray-400 shrink-0">
+                      {fmtData(a.data)}
                     </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="card">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-sm tracking-wide text-gray-500 uppercase">
+                Provas
+              </h2>
+              <button
+                onClick={() => setShowProvaForm((s) => !s)}
+                aria-label="Adicionar prova"
+                className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
+              >
+                {showProvaForm ? "✕" : "+"}
+              </button>
+            </div>
+
+            {showProvaForm && (
+              <form onSubmit={handleAddProva} className="space-y-2 mb-3">
+                <input
+                  required
+                  autoFocus
+                  className="input-field !py-1.5"
+                  placeholder="Título (ex: P1)"
+                  value={provaTitulo}
+                  onChange={(e) => setProvaTitulo(e.target.value)}
+                />
+                <input
+                  required
+                  type="date"
+                  className="input-field !py-1.5"
+                  value={provaData}
+                  onChange={(e) => setProvaData(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={savingProva}
+                  className="btn-primary !py-1.5 w-full"
+                >
+                  {savingProva ? "Salvando..." : "Salvar prova"}
+                </button>
+                <p className="text-[11px] text-textMuted">
+                  A prova aparece automaticamente no calendário.
+                </p>
+              </form>
+            )}
+
+            {provas.length === 0 ? (
+              <p className="text-gray-400 text-sm">Nenhuma prova cadastrada.</p>
+            ) : (
+              <ul className="space-y-2">
+                {provas.map((p) => (
+                  <li key={p.id} className="text-sm flex justify-between gap-2">
+                    <span className="min-w-0 break-words">
+                      {p.titulo}{" "}
+                      <span className="text-xs text-gray-400">
+                        · {fmtData(p.data)}
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => handleDeleteProva(p.id)}
+                      className="text-gray-400 hover:text-red-500 text-xs shrink-0 p-1 -m-1"
+                    >
+                      remover
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -474,6 +761,7 @@ export default function MateriaDetalhe() {
               </h2>
               <Link
                 href="/tarefas"
+                aria-label="Ir para tarefas"
                 className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
               >
                 +
@@ -514,6 +802,197 @@ export default function MateriaDetalhe() {
           onClose={() => setArquivoAberto(null)}
         />
       )}
+
+      <Modal
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        title="Editar matéria"
+        maxWidth="max-w-2xl"
+      >
+        {formMat && (
+          <form onSubmit={handleSaveEdit} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nome *</label>
+                <input
+                  required
+                  className="input-field"
+                  value={formMat.nome}
+                  onChange={(e) =>
+                    setFormMat((f) => ({ ...f, nome: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Código</label>
+                <input
+                  className="input-field"
+                  value={formMat.codigo}
+                  onChange={(e) =>
+                    setFormMat((f) => ({ ...f, codigo: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Professor</label>
+                <input
+                  className="input-field"
+                  value={formMat.professor}
+                  onChange={(e) =>
+                    setFormMat((f) => ({ ...f, professor: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Email do professor
+                </label>
+                <input
+                  type="email"
+                  className="input-field"
+                  value={formMat.email_professor}
+                  onChange={(e) =>
+                    setFormMat((f) => ({
+                      ...f,
+                      email_professor: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium mb-1">Descrição</label>
+                <textarea
+                  className="input-field"
+                  rows={2}
+                  value={formMat.descricao}
+                  onChange={(e) =>
+                    setFormMat((f) => ({ ...f, descricao: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Cor</label>
+                <input
+                  type="color"
+                  className="w-12 h-10 rounded-xl border border-borderSoft cursor-pointer"
+                  value={formMat.cor}
+                  onChange={(e) =>
+                    setFormMat((f) => ({ ...f, cor: e.target.value }))
+                  }
+                  aria-label="Cor da matéria"
+                />
+              </div>
+            </div>
+
+            <hr className="border-borderSoft my-3" />
+
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-textPrimary">
+                Locais e Horários
+              </h3>
+              <button
+                type="button"
+                onClick={addHorarioEdit}
+                className="text-xs text-primary hover:underline"
+              >
+                + Adicionar
+              </button>
+            </div>
+
+            {formHorarios.length === 0 && (
+              <p className="text-xs text-textMuted">
+                Nenhum horário cadastrado. Clique em "+ Adicionar".
+              </p>
+            )}
+
+            {formHorarios.map((h, idx) => (
+              <div
+                key={idx}
+                className="border border-borderSoft bg-gray-50/50 rounded-xl p-3 space-y-2 relative"
+              >
+                <button
+                  type="button"
+                  onClick={() => removeHorarioEdit(idx)}
+                  aria-label="Remover este horário"
+                  className="absolute right-2 top-2 w-6 h-6 flex items-center justify-center rounded-full bg-white border border-borderSoft text-textMuted hover:text-red-500"
+                >
+                  ✕
+                </button>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    className="input-field"
+                    value={h.dia_semana}
+                    onChange={(e) =>
+                      updateHorarioEdit(idx, "dia_semana", e.target.value)
+                    }
+                  >
+                    {DIAS.map((d, i) => (
+                      <option key={i} value={i}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="time"
+                    className="input-field"
+                    value={h.hora_inicio}
+                    onChange={(e) =>
+                      updateHorarioEdit(idx, "hora_inicio", e.target.value)
+                    }
+                  />
+                  <input
+                    type="time"
+                    className="input-field"
+                    value={h.hora_fim}
+                    onChange={(e) =>
+                      updateHorarioEdit(idx, "hora_fim", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    className="input-field"
+                    placeholder="Prédio"
+                    value={h.predio}
+                    onChange={(e) =>
+                      updateHorarioEdit(idx, "predio", e.target.value)
+                    }
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Bloco"
+                    value={h.bloco}
+                    onChange={(e) =>
+                      updateHorarioEdit(idx, "bloco", e.target.value)
+                    }
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Sala"
+                    value={h.sala}
+                    onChange={(e) =>
+                      updateHorarioEdit(idx, "sala", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+
+            <div className="flex gap-2 pt-3 border-t border-borderSoft">
+              <button type="submit" disabled={savingEdit} className="btn-primary">
+                {savingEdit ? "Salvando..." : "Salvar alterações"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEdit(false)}
+                className="text-textMuted px-3"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </AppLayout>
   );
 }
@@ -532,7 +1011,10 @@ function BaralhoCard({ c, materiaId, materiaCor, onDelete }) {
         className="relative flex items-center justify-center h-20 sm:h-auto sm:w-[20%] shrink-0 overflow-hidden"
         style={{ background: cor }}
       >
-        <span className="text-white [&>svg]:w-9 [&>svg]:h-9 sm:[&>svg]:w-12 sm:[&>svg]:h-12">
+        <span
+          className="text-white [&>svg]:w-9 [&>svg]:h-9 sm:[&>svg]:w-12 sm:[&>svg]:h-12"
+          aria-hidden="true"
+        >
           {icons.layers}
         </span>
         <svg
@@ -584,7 +1066,9 @@ function BaralhoCard({ c, materiaId, materiaCor, onDelete }) {
             className="h-[42px] rounded-[10px] bg-primary text-white text-sm font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity sm:flex-1"
           >
             Estudar
-            <span className="[&>svg]:w-4 [&>svg]:h-4">{icons.arrowRight}</span>
+            <span className="[&>svg]:w-4 [&>svg]:h-4" aria-hidden="true">
+              {icons.arrowRight}
+            </span>
           </Link>
           <Link
             href={`/materias/${materiaId}/flashcards/${c.id}`}
@@ -600,6 +1084,7 @@ function BaralhoCard({ c, materiaId, materiaCor, onDelete }) {
         onClick={() => onDelete(c.id)}
         className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-textMuted hover:text-red-500 hover:bg-red-50 transition-colors text-xs"
         title="Remover baralho"
+        aria-label={`Remover baralho ${c.nome_colecao}`}
       >
         ✕
       </button>
