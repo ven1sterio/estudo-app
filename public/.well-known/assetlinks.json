@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.simplify.estudos",
+      "package_name": "app.vercel.estudo_app_alpha.twa",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_YOUR_SHA256_CERT_FINGERPRINT_FROM_KEYSTORE"
+        "46:F2:A0:5F:A2:7F:B1:A5:27:78:43:B1:27:55:24:72:BC:9F:BE:8A:81:77:BB:2D:17:0E:A0:F1:44:BA:FA:FC"
       ]
     }
   }
