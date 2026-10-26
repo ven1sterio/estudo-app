@@ -16,4 +16,12 @@ out/
 .DS_Store
 
 android.keystore
-android/
+# Arquivos temporários e compilados do Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Chaves de assinatura: nunca enviar ao GitHub
+*.keystore
+*.jks
