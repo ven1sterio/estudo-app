@@ -4,7 +4,8 @@ import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../lib/useAuth";
 import { useConfirm } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
-import { supabase } from "../../lib/supabaseClient";
+import { insertLocal, deleteMateriaLocal } from "../../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../../lib/sync";
 import AppLayout from "../../components/AppLayout";
 import Skeleton from "../../components/Skeleton";
 import { icons } from "../../components/icons";
@@ -25,7 +26,7 @@ export default function Materias() {
   const { showToast } = useToast();
 
   const [showForm, setShowForm] = useState(false);
-  const [view, setView] = useState("grid"); // 'grid' | 'list'
+  const [view, setView] = useState("grid");
 
   const { data: materias = [], isLoading: lM } = useSWR(
     uid ? swrKeys.materias(uid) : null,
@@ -76,11 +77,12 @@ export default function Materias() {
       false
     );
 
-    const { error } = await supabase.from("materias").delete().eq("id", materiaId);
-    if (error) {
-      showToast("Erro ao excluir matéria: " + error.message, "error");
-    } else {
+    try {
+      await deleteMateriaLocal(materiaId);
+      await sincronizarAgoraSeOnline();
       showToast("Matéria excluída.", "success");
+    } catch (error) {
+      showToast("Erro ao excluir matéria: " + error.message, "error");
     }
     globalMutate(swrKeys.materias(uid));
   }
@@ -134,6 +136,7 @@ export default function Materias() {
 
       {showForm && (
         <NovaMateriaForm
+          userId={uid}
           onClose={() => setShowForm(false)}
           onCreated={() => {
             setShowForm(false);
@@ -340,7 +343,7 @@ function MateriaRow({ m, index, stats, onDelete }) {
   );
 }
 
-function NovaMateriaForm({ onClose, onCreated }) {
+function NovaMateriaForm({ userId, onClose, onCreated }) {
   const [nome, setNome] = useState("");
   const [codigo, setCodigo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -375,34 +378,26 @@ function NovaMateriaForm({ onClose, onCreated }) {
     setError("");
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    if (!userId) {
+      setError("Sessão não encontrada.");
+      setLoading(false);
+      return;
+    }
 
-    const { data: materia, error: materiaError } = await supabase
-      .from("materias")
-      .insert({
-        user_id: user.id,
+    try {
+      const materia = await insertLocal("materias", {
+        user_id: userId,
         nome,
         codigo,
         descricao,
         professor,
         email_professor: emailProfessor,
         cor,
-      })
-      .select()
-      .single();
+      });
 
-    if (materiaError) {
-      setError(materiaError.message);
-      setLoading(false);
-      return;
-    }
-
-    const horariosValidos = horarios.filter((h) => h.horaInicio && h.horaFim);
-    if (horariosValidos.length > 0) {
-      const { error: horarioError } = await supabase.from("horarios").insert(
-        horariosValidos.map((h) => ({
+      const horariosValidos = horarios.filter((h) => h.horaInicio && h.horaFim);
+      for (const h of horariosValidos) {
+        await insertLocal("horarios", {
           materia_id: materia.id,
           dia_semana: Number(h.diaSemana),
           hora_inicio: h.horaInicio,
@@ -410,17 +405,16 @@ function NovaMateriaForm({ onClose, onCreated }) {
           predio: h.predio || null,
           bloco: h.bloco || null,
           sala: h.sala || null,
-        }))
-      );
-      if (horarioError) {
-        setError(horarioError.message);
-        setLoading(false);
-        return;
+        });
       }
-    }
 
-    setLoading(false);
-    onCreated();
+      await sincronizarAgoraSeOnline();
+      setLoading(false);
+      onCreated();
+    } catch (err) {
+      setError(err.message || "Erro ao criar matéria.");
+      setLoading(false);
+    }
   }
 
   return (

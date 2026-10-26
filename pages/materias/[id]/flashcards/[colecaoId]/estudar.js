@@ -5,6 +5,10 @@ import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../../../../lib/useAuth";
 import { useToast } from "../../../../../components/Toast";
 import { supabase } from "../../../../../lib/supabaseClient";
+import { db } from "../../../../../lib/db";
+import { isOnline } from "../../../../../lib/network";
+import { updateLocal } from "../../../../../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../../../../../lib/sync";
 import AppLayout from "../../../../../components/AppLayout";
 import Skeleton from "../../../../../components/Skeleton";
 import { calcularProximoReview, estaParaRevisar } from "../../../../../lib/sm2";
@@ -13,22 +17,40 @@ const swrKeyColecao = (colecaoId) => ["colecao", colecaoId];
 const swrKeyCards = (colecaoId) => ["cards", colecaoId];
 
 async function fetchColecao(colecaoId) {
-  const { data, error } = await supabase
-    .from("flashcard_colecoes")
-    .select("*")
-    .eq("id", colecaoId)
-    .single();
-  if (error) throw error;
-  return data;
+  if (!isOnline()) {
+    const local = await db.flashcard_colecoes.get(colecaoId);
+    return local || null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from("flashcard_colecoes")
+      .select("*")
+      .eq("id", colecaoId)
+      .single();
+    if (error) throw error;
+    if (data) await db.flashcard_colecoes.put(data);
+    return data;
+  } catch {
+    const local = await db.flashcard_colecoes.get(colecaoId);
+    return local || null;
+  }
 }
 
 async function fetchCards(colecaoId) {
-  const { data, error } = await supabase
-    .from("flashcards")
-    .select("*")
-    .eq("colecao_id", colecaoId);
-  if (error) throw error;
-  return data || [];
+  if (!isOnline()) {
+    return db.flashcards.where("colecao_id").equals(colecaoId).toArray();
+  }
+  try {
+    const { data, error } = await supabase
+      .from("flashcards")
+      .select("*")
+      .eq("colecao_id", colecaoId);
+    if (error) throw error;
+    if (data?.length) await db.flashcards.bulkPut(data);
+    return data || [];
+  } catch {
+    return db.flashcards.where("colecao_id").equals(colecaoId).toArray();
+  }
 }
 
 function shuffle(arr) {
@@ -87,11 +109,13 @@ export default function EstudarFlashcards() {
 
     if (cartaoAtual) {
       const update = calcularProximoReview(cartaoAtual, soube);
-      supabase
-        .from("flashcards")
-        .update(update)
-        .eq("id", cartaoAtual.id)
-        .then(() => {});
+      // Persiste no Dexie e enfileira para o Supabase. Se offline, o flush
+      // acontece automaticamente na reconexão (useSyncOutbox) ou ao final
+      // da sessão.
+      updateLocal("flashcards", cartaoAtual.id, update).catch((e) => {
+        // eslint-disable-next-line no-console
+        console.warn("Erro ao salvar revisão local:", e);
+      });
     }
 
     setFlipped(false);
@@ -100,17 +124,22 @@ export default function EstudarFlashcards() {
 
   const acabou = fila.length > 0 && index >= fila.length;
 
-  // Ao finalizar, atualiza ultima_revisao da coleção (para o card do dashboard).
+  // Ao finalizar, atualiza ultima_revisao da coleção e tenta sincronizar.
   useEffect(() => {
     if (!acabou || !colecaoId) return;
-    supabase
-      .from("flashcard_colecoes")
-      .update({ ultima_revisao: new Date().toISOString() })
-      .eq("id", colecaoId)
-      .then(() => {
-        globalMutate(swrKeyColecao(colecaoId));
-        globalMutate(["flashcard_colecoes", user?.id]);
-      });
+    (async () => {
+      try {
+        await updateLocal("flashcard_colecoes", colecaoId, {
+          ultima_revisao: new Date().toISOString(),
+        });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("Erro ao salvar ultima_revisao:", e);
+      }
+      await sincronizarAgoraSeOnline();
+      globalMutate(swrKeyColecao(colecaoId));
+      globalMutate(["flashcard_colecoes", user?.id]);
+    })();
   }, [acabou, colecaoId, user?.id]);
 
   const total = fila.length;

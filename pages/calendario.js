@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../lib/useAuth";
-import { supabase } from "../lib/supabaseClient";
+import { insertLocal } from "../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../lib/sync";
 import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
 import {
@@ -79,7 +80,7 @@ export default function Calendario() {
   }, [range]);
 
   async function handleCriarEvento({ titulo, descricao, tipo, cor }) {
-    await supabase.from("eventos_calendario").insert({
+    await insertLocal("eventos_calendario", {
       user_id: uid,
       titulo,
       descricao,
@@ -88,6 +89,7 @@ export default function Calendario() {
       data: selectedDay,
       origem: "manual",
     });
+    await sincronizarAgoraSeOnline();
     setShowNovoEvento(false);
     globalMutate(swrKeys.eventosRange(uid, inicioMes, fimMes));
     globalMutate(swrKeys.eventosProximos(uid));

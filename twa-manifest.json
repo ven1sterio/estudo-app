@@ -1,0 +1,55 @@
+{
+  "packageId": "com.simplify.estudos",
+  "host": "seudominio.com",
+  "name": "SIMPLIFY — Estudos",
+  "launcherName": "SIMPLIFY",
+  "display": "standalone",
+  "themeColor": "#8B6FD8",
+  "themeColorDark": "#14131A",
+  "navigationColor": "#8B6FD8",
+  "navigationColorDark": "#14131A",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#FAFAFC",
+  "enableNotifications": false,
+  "startUrl": "/dashboard",
+  "iconUrl": "https://seudominio.com/icons/icon-512.png",
+  "maskableIconUrl": "https://seudominio.com/icons/icon-512-maskable.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Tarefas",
+      "shortName": "Tarefas",
+      "url": "/tarefas",
+      "chosenIconUrl": "https://seudominio.com/icons/icon-192.png"
+    },
+    {
+      "name": "Flashcards",
+      "shortName": "Cartões",
+      "url": "/flashcards",
+      "chosenIconUrl": "https://seudominio.com/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://seudominio.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": { "enabled": false },
+    "locationDelegation": { "enabled": false }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://seudominio.com/",
+  "minSdkVersion": 21,
+  "orientation": "portrait"
+}

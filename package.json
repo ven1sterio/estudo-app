@@ -14,8 +14,10 @@
     "maintained node versions"
   ],
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@supabase/supabase-js": "^2.45.4",
+    "dexie": "^4.0.8",
+    "dexie-react-hooks": "^1.1.7",
     "docx-preview": "^0.3.5",
     "next": "14.2.35",
     "pdfjs-dist": "4.2.67",

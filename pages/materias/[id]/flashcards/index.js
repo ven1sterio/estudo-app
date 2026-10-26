@@ -5,7 +5,9 @@ import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../../../../lib/useAuth";
 import { useConfirm } from "../../../../components/ConfirmDialog";
 import { useToast } from "../../../../components/Toast";
-import { supabase } from "../../../../lib/supabaseClient";
+import { db } from "../../../../lib/db";
+import { insertLocal, deleteLocal } from "../../../../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../../../../lib/sync";
 import AppLayout from "../../../../components/AppLayout";
 import Skeleton from "../../../../components/Skeleton";
 import {
@@ -52,35 +54,34 @@ export default function Flashcards() {
     setError("");
     setSaving(true);
 
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
+    if (!uid) {
+      setError("Sessão não encontrada.");
+      setSaving(false);
+      return;
+    }
 
-    const { error: insertError } = await supabase
-      .from("flashcard_colecoes")
-      .insert({
+    try {
+      await insertLocal("flashcard_colecoes", {
         materia_id: id,
-        user_id: authUser.id,
+        user_id: uid,
         nome_colecao: novoNome,
         descricao: novaDescricao,
         cor: novaCor,
       });
-
-    setSaving(false);
-
-    if (insertError) {
-      setError(insertError.message);
+      await sincronizarAgoraSeOnline();
+      setNovoNome("");
+      setNovaDescricao("");
+      setNovaCor("#8B85F0");
+      setShowForm(false);
+      globalMutate(swrKeys.colecoesMateria(id));
+      globalMutate(swrKeys.colecoes(uid));
+      showToast("Baralho criado.", "success");
+    } catch (err) {
+      setError(err.message || "Erro ao criar baralho.");
       showToast("Erro ao criar baralho.", "error");
-      return;
+    } finally {
+      setSaving(false);
     }
-
-    setNovoNome("");
-    setNovaDescricao("");
-    setNovaCor("#8B85F0");
-    setShowForm(false);
-    globalMutate(swrKeys.colecoesMateria(id));
-    globalMutate(swrKeys.colecoes(uid));
-    showToast("Baralho criado.", "success");
   }
 
   async function handleDelete(colecaoId) {
@@ -91,7 +92,14 @@ export default function Flashcards() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("flashcard_colecoes").delete().eq("id", colecaoId);
+
+    try {
+      await db.flashcards.where("colecao_id").equals(colecaoId).delete();
+    } catch {
+      /* Dexie pode falhar em SSR — ignora */
+    }
+    await deleteLocal("flashcard_colecoes", colecaoId);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.colecoesMateria(id));
     globalMutate(swrKeys.colecoes(uid));
     showToast("Baralho removido.", "success");

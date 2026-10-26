@@ -6,6 +6,8 @@ import AppLayout from "../../components/AppLayout";
 import Skeleton from "../../components/Skeleton";
 import { icons } from "../../components/icons";
 import { supabase } from "../../lib/supabaseClient";
+import { db } from "../../lib/db";
+import { isOnline } from "../../lib/network";
 import { swrKeys, fetchColecoes } from "../../lib/fetchers";
 
 function formatRevisao(data) {
@@ -21,30 +23,52 @@ function hojeStr() {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Contagem de cartões pendentes por coleção.
+ * Online: pergunta ao Supabase e espelha os pendentes no Dexie via o
+ *         `proximo_review` local (que o SM-2 já persiste em `flashcards`).
+ * Offline: conta direto do Dexie usando `proximo_review <= hoje`.
+ */
 async function fetchContagemPendentes() {
   const hoje = hojeStr();
 
-  // 1ª tentativa: filtrar pelos cartões com revisão vencida ou nula
-  let resp = await supabase
-    .from("flashcards")
-    .select("colecao_id, proximo_review")
-    .or(`proximo_review.lte.${hoje},proximo_review.is.null`);
-
-  // Fallback se a coluna ainda não existir (migration 05 não rodada):
-  // conta todos os cartões como pendentes.
-  if (
-    resp.error &&
-    (resp.error.message || "").toLowerCase().includes("proximo_review") &&
-    (resp.error.message || "").toLowerCase().includes("does not exist")
-  ) {
-    resp = await supabase.from("flashcards").select("colecao_id");
+  if (!isOnline()) {
+    return contarPendentesDoDexie(hoje);
   }
 
-  if (resp.error) throw resp.error;
+  try {
+    let resp = await supabase
+      .from("flashcards")
+      .select("colecao_id, proximo_review")
+      .or(`proximo_review.lte.${hoje},proximo_review.is.null`);
 
+    if (
+      resp.error &&
+      (resp.error.message || "").toLowerCase().includes("proximo_review") &&
+      (resp.error.message || "").toLowerCase().includes("does not exist")
+    ) {
+      resp = await supabase.from("flashcards").select("colecao_id");
+    }
+
+    if (resp.error) throw resp.error;
+
+    const contagem = {};
+    for (const row of resp.data || []) {
+      contagem[row.colecao_id] = (contagem[row.colecao_id] || 0) + 1;
+    }
+    return contagem;
+  } catch {
+    return contarPendentesDoDexie(hoje);
+  }
+}
+
+async function contarPendentesDoDexie(hoje) {
+  const todos = await db.flashcards.toArray();
   const contagem = {};
-  for (const row of resp.data || []) {
-    contagem[row.colecao_id] = (contagem[row.colecao_id] || 0) + 1;
+  for (const c of todos) {
+    if (!c.proximo_review || c.proximo_review <= hoje) {
+      contagem[c.colecao_id] = (contagem[c.colecao_id] || 0) + 1;
+    }
   }
   return contagem;
 }

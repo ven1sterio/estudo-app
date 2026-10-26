@@ -6,6 +6,14 @@ import { useRequireAuth } from "../../../../../lib/useAuth";
 import { useConfirm } from "../../../../../components/ConfirmDialog";
 import { useToast } from "../../../../../components/Toast";
 import { supabase } from "../../../../../lib/supabaseClient";
+import { db } from "../../../../../lib/db";
+import { isOnline } from "../../../../../lib/network";
+import {
+  insertLocal,
+  updateLocal,
+  deleteLocal,
+} from "../../../../../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../../../../../lib/sync";
 import AppLayout from "../../../../../components/AppLayout";
 import Skeleton from "../../../../../components/Skeleton";
 
@@ -13,23 +21,41 @@ const swrKeyColecao = (colecaoId) => ["colecao", colecaoId];
 const swrKeyCards = (colecaoId) => ["cards", colecaoId];
 
 async function fetchColecao(colecaoId) {
-  const { data, error } = await supabase
-    .from("flashcard_colecoes")
-    .select("*")
-    .eq("id", colecaoId)
-    .single();
-  if (error) throw error;
-  return data;
+  if (!isOnline()) {
+    const local = await db.flashcard_colecoes.get(colecaoId);
+    return local || null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from("flashcard_colecoes")
+      .select("*")
+      .eq("id", colecaoId)
+      .single();
+    if (error) throw error;
+    if (data) await db.flashcard_colecoes.put(data);
+    return data;
+  } catch {
+    const local = await db.flashcard_colecoes.get(colecaoId);
+    return local || null;
+  }
 }
 
 async function fetchCards(colecaoId) {
-  const { data, error } = await supabase
-    .from("flashcards")
-    .select("*")
-    .eq("colecao_id", colecaoId)
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return data || [];
+  if (!isOnline()) {
+    return db.flashcards.where("colecao_id").equals(colecaoId).toArray();
+  }
+  try {
+    const { data, error } = await supabase
+      .from("flashcards")
+      .select("*")
+      .eq("colecao_id", colecaoId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    if (data?.length) await db.flashcards.bulkPut(data);
+    return data || [];
+  } catch {
+    return db.flashcards.where("colecao_id").equals(colecaoId).toArray();
+  }
 }
 
 /* ------------------ CSV helpers (import / export) ------------------ */
@@ -138,45 +164,43 @@ export default function GerenciarCartoes() {
   const [importText, setImportText] = useState("");
   const [importing, setImporting] = useState(false);
 
+  async function refreshAfterWrite() {
+    globalMutate(swrKeyCards(colecaoId));
+    globalMutate(swrKeyColecao(colecaoId));
+    globalMutate(["colecoes_materia", id]);
+    globalMutate(["flashcard_colecoes", uid]);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setSaving(true);
 
-    if (editingId) {
-      const { error } = await supabase
-        .from("flashcards")
-        .update({ frente, verso })
-        .eq("id", editingId);
-      setSaving(false);
-      if (error) {
-        setError(error.message);
-        showToast("Erro ao editar cartão.", "error");
-        return;
+    try {
+      if (editingId) {
+        await updateLocal("flashcards", editingId, { frente, verso });
+        await sincronizarAgoraSeOnline();
+        showToast("Cartão atualizado.", "success");
+      } else {
+        await insertLocal("flashcards", {
+          colecao_id: colecaoId,
+          frente,
+          verso,
+        });
+        await sincronizarAgoraSeOnline();
+        showToast("Cartão adicionado.", "success");
       }
-      showToast("Cartão atualizado.", "success");
-    } else {
-      const { error } = await supabase.from("flashcards").insert({
-        colecao_id: colecaoId,
-        frente,
-        verso,
-      });
-      setSaving(false);
-      if (error) {
-        setError(error.message);
-        showToast("Erro ao criar cartão.", "error");
-        return;
-      }
-      showToast("Cartão adicionado.", "success");
-    }
 
-    setFrente("");
-    setVerso("");
-    setEditingId(null);
-    globalMutate(swrKeyCards(colecaoId));
-    globalMutate(swrKeyColecao(colecaoId));
-    globalMutate(["colecoes_materia", id]);
-    globalMutate(["flashcard_colecoes", uid]);
+      setFrente("");
+      setVerso("");
+      setEditingId(null);
+      await refreshAfterWrite();
+    } catch (err) {
+      setError(err.message || "Erro ao salvar cartão.");
+      showToast("Erro ao salvar cartão.", "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleEdit(card) {
@@ -198,11 +222,9 @@ export default function GerenciarCartoes() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("flashcards").delete().eq("id", cardId);
-    globalMutate(swrKeyCards(colecaoId));
-    globalMutate(swrKeyColecao(colecaoId));
-    globalMutate(["colecoes_materia", id]);
-    globalMutate(["flashcard_colecoes", uid]);
+    await deleteLocal("flashcards", cardId);
+    await sincronizarAgoraSeOnline();
+    await refreshAfterWrite();
     showToast("Cartão removido.", "success");
   }
 
@@ -230,27 +252,24 @@ export default function GerenciarCartoes() {
       return;
     }
 
-    const { error } = await supabase.from("flashcards").insert(
-      novos.map((c) => ({
-        colecao_id: colecaoId,
-        frente: c.frente,
-        verso: c.verso,
-      }))
-    );
-    setImporting(false);
-
-    if (error) {
-      showToast("Erro ao importar: " + error.message, "error");
-      return;
+    try {
+      for (const c of novos) {
+        await insertLocal("flashcards", {
+          colecao_id: colecaoId,
+          frente: c.frente,
+          verso: c.verso,
+        });
+      }
+      await sincronizarAgoraSeOnline();
+      setImportText("");
+      setShowImport(false);
+      await refreshAfterWrite();
+      showToast(`${novos.length} cartão(ões) importado(s).`, "success");
+    } catch (err) {
+      showToast("Erro ao importar: " + err.message, "error");
+    } finally {
+      setImporting(false);
     }
-
-    setImportText("");
-    setShowImport(false);
-    globalMutate(swrKeyCards(colecaoId));
-    globalMutate(swrKeyColecao(colecaoId));
-    globalMutate(["colecoes_materia", id]);
-    globalMutate(["flashcard_colecoes", uid]);
-    showToast(`${novos.length} cartão(ões) importado(s).`, "success");
   }
 
   if (authLoading) return null;

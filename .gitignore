@@ -1,3 +1,16 @@
-node_modules/ 
-.next/ 
-.env.local 
+node_modules/
+.next/
+.env.local
+
+# Artefatos de empacotamento Android (TWA)
+android/
+*.keystore
+*.jks
+twa-manifest.json.bak
+
+# Build de exportação estática (não usamos hoje, mas evita ruído)
+out/
+
+# Logs e caches locais
+*.log
+.DS_Store

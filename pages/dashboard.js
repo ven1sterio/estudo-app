@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../lib/useAuth";
-import { supabase } from "../lib/supabaseClient";
+import { insertLocal, updateLocal } from "../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../lib/sync";
 import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
 import { icons } from "../components/icons";
@@ -206,7 +207,7 @@ export default function Dashboard() {
   }
 
   async function handleCriarEvento({ titulo, descricao, tipo, cor }) {
-    await supabase.from("eventos_calendario").insert({
+    await insertLocal("eventos_calendario", {
       user_id: uid,
       titulo,
       descricao,
@@ -215,6 +216,7 @@ export default function Dashboard() {
       data: selectedDay,
       origem: "manual",
     });
+    await sincronizarAgoraSeOnline();
     setShowNovoEvento(false);
     globalMutate(swrKeys.eventosRange(uid, inicioMes, fimMes));
     globalMutate(swrKeys.eventosProximos(uid));
@@ -239,10 +241,8 @@ export default function Dashboard() {
     );
 
     try {
-      await supabase
-        .from("tarefas_rotina")
-        .update({ concluido: novoConcluido })
-        .eq("id", l.id);
+      await updateLocal("tarefas_rotina", l.id, { concluido: novoConcluido });
+      await sincronizarAgoraSeOnline();
     } finally {
       togglingRef.current.delete(l.id);
       globalMutate(swrKeys.lembretes(uid));

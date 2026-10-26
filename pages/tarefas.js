@@ -4,6 +4,9 @@ import { useRequireAuth } from "../lib/useAuth";
 import { useConfirm } from "../components/ConfirmDialog";
 import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabaseClient";
+import { db } from "../lib/db";
+import { insertLocal, updateLocal, deleteLocal } from "../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../lib/sync";
 import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
@@ -138,28 +141,32 @@ export default function Tarefas() {
     (t) => !t.concluido && t.data_entrega === hoje
   ).length;
 
-  /* -------------------- handlers -------------------- */
+  /* -------------------- handlers (offline-first) -------------------- */
 
   async function handleAddTarefa({ titulo, materiaId, data, tipo, prioridade }) {
     if (!uid || !materiaId) return false;
-
-    const { error } = await supabase.from("tarefas").insert({
-      user_id: uid,
-      materia_id: materiaId,
-      titulo,
-      data_entrega: data,
-      tipo,
-      prioridade,
-    });
-
-    if (error) {
-      showToast("Erro ao criar tarefa: " + error.message, "error");
+    try {
+      await insertLocal("tarefas", {
+        user_id: uid,
+        materia_id: materiaId,
+        titulo,
+        data_entrega: data,
+        tipo,
+        prioridade,
+        concluido: false,
+      });
+      await sincronizarAgoraSeOnline();
+      globalMutate(swrKeys.tarefas(uid));
+      globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+      showToast("Tarefa criada.", "success");
+      return true;
+    } catch (e) {
+      showToast(
+        "Erro ao criar tarefa: " + (e?.message || String(e)),
+        "error"
+      );
       return false;
     }
-    globalMutate(swrKeys.tarefas(uid));
-    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
-    showToast("Tarefa criada.", "success");
-    return true;
   }
 
   async function handleUpdateTarefa(id, patch) {
@@ -168,27 +175,22 @@ export default function Tarefas() {
       (prev) => prev?.map((t) => (t.id === id ? { ...t, ...patch } : t)),
       false
     );
-    const { error } = await supabase.from("tarefas").update(patch).eq("id", id);
-    if (error) {
-      showToast("Erro ao atualizar tarefa: " + error.message, "error");
-    }
+    await updateLocal("tarefas", id, patch);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.tarefas(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
   }
 
   async function toggleTarefa(tarefa) {
+    const novo = !tarefa.concluido;
     globalMutate(
       swrKeys.tarefas(uid),
       (prev) =>
-        prev?.map((t) =>
-          t.id === tarefa.id ? { ...t, concluido: !t.concluido } : t
-        ),
+        prev?.map((t) => (t.id === tarefa.id ? { ...t, concluido: novo } : t)),
       false
     );
-    await supabase
-      .from("tarefas")
-      .update({ concluido: !tarefa.concluido })
-      .eq("id", tarefa.id);
+    await updateLocal("tarefas", tarefa.id, { concluido: novo });
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.tarefas(uid));
   }
 
@@ -200,7 +202,8 @@ export default function Tarefas() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("tarefas").delete().eq("id", id);
+    await deleteLocal("tarefas", id);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.tarefas(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
     showToast("Tarefa removida.", "success");
@@ -210,28 +213,36 @@ export default function Tarefas() {
     e.preventDefault();
     if (!novoLembrete.trim()) return;
     setSavingLembrete(true);
-    await supabase
-      .from("tarefas_rotina")
-      .insert({ user_id: uid, titulo: novoLembrete });
-    setNovoLembrete("");
-    setSavingLembrete(false);
-    globalMutate(swrKeys.lembretes(uid));
-    showToast("Lembrete adicionado.", "success");
+    try {
+      await insertLocal("tarefas_rotina", {
+        user_id: uid,
+        titulo: novoLembrete,
+        concluido: false,
+      });
+      await sincronizarAgoraSeOnline();
+      setNovoLembrete("");
+      globalMutate(swrKeys.lembretes(uid));
+      showToast("Lembrete adicionado.", "success");
+    } catch (e) {
+      showToast(
+        "Erro ao adicionar lembrete: " + (e?.message || String(e)),
+        "error"
+      );
+    } finally {
+      setSavingLembrete(false);
+    }
   }
 
   async function toggleLembrete(lembrete) {
+    const novo = !lembrete.concluido;
     globalMutate(
       swrKeys.lembretes(uid),
       (prev) =>
-        prev?.map((l) =>
-          l.id === lembrete.id ? { ...l, concluido: !l.concluido } : l
-        ),
+        prev?.map((l) => (l.id === lembrete.id ? { ...l, concluido: novo } : l)),
       false
     );
-    await supabase
-      .from("tarefas_rotina")
-      .update({ concluido: !lembrete.concluido })
-      .eq("id", lembrete.id);
+    await updateLocal("tarefas_rotina", lembrete.id, { concluido: novo });
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.lembretes(uid));
   }
 
@@ -242,7 +253,8 @@ export default function Tarefas() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("tarefas_rotina").delete().eq("id", id);
+    await deleteLocal("tarefas_rotina", id);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.lembretes(uid));
     showToast("Lembrete removido.", "success");
   }
@@ -255,9 +267,24 @@ export default function Tarefas() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("provas").delete().eq("id", id);
+
+    // Cobre o trigger do banco quando offline: remove eventos ligados à prova
+    try {
+      const locais = await db.eventos_calendario.toArray();
+      for (const e of locais) {
+        if (e.prova_id === id) {
+          await deleteLocal("eventos_calendario", e.id);
+        }
+      }
+    } catch {
+      /* sem eventos locais para limpar */
+    }
+
+    await deleteLocal("provas", id);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.provas(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+    globalMutate(swrKeys.eventosManuais(uid));
     showToast("Prova removida.", "success");
   }
 
@@ -269,7 +296,8 @@ export default function Tarefas() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("eventos_calendario").delete().eq("id", id);
+    await deleteLocal("eventos_calendario", id);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.eventosManuais(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
     showToast("Evento removido.", "success");

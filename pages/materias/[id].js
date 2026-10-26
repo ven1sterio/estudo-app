@@ -7,6 +7,15 @@ import { useConfirm } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
 import Modal from "../../components/Modal";
 import { supabase } from "../../lib/supabaseClient";
+import { db } from "../../lib/db";
+import { isOnline } from "../../lib/network";
+import {
+  insertLocal,
+  updateLocal,
+  deleteLocal,
+  deleteMateriaLocal,
+} from "../../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../../lib/sync";
 import AppLayout from "../../components/AppLayout";
 import Skeleton from "../../components/Skeleton";
 import VisualizadorArquivo, {
@@ -163,39 +172,30 @@ export default function MateriaDetalhe() {
     if (!formMat) return;
     setSavingEdit(true);
 
-    const { error: matErr } = await supabase
-      .from("materias")
-      .update({
+    try {
+      await updateLocal("materias", id, {
         nome: formMat.nome,
         codigo: formMat.codigo,
         professor: formMat.professor,
         email_professor: formMat.email_professor,
         descricao: formMat.descricao,
         cor: formMat.cor,
-      })
-      .eq("id", id);
+      });
 
-    if (matErr) {
-      setSavingEdit(false);
-      showToast("Erro ao salvar matéria: " + matErr.message, "error");
-      return;
-    }
+      // Horários: apaga todos os existentes (locais + outbox) e insere os
+      // novos via insertLocal. O servidor recebe um delete por horário e
+      // um insert por horário novo — mesma semântica do original.
+      const horariosAtuais = await db.horarios
+        .where("materia_id")
+        .equals(id)
+        .toArray();
+      for (const h of horariosAtuais) {
+        await deleteLocal("horarios", h.id);
+      }
 
-    // Horários: estratégia simples = apagar os antigos e inserir os novos.
-    const { error: delErr } = await supabase
-      .from("horarios")
-      .delete()
-      .eq("materia_id", id);
-    if (delErr) {
-      setSavingEdit(false);
-      showToast("Erro ao atualizar horários: " + delErr.message, "error");
-      return;
-    }
-
-    const validos = formHorarios.filter((h) => h.hora_inicio && h.hora_fim);
-    if (validos.length > 0) {
-      const { error: insErr } = await supabase.from("horarios").insert(
-        validos.map((h) => ({
+      const validos = formHorarios.filter((h) => h.hora_inicio && h.hora_fim);
+      for (const h of validos) {
+        await insertLocal("horarios", {
           materia_id: id,
           dia_semana: Number(h.dia_semana),
           hora_inicio: h.hora_inicio,
@@ -203,20 +203,19 @@ export default function MateriaDetalhe() {
           predio: h.predio || null,
           bloco: h.bloco || null,
           sala: h.sala || null,
-        }))
-      );
-      if (insErr) {
-        setSavingEdit(false);
-        showToast("Erro ao salvar horários: " + insErr.message, "error");
-        return;
+        });
       }
-    }
 
-    setSavingEdit(false);
-    setShowEdit(false);
-    globalMutate(swrKeys.materiaDetalhe(id));
-    globalMutate(swrKeys.materias(uid));
-    showToast("Matéria atualizada.", "success");
+      await sincronizarAgoraSeOnline();
+      setShowEdit(false);
+      globalMutate(swrKeys.materiaDetalhe(id));
+      globalMutate(swrKeys.materias(uid));
+      showToast("Matéria atualizada.", "success");
+    } catch (err) {
+      showToast("Erro ao salvar matéria: " + err.message, "error");
+    } finally {
+      setSavingEdit(false);
+    }
   }
 
   async function handleDeleteMateria() {
@@ -229,19 +228,18 @@ export default function MateriaDetalhe() {
     if (!ok) return;
 
     setDeletingMateria(true);
-    const { error: deleteError } = await supabase
-      .from("materias")
-      .delete()
-      .eq("id", id);
-    if (deleteError) {
+    try {
+      await deleteMateriaLocal(id);
+      await sincronizarAgoraSeOnline();
+      globalMutate(swrKeys.materias(uid));
+      showToast("Matéria excluída.", "success");
+      router.push("/materias");
+    } catch (deleteError) {
       setError(deleteError.message);
-      setDeletingMateria(false);
       showToast("Erro ao excluir: " + deleteError.message, "error");
-      return;
+    } finally {
+      setDeletingMateria(false);
     }
-    globalMutate(swrKeys.materias(uid));
-    showToast("Matéria excluída.", "success");
-    router.push("/materias");
   }
 
   /* -------------------- Materiais -------------------- */
@@ -250,6 +248,13 @@ export default function MateriaDetalhe() {
     const file = e.target.files?.[0];
     if (!file || !uid) return;
     setError("");
+
+    if (!isOnline()) {
+      setError("Você está offline. Envio de arquivos precisa de conexão.");
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
 
     const filePath = `${uid}/${id}/${Date.now()}_${file.name}`;
@@ -268,23 +273,24 @@ export default function MateriaDetalhe() {
       data: { publicUrl },
     } = supabase.storage.from("materiais").getPublicUrl(filePath);
 
-    const { error: insertError } = await supabase.from("materiais").insert({
-      materia_id: id,
-      user_id: uid,
-      titulo: file.name,
-      arquivo_url: publicUrl,
-      topico: playlistAtiva,
-    });
-
-    setUploading(false);
-    if (insertError) {
+    try {
+      await insertLocal("materiais", {
+        materia_id: id,
+        user_id: uid,
+        titulo: file.name,
+        arquivo_url: publicUrl,
+        topico: playlistAtiva,
+      });
+      await sincronizarAgoraSeOnline();
+      e.target.value = "";
+      globalMutate(swrKeys.materiaisMateria(id));
+      showToast("Arquivo enviado.", "success");
+    } catch (insertError) {
       setError(insertError.message);
       showToast("Erro ao registrar arquivo: " + insertError.message, "error");
-      return;
+    } finally {
+      setUploading(false);
     }
-    e.target.value = "";
-    globalMutate(swrKeys.materiaisMateria(id));
-    showToast("Arquivo enviado.", "success");
   }
 
   async function handleDeleteMaterial(materialId, arquivoUrl) {
@@ -294,14 +300,26 @@ export default function MateriaDetalhe() {
       danger: true,
     });
     if (!ok) return;
-    const path = caminhoNoStorage(arquivoUrl);
-    if (path) await supabase.storage.from("materiais").remove([path]);
+
+    // Se online, tenta remover o binário do Storage (best effort)
+    if (isOnline()) {
+      const path = caminhoNoStorage(arquivoUrl);
+      if (path) {
+        try {
+          await supabase.storage.from("materiais").remove([path]);
+        } catch {
+          /* arquivo órfão é aceitável */
+        }
+      }
+    }
+
     globalMutate(
       swrKeys.materiaisMateria(id),
       (prev) => prev?.filter((m) => m.id !== materialId),
       false
     );
-    await supabase.from("materiais").delete().eq("id", materialId);
+    await deleteLocal("materiais", materialId);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.materiaisMateria(id));
     showToast("Material removido.", "success");
   }
@@ -324,12 +342,19 @@ export default function MateriaDetalhe() {
       danger: true,
     });
     if (!ok) return;
+
     globalMutate(
       swrKeys.colecoesMateria(id),
       (prev) => prev?.filter((c) => c.id !== colecaoId),
       false
     );
-    await supabase.from("flashcard_colecoes").delete().eq("id", colecaoId);
+    try {
+      await db.flashcards.where("colecao_id").equals(colecaoId).delete();
+    } catch {
+      /* Dexie pode falhar em SSR */
+    }
+    await deleteLocal("flashcard_colecoes", colecaoId);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.colecoesMateria(id));
     globalMutate(swrKeys.colecoes(uid));
     showToast("Baralho removido.", "success");
@@ -337,7 +362,6 @@ export default function MateriaDetalhe() {
 
   /* -------------------- Lembretes -------------------- */
 
-  // Lock por id: dois cliques rápidos não sobrepõem a mutação otimista.
   async function toggleLembrete(l) {
     if (!l?.id || togglingRef.current.has(l.id)) return;
     togglingRef.current.add(l.id);
@@ -353,10 +377,8 @@ export default function MateriaDetalhe() {
     );
 
     try {
-      await supabase
-        .from("tarefas_rotina")
-        .update({ concluido: novoConcluido })
-        .eq("id", l.id);
+      await updateLocal("tarefas_rotina", l.id, { concluido: novoConcluido });
+      await sincronizarAgoraSeOnline();
     } finally {
       togglingRef.current.delete(l.id);
       globalMutate(swrKeys.lembretes(uid));
@@ -370,27 +392,30 @@ export default function MateriaDetalhe() {
     if (!provaTitulo.trim() || !provaData) return;
     setSavingProva(true);
 
-    const { error: err } = await supabase.from("provas").insert({
-      materia_id: id,
-      user_id: uid,
-      titulo: provaTitulo.trim(),
-      data: provaData,
-    });
+    try {
+      await insertLocal("provas", {
+        materia_id: id,
+        user_id: uid,
+        titulo: provaTitulo.trim(),
+        data: provaData,
+      });
+      await sincronizarAgoraSeOnline();
+      setProvaTitulo("");
+      setProvaData("");
+      setShowProvaForm(false);
+      globalMutate(swrKeys.provasMateria(id));
+      globalMutate(swrKeys.provas(uid));
+      globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
 
-    setSavingProva(false);
-
-    if (err) {
+      const msg = isOnline()
+        ? "Prova criada e adicionada ao calendário."
+        : "Prova criada. O evento no calendário aparece ao reconectar.";
+      showToast(msg, "success");
+    } catch (err) {
       showToast("Erro ao criar prova: " + err.message, "error");
-      return;
+    } finally {
+      setSavingProva(false);
     }
-
-    setProvaTitulo("");
-    setProvaData("");
-    setShowProvaForm(false);
-    globalMutate(swrKeys.provasMateria(id));
-    globalMutate(swrKeys.provas(uid));
-    globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
-    showToast("Prova criada e adicionada ao calendário.", "success");
   }
 
   async function handleDeleteProva(provaId) {
@@ -401,7 +426,22 @@ export default function MateriaDetalhe() {
       danger: true,
     });
     if (!ok) return;
-    await supabase.from("provas").delete().eq("id", provaId);
+
+    // O trigger do servidor (migration 05) remove o evento via prova_id;
+    // localmente limpamos os eventos ligados a essa prova.
+    try {
+      const eventos = await db.eventos_calendario.toArray();
+      for (const ev of eventos) {
+        if (ev.prova_id === provaId) {
+          await db.eventos_calendario.delete(ev.id);
+        }
+      }
+    } catch {
+      /* ignora */
+    }
+
+    await deleteLocal("provas", provaId);
+    await sincronizarAgoraSeOnline();
     globalMutate(swrKeys.provasMateria(id));
     globalMutate(swrKeys.provas(uid));
     globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
