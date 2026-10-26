@@ -183,7 +183,7 @@ function VisualizadorPdf({ path, zoom, onErro }) {
   return (
     <div ref={containerRef} className="p-2 min-h-full">
       {carregando && (
-        <p className="text-center text-sm text-gray-500 py-10">Carregando PDF…</p>
+        <p className="text-center text-sm text-textSecondary py-10">Carregando PDF…</p>
       )}
       {doc && info &&
         Array.from({ length: info.paginas }, (_, i) => (
@@ -240,9 +240,9 @@ function VisualizadorDocx({ path, onErro }) {
   }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="min-h-full bg-gray-100">
+    <div className="min-h-full preview-content-area">
       {carregando && (
-        <p className="text-center text-sm text-gray-500 py-10">Carregando documento…</p>
+        <p className="text-center text-sm text-textSecondary py-10">Carregando documento…</p>
       )}
       <div ref={containerRef} className="docx-container" />
     </div>
@@ -274,10 +274,10 @@ function VisualizadorTexto({ path, onErro }) {
   }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (texto === null) {
-    return <p className="text-center text-sm text-gray-500 py-10">Carregando…</p>;
+    return <p className="text-center text-sm text-textSecondary py-10">Carregando…</p>;
   }
   return (
-    <pre className="p-4 text-sm whitespace-pre-wrap break-words bg-white min-h-full">
+    <pre className="p-4 text-sm whitespace-pre-wrap break-words bg-white text-textPrimary min-h-full">
       {texto}
     </pre>
   );
@@ -357,7 +357,7 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
   } else {
     corpo = (
       <div className="min-h-full flex flex-col items-center justify-center text-center p-6 gap-3">
-        <p className="text-gray-600 text-sm">Este tipo de arquivo não tem pré-visualização.</p>
+        <p className="text-textSecondary text-sm">Este tipo de arquivo não tem pré-visualização.</p>
         <a href={urlDeDownload(url, titulo)} className="btn-primary">
           Baixar arquivo
         </a>
@@ -378,7 +378,7 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 bg-white border-b border-borderSoft px-3 pb-2 pt-[calc(0.5rem_+_env(safe-area-inset-top))] sm:pt-2">
-          <p className="flex-1 min-w-0 truncate text-sm font-medium" title={titulo}>
+          <p className="flex-1 min-w-0 truncate text-sm font-medium text-textPrimary" title={titulo}>
             {titulo}
           </p>
 
@@ -418,7 +418,7 @@ export default function VisualizadorArquivo({ titulo, url, onClose }) {
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-auto overscroll-contain bg-gray-100">
+        <div className="flex-1 min-h-0 overflow-auto overscroll-contain preview-content-area">
           {corpo}
           {erro && (
             <div className="min-h-full flex flex-col items-center justify-center text-center p-6 gap-3">

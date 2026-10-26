@@ -136,7 +136,7 @@ export default function EstudarFlashcards() {
         >
           ← {colecao?.nome_colecao}
         </Link>
-        <p className="text-gray-500 mt-6">
+        <p className="text-textSecondary mt-6">
           Este baralho ainda não tem cartões. Adicione alguns para estudar.
         </p>
       </AppLayout>
@@ -153,7 +153,7 @@ export default function EstudarFlashcards() {
           ← {colecao?.nome_colecao}
         </Link>
         {!acabou && (
-          <span className="text-sm text-gray-500 shrink-0">
+          <span className="text-sm text-textSecondary shrink-0">
             {index + 1} / {total}
           </span>
         )}
@@ -168,16 +168,18 @@ export default function EstudarFlashcards() {
 
       {acabou ? (
         <div className="card text-center py-12">
-          <h2 className="text-2xl font-bold mb-2">Sessão concluída! 🎉</h2>
-          <p className="text-gray-500 mb-6">
+          <h2 className="text-2xl font-bold mb-2 text-textPrimary">
+            Sessão concluída! 🎉
+          </h2>
+          <p className="text-textSecondary mb-6">
             Você acertou {sabidos} de {total} cartões.
           </p>
           <div className="flex gap-2 justify-center">
             <button
-              onClick={() => router.push(
-                `/materias/${id}/flashcards/${colecaoId}`
-              )}
-              className="border border-borderSoft rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-surface transition-colors"
+              onClick={() =>
+                router.push(`/materias/${id}/flashcards/${colecaoId}`)
+              }
+              className="border border-borderSoft rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-surface transition-colors text-textPrimary"
             >
               Voltar
             </button>
@@ -207,23 +209,22 @@ export default function EstudarFlashcards() {
                 setFlipped((f) => !f);
               }
             }}
-            className="card w-full max-w-lg min-h-[16rem] flex items-center justify-center text-center cursor-pointer select-none px-5 sm:px-8"
-            style={{
-              background: flipped ? "#f0eeff" : "white",
-              transition: "background 0.15s",
-            }}
+            className={
+              "card flashcard-tile w-full max-w-lg min-h-[16rem] flex items-center justify-center text-center cursor-pointer select-none px-5 sm:px-8 " +
+              (flipped ? "is-flipped" : "")
+            }
           >
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-400 mb-3">
+              <p className="text-xs uppercase tracking-wide text-textMuted mb-3">
                 {flipped ? "Resposta" : "Pergunta"}
               </p>
-              <p className="text-lg font-medium break-words">
+              <p className="text-lg font-medium break-words text-textPrimary">
                 {flipped ? fila[index]?.verso : fila[index]?.frente}
               </p>
             </div>
           </div>
 
-          <p className="text-gray-400 text-sm mt-3">
+          <p className="text-textMuted text-sm mt-3">
             Clique no cartão (ou aperte espaço) para{" "}
             {flipped ? "ver a pergunta" : "ver a resposta"}
           </p>

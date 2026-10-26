@@ -94,6 +94,10 @@ export default function Dashboard() {
   });
   const detalheRef = useRef(null);
 
+  // Lock por id de lembrete: evita mutações otimistas conflitantes se o
+  // usuário clicar rápido (o segundo clique espera o primeiro terminar).
+  const togglingRef = useRef(new Set());
+
   const streak = useMemo(
     () => diasConsecutivos(diasRevisao || [], hojeIso()),
     [diasRevisao]
@@ -216,20 +220,33 @@ export default function Dashboard() {
     globalMutate(swrKeys.eventosProximos(uid));
   }
 
+  // Lock por id: só aplica a mudança otimista depois que o clique anterior
+  // terminou de sincronizar. Sem isso, dois cliques rápidos computavam
+  // `!x.concluido` sobre o mesmo snapshot e o segundo sobrescrevia o
+  // primeiro em vez de alternar de novo.
   async function toggleLembrete(l) {
+    if (!l?.id || togglingRef.current.has(l.id)) return;
+    togglingRef.current.add(l.id);
+    const novoConcluido = !l.concluido;
+
     globalMutate(
       swrKeys.lembretes(uid),
       (prev) =>
         prev?.map((x) =>
-          x.id === l.id ? { ...x, concluido: !x.concluido } : x
+          x.id === l.id ? { ...x, concluido: novoConcluido } : x
         ),
       false
     );
-    await supabase
-      .from("tarefas_rotina")
-      .update({ concluido: !l.concluido })
-      .eq("id", l.id);
-    globalMutate(swrKeys.lembretes(uid));
+
+    try {
+      await supabase
+        .from("tarefas_rotina")
+        .update({ concluido: novoConcluido })
+        .eq("id", l.id);
+    } finally {
+      togglingRef.current.delete(l.id);
+      globalMutate(swrKeys.lembretes(uid));
+    }
   }
 
   if (authLoading) {

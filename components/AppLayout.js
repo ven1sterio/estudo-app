@@ -49,9 +49,9 @@ export default function AppLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-surface">
-      {/* Sidebar (desktop) */}
-      <aside className="hidden md:flex md:flex-col w-56 shrink-0 bg-white border-r border-borderSoft py-6 px-4">
+    <div className="min-h-screen flex bg-surface md:h-screen md:overflow-hidden">
+      {/* Sidebar (desktop) — fixa, com rolagem própria caso cresça */}
+      <aside className="hidden md:flex md:flex-col w-56 shrink-0 bg-white border-r border-borderSoft py-6 px-4 md:h-screen md:overflow-y-auto">
         <Link href="/dashboard" className="flex items-center gap-2 px-2 mb-8">
           <span className="text-xl" aria-hidden="true">🌟</span>
           <span className="font-bold text-textPrimary">SIMPLIFY</span>
@@ -116,7 +116,8 @@ export default function AppLayout({ children }) {
         </div>
       </div>
 
-      <main className="flex-1 min-w-0 px-4 py-6 pt-[calc(4.5rem_+_env(safe-area-inset-top))] md:pt-8 md:px-8 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-8">
+      {/* Conteúdo principal — rola independente da sidebar no desktop */}
+      <main className="flex-1 min-w-0 px-4 py-6 pt-[calc(4.5rem_+_env(safe-area-inset-top))] md:pt-8 md:px-8 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-8 md:h-screen md:overflow-y-auto">
         <div className="max-w-6xl mx-auto">{children}</div>
       </main>
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import useSWR, { mutate as globalMutate } from "swr";
@@ -97,6 +97,9 @@ export default function MateriaDetalhe() {
   const [provaTitulo, setProvaTitulo] = useState("");
   const [provaData, setProvaData] = useState("");
   const [savingProva, setSavingProva] = useState(false);
+
+  // Lock por id de lembrete: evita mutações otimistas conflitantes.
+  const togglingRef = useRef(new Set());
 
   const playlists = useMemo(() => {
     const existentes = new Set(materiais.map((m) => m.topico || "Geral"));
@@ -334,20 +337,30 @@ export default function MateriaDetalhe() {
 
   /* -------------------- Lembretes -------------------- */
 
+  // Lock por id: dois cliques rápidos não sobrepõem a mutação otimista.
   async function toggleLembrete(l) {
+    if (!l?.id || togglingRef.current.has(l.id)) return;
+    togglingRef.current.add(l.id);
+    const novoConcluido = !l.concluido;
+
     globalMutate(
       swrKeys.lembretes(uid),
       (prev) =>
         prev?.map((x) =>
-          x.id === l.id ? { ...x, concluido: !x.concluido } : x
+          x.id === l.id ? { ...x, concluido: novoConcluido } : x
         ),
       false
     );
-    await supabase
-      .from("tarefas_rotina")
-      .update({ concluido: !l.concluido })
-      .eq("id", l.id);
-    globalMutate(swrKeys.lembretes(uid));
+
+    try {
+      await supabase
+        .from("tarefas_rotina")
+        .update({ concluido: novoConcluido })
+        .eq("id", l.id);
+    } finally {
+      togglingRef.current.delete(l.id);
+      globalMutate(swrKeys.lembretes(uid));
+    }
   }
 
   /* -------------------- Provas (form rápido) -------------------- */
@@ -418,7 +431,7 @@ export default function MateriaDetalhe() {
   if (!materia) {
     return (
       <AppLayout>
-        <p>Matéria não encontrada.</p>
+        <p className="text-textPrimary">Matéria não encontrada.</p>
       </AppLayout>
     );
   }
@@ -454,8 +467,8 @@ export default function MateriaDetalhe() {
           >
             <div className="flex justify-between items-start flex-wrap gap-2">
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold break-words">{materia.nome}</h1>
-                <p className="text-gray-400">
+                <h1 className="text-2xl font-bold break-words text-textPrimary">{materia.nome}</h1>
+                <p className="text-textSecondary">
                   {materia.codigo && `${materia.codigo} · `}
                   {materia.professor}
                 </p>
@@ -477,7 +490,7 @@ export default function MateriaDetalhe() {
               </div>
             </div>
             {materia.descricao && (
-              <p className="text-gray-500 text-sm mt-2">{materia.descricao}</p>
+              <p className="text-textSecondary text-sm mt-2">{materia.descricao}</p>
             )}
             {materia.horarios?.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
@@ -504,7 +517,7 @@ export default function MateriaDetalhe() {
             </Link>
           </div>
           {colecoes.length === 0 ? (
-            <p className="text-gray-400 text-sm">Nenhum baralho criado ainda.</p>
+            <p className="text-textMuted text-sm">Nenhum baralho criado ainda.</p>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {colecoes.map((c) => (
@@ -521,8 +534,8 @@ export default function MateriaDetalhe() {
 
           <div className="card">
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <h2 className="font-semibold text-lg">📎 Materiais</h2>
-              <div className="flex bg-surface rounded-xl border border-gray-200 p-1">
+              <h2 className="font-semibold text-lg text-textPrimary">📎 Materiais</h2>
+              <div className="flex bg-surface rounded-xl border border-borderSoft p-1">
                 <button
                   onClick={() => setView("grid")}
                   aria-label="Visualização em grade"
@@ -530,7 +543,7 @@ export default function MateriaDetalhe() {
                     "px-3 py-1 rounded-lg text-sm " +
                     (view === "grid"
                       ? "bg-white shadow-sm text-primaryDark"
-                      : "text-gray-400")
+                      : "text-textMuted")
                   }
                 >
                   ▦
@@ -542,7 +555,7 @@ export default function MateriaDetalhe() {
                     "px-3 py-1 rounded-lg text-sm " +
                     (view === "list"
                       ? "bg-white shadow-sm text-primaryDark"
-                      : "text-gray-400")
+                      : "text-textMuted")
                   }
                 >
                   ☰
@@ -559,7 +572,7 @@ export default function MateriaDetalhe() {
                     "text-sm rounded-full px-3 py-1 transition-colors " +
                     (p === playlistAtiva
                       ? "bg-primary text-white"
-                      : "bg-surface text-gray-500 hover:bg-primarySoft")
+                      : "bg-surface text-textSecondary hover:bg-primarySoft")
                   }
                 >
                   {p}
@@ -579,7 +592,7 @@ export default function MateriaDetalhe() {
               ) : (
                 <button
                   onClick={() => setShowNovaPlaylist(true)}
-                  className="text-sm rounded-full px-3 py-1 border border-dashed border-gray-300 text-gray-400 hover:text-primary hover:border-primary"
+                  className="text-sm rounded-full px-3 py-1 border border-dashed border-borderSoft text-textMuted hover:text-primary hover:border-primary"
                 >
                   + playlist
                 </button>
@@ -601,7 +614,7 @@ export default function MateriaDetalhe() {
             {lMats ? (
               <Skeleton className="h-20 w-full" />
             ) : materiaisDaPlaylist.length === 0 ? (
-              <p className="text-gray-400 text-sm">Nenhum arquivo nesta playlist ainda.</p>
+              <p className="text-textMuted text-sm">Nenhum arquivo nesta playlist ainda.</p>
             ) : view === "list" ? (
               <ul className="space-y-1">
                 {materiaisDaPlaylist.map((m) => (
@@ -618,7 +631,7 @@ export default function MateriaDetalhe() {
                     </button>
                     <button
                       onClick={() => handleDeleteMaterial(m.id, m.arquivo_url)}
-                      className="text-gray-400 hover:text-red-500 text-xs ml-3 p-2 -m-2 shrink-0"
+                      className="text-textMuted hover:text-red-500 text-xs ml-3 p-2 -m-2 shrink-0"
                     >
                       remover
                     </button>
@@ -630,7 +643,7 @@ export default function MateriaDetalhe() {
                 {materiaisDaPlaylist.map((m) => (
                   <div
                     key={m.id}
-                    className="border border-gray-100 rounded-xl p-3 bg-surface"
+                    className="border border-borderSoft rounded-xl p-3 bg-surface"
                   >
                     <button
                       type="button"
@@ -641,7 +654,7 @@ export default function MateriaDetalhe() {
                     </button>
                     <button
                       onClick={() => handleDeleteMaterial(m.id, m.arquivo_url)}
-                      className="text-gray-400 hover:text-red-500 text-xs mt-2"
+                      className="text-textMuted hover:text-red-500 text-xs mt-2"
                     >
                       remover
                     </button>
@@ -656,7 +669,7 @@ export default function MateriaDetalhe() {
         <div className="space-y-6">
           <section className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-sm tracking-wide text-gray-500 uppercase">
+              <h2 className="font-semibold text-sm tracking-wide text-textMuted uppercase">
                 Atividades
               </h2>
               <Link
@@ -668,7 +681,7 @@ export default function MateriaDetalhe() {
               </Link>
             </div>
             {atividadesLista.length === 0 ? (
-              <p className="text-gray-400 text-sm">Nenhuma atividade vinculada ainda.</p>
+              <p className="text-textMuted text-sm">Nenhuma atividade vinculada ainda.</p>
             ) : (
               <ul className="space-y-2">
                 {atividadesLista.map((a) => (
@@ -677,7 +690,7 @@ export default function MateriaDetalhe() {
                       {a.isProva ? "📝 " : ""}
                       <span className="text-primary">{a.titulo}</span>
                     </span>
-                    <span className="text-xs text-gray-400 shrink-0">
+                    <span className="text-xs text-textMuted shrink-0">
                       {fmtData(a.data)}
                     </span>
                   </li>
@@ -688,7 +701,7 @@ export default function MateriaDetalhe() {
 
           <section className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-sm tracking-wide text-gray-500 uppercase">
+              <h2 className="font-semibold text-sm tracking-wide text-textMuted uppercase">
                 Provas
               </h2>
               <button
@@ -731,20 +744,20 @@ export default function MateriaDetalhe() {
             )}
 
             {provas.length === 0 ? (
-              <p className="text-gray-400 text-sm">Nenhuma prova cadastrada.</p>
+              <p className="text-textMuted text-sm">Nenhuma prova cadastrada.</p>
             ) : (
               <ul className="space-y-2">
                 {provas.map((p) => (
                   <li key={p.id} className="text-sm flex justify-between gap-2">
                     <span className="min-w-0 break-words">
                       {p.titulo}{" "}
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-textMuted">
                         · {fmtData(p.data)}
                       </span>
                     </span>
                     <button
                       onClick={() => handleDeleteProva(p.id)}
-                      className="text-gray-400 hover:text-red-500 text-xs shrink-0 p-1 -m-1"
+                      className="text-textMuted hover:text-red-500 text-xs shrink-0 p-1 -m-1"
                     >
                       remover
                     </button>
@@ -756,7 +769,7 @@ export default function MateriaDetalhe() {
 
           <section className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-sm tracking-wide text-gray-500 uppercase">
+              <h2 className="font-semibold text-sm tracking-wide text-textMuted uppercase">
                 Lembretes
               </h2>
               <Link
@@ -768,7 +781,7 @@ export default function MateriaDetalhe() {
               </Link>
             </div>
             {lembretes.length === 0 ? (
-              <p className="text-gray-400 text-sm">Nenhum lembrete ainda.</p>
+              <p className="text-textMuted text-sm">Nenhum lembrete ainda.</p>
             ) : (
               <ul className="space-y-2">
                 {lembretes.slice(0, 5).map((l) => (
@@ -782,7 +795,7 @@ export default function MateriaDetalhe() {
                     <span
                       className={
                         "min-w-0 break-words " +
-                        (l.concluido ? "line-through text-gray-300" : "")
+                        (l.concluido ? "line-through text-textMuted" : "text-textPrimary")
                       }
                     >
                       {l.titulo}
@@ -813,7 +826,7 @@ export default function MateriaDetalhe() {
           <form onSubmit={handleSaveEdit} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-1">Nome *</label>
+                <label className="block text-sm font-medium mb-1 text-textPrimary">Nome *</label>
                 <input
                   required
                   className="input-field"
@@ -824,7 +837,7 @@ export default function MateriaDetalhe() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Código</label>
+                <label className="block text-sm font-medium mb-1 text-textPrimary">Código</label>
                 <input
                   className="input-field"
                   value={formMat.codigo}
@@ -834,7 +847,7 @@ export default function MateriaDetalhe() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Professor</label>
+                <label className="block text-sm font-medium mb-1 text-textPrimary">Professor</label>
                 <input
                   className="input-field"
                   value={formMat.professor}
@@ -844,7 +857,7 @@ export default function MateriaDetalhe() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-textPrimary">
                   Email do professor
                 </label>
                 <input
@@ -860,7 +873,7 @@ export default function MateriaDetalhe() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Descrição</label>
+                <label className="block text-sm font-medium mb-1 text-textPrimary">Descrição</label>
                 <textarea
                   className="input-field"
                   rows={2}
@@ -871,7 +884,7 @@ export default function MateriaDetalhe() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Cor</label>
+                <label className="block text-sm font-medium mb-1 text-textPrimary">Cor</label>
                 <input
                   type="color"
                   className="w-12 h-10 rounded-xl border border-borderSoft cursor-pointer"
@@ -1072,8 +1085,7 @@ function BaralhoCard({ c, materiaId, materiaCor, onDelete }) {
           </Link>
           <Link
             href={`/materias/${materiaId}/flashcards/${c.id}`}
-            className="h-[42px] rounded-[10px] border text-sm font-semibold flex items-center justify-center hover:bg-primarySoft/40 transition-colors sm:flex-1"
-            style={{ borderColor: "#CFC2F5", color: "#8B6FD8" }}
+            className="h-[42px] rounded-[10px] border btn-outline-primary text-sm font-semibold flex items-center justify-center hover:bg-primarySoft/40 transition-colors sm:flex-1"
           >
             Gerenciar
           </Link>

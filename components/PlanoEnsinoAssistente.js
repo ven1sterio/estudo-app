@@ -275,10 +275,10 @@ export default function PlanoEnsinoAssistente() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 flex items-end sm:items-center justify-center z-30 sm:px-4" style={{ background: "rgba(20, 15, 30, 0.35)" }}>
-          <div className="bg-white rounded-t-[18px] sm:rounded-[18px] max-w-lg w-full max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto overscroll-contain p-4 sm:p-6 pb-[calc(1rem_+_env(safe-area-inset-bottom))] sm:pb-6" style={{ boxShadow: "0 15px 50px rgba(30, 20, 50, 0.15)" }}>
+        <div className="assistente-overlay fixed inset-0 flex items-end sm:items-center justify-center z-30 sm:px-4">
+          <div className="assistente-modal bg-white rounded-t-[18px] sm:rounded-[18px] max-w-lg w-full max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto overscroll-contain p-4 sm:p-6 pb-[calc(1rem_+_env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-lg">🤖 Assistente</h2>
+              <h2 className="font-semibold text-lg text-textPrimary">🤖 Assistente</h2>
               <button onClick={fechar} className="text-textMuted hover:text-textPrimary">✕</button>
             </div>
 
@@ -335,7 +335,7 @@ export default function PlanoEnsinoAssistente() {
                 </p>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Matéria de destino</label>
+                  <label className="block text-sm font-medium mb-1 text-textPrimary">Matéria de destino</label>
                   <select className="input-field" value={materiaSelecionada} onChange={(e) => setMateriaSelecionada(e.target.value)}>
                     {(materias || []).map((m) => (
                       <option key={m.id} value={m.id}>{m.nome}</option>
@@ -457,7 +457,7 @@ export default function PlanoEnsinoAssistente() {
 
             {step === "salvo" && (
               <div className="text-center py-6">
-                <p className="text-lg font-semibold mb-2">Prontinho! 🎉</p>
+                <p className="text-lg font-semibold mb-2 text-textPrimary">Prontinho! 🎉</p>
                 <p className="text-textSecondary text-sm mb-4">
                   {modo === "plano"
                     ? "As avaliações selecionadas já estão no seu calendário."

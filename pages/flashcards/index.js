@@ -138,10 +138,7 @@ function FlashcardCard({ c, pendentes }) {
 
       <div className="flex-1 flex flex-col justify-center px-5 py-4 sm:px-7 sm:py-5 gap-1.5 min-w-0">
         {c.materias?.nome && (
-          <span
-            className="self-start text-[12px] font-semibold rounded-full px-2.5 py-1"
-            style={{ color: "#8B6FD8", background: "#F0EAFF" }}
-          >
+          <span className="self-start text-[12px] font-semibold rounded-full px-2.5 py-1 badge-materia">
             {c.materias.nome}
           </span>
         )}
@@ -154,11 +151,15 @@ function FlashcardCard({ c, pendentes }) {
         </Link>
 
         {c.descricao && (
-          <p className="text-[13px] text-textSecondary line-clamp-2">{c.descricao}</p>
+          <p className="text-[13px] text-textSecondary line-clamp-2">
+            {c.descricao}
+          </p>
         )}
 
         <div className="flex items-center gap-2 text-xs text-textMuted mt-1 flex-wrap">
-          <span>{total} cartão{total === 1 ? "" : "ões"}</span>
+          <span>
+            {total} cartão{total === 1 ? "" : "ões"}
+          </span>
           <span>·</span>
           <span>{formatRevisao(c.ultima_revisao)}</span>
           {pendentes > 0 && (
@@ -179,7 +180,9 @@ function FlashcardCard({ c, pendentes }) {
                 style={{ width: `${progresso}%`, background: "#8B6FD8" }}
               />
             </div>
-            <p className="text-[11px] text-textMuted mt-1">{progresso}% concluído</p>
+            <p className="text-[11px] text-textMuted mt-1">
+              {progresso}% concluído
+            </p>
           </div>
         )}
 
@@ -195,8 +198,7 @@ function FlashcardCard({ c, pendentes }) {
           </Link>
           <Link
             href={`/materias/${c.materia_id}/flashcards/${c.id}`}
-            className="h-[42px] rounded-[10px] border text-sm font-semibold flex items-center justify-center hover:bg-primarySoft/40 transition-colors sm:flex-1"
-            style={{ borderColor: "#CFC2F5", color: "#8B6FD8" }}
+            className="h-[42px] rounded-[10px] border btn-outline-primary text-sm font-semibold flex items-center justify-center hover:bg-primarySoft/40 transition-colors sm:flex-1"
           >
             Gerenciar
           </Link>

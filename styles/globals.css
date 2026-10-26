@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   VARIÁVEIS CSS — usadas em componentes com style inline.
+   Definidas em :root para o light, sobrescritas em html.dark.
+   ============================================================ */
+:root {
+  --flashcard-front-bg: #ffffff;
+  --flashcard-front-border: #eceaf0;
+  --flashcard-back-bg: #f0eeff;
+  --flashcard-back-border: #dfd6f8;
+  --skeleton-bg: rgba(236, 234, 240, 0.65);
+  --badge-materia-bg: #f0eaff;
+  --badge-materia-fg: #6d4fc4;
+
+  /* Polimento visual (dark mode unificado) */
+  --modal-overlay-bg: rgba(20, 15, 30, 0.35);
+  --modal-shadow: 0 15px 50px rgba(30, 20, 50, 0.15);
+  --secondary-btn-border: #CFC2F5;
+  --secondary-btn-fg: #8B6FD8;
+  --preview-content-bg: #F3F4F6;
+}
+
+html.dark {
+  --flashcard-front-bg: #1f1e26;
+  --flashcard-front-border: #2f2d3a;
+  --flashcard-back-bg: #2d2748;
+  --flashcard-back-border: #4a3e6b;
+  --skeleton-bg: rgba(255, 255, 255, 0.08);
+  --badge-materia-bg: rgba(139, 111, 216, 0.25);
+  --badge-materia-fg: #e0d7ff;
+
+  /* Polimento visual no dark */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.55);
+  --modal-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+  --secondary-btn-border: #4a3e6b;
+  --secondary-btn-fg: #c5b4f5;
+  --preview-content-bg: #14131a;
+}
+
 body {
   background-color: #FAFAFC;
   color: #25232A;
@@ -26,6 +64,46 @@ body {
 
 .card:hover {
   @apply shadow-softHover;
+}
+
+/* Skeleton — reage ao dark mode */
+.skeleton {
+  background-color: var(--skeleton-bg);
+}
+
+/* Badge de matéria (dashboard / flashcards) */
+.badge-materia {
+  color: var(--badge-materia-fg);
+  background: var(--badge-materia-bg);
+}
+
+/* Botão outline com cor dinâmica (usado no "Gerenciar" dos baralhos) */
+.btn-outline-primary {
+  border-color: var(--secondary-btn-border);
+  color: var(--secondary-btn-fg);
+}
+
+/* Overlay/sombra do assistente (PlanoEnsinoAssistente) */
+.assistente-overlay {
+  background: var(--modal-overlay-bg);
+}
+.assistente-modal {
+  box-shadow: var(--modal-shadow);
+}
+
+/* Área de conteúdo do preview de arquivos (VisualizadorArquivo) */
+.preview-content-area {
+  background-color: var(--preview-content-bg);
+}
+
+/* Card flip do modo de estudo */
+.flashcard-tile {
+  background: var(--flashcard-front-bg);
+  border-color: var(--flashcard-front-border);
+}
+.flashcard-tile.is-flipped {
+  background: var(--flashcard-back-bg);
+  border-color: var(--flashcard-back-border);
 }
 
 /* ============================================================
@@ -107,7 +185,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
 }
 
 /* ============================================================
-   DARK MODE
+   DARK MODE — revisão de contraste
+   Contraste alvo (WCAG AA normal text ≥ 4.5:1, large text ≥ 3:1):
+   - textPrimary #e8e6ec sobre #1f1e26 ≈ 13.5:1 ✓
+   - textSecondary #b3aec0 sobre #1f1e26 ≈ 7.6:1 ✓
+   - textMuted #9b96a8 sobre #1f1e26 ≈ 5.6:1 ✓
+   - primary #b9a5f0 sobre #1f1e26 ≈ 7.4:1 ✓
+   - gray-300 #8a8694 sobre #1f1e26 ≈ 4.5:1 ✓
    ============================================================ */
 html.dark { color-scheme: dark; }
 
@@ -119,22 +203,65 @@ html.dark body {
 /* Superfícies */
 html.dark .bg-white { background-color: #1f1e26; }
 html.dark .bg-surface { background-color: #14131a; }
-html.dark .bg-primarySoft { background-color: #2a2540; }
-html.dark .bg-primaryExtraSoft { background-color: #1c1a26; }
+html.dark .bg-primarySoft { background-color: #2d2748; }
+html.dark .bg-primaryExtraSoft { background-color: #262330; }
 html.dark .bg-gray-50,
 html.dark .bg-gray-50\/50 { background-color: #1a1922; }
 html.dark .bg-gray-100 { background-color: #221f2c; }
 
-/* Tipografia */
+/* Superfícies com opacidade */
+html.dark .bg-white\/90 { background-color: rgba(31, 30, 38, 0.9); }
+html.dark .bg-white\/60 { background-color: rgba(255, 255, 255, 0.08); }
+html.dark .bg-white\/20 { background-color: rgba(255, 255, 255, 0.15); }
+html.dark .bg-primarySoft\/40 { background-color: rgba(139, 111, 216, 0.18); }
+html.dark .bg-primarySoft\/50 { background-color: rgba(139, 111, 216, 0.24); }
+html.dark .hover\:bg-primarySoft\/40:hover { background-color: rgba(139, 111, 216, 0.18); }
+
+/* Tipografia — tokens próprios */
 html.dark .text-textPrimary { color: #e8e6ec; }
-html.dark .text-textSecondary { color: #a8a4b3; }
-html.dark .text-textMuted { color: #7a7684; }
-html.dark .text-primaryDark { color: #B9A5F0; }
-html.dark .text-gray-300 { color: #5a5763; }
+html.dark .text-textSecondary { color: #b3aec0; }
+html.dark .text-textMuted { color: #9b96a8; }
+html.dark .text-primaryDark { color: #c5b4f5; }
+
+/* Tipografia — tons do Tailwind */
+html.dark .text-gray-300 { color: #8a8694; }
 html.dark .text-gray-400,
 html.dark .text-gray-500,
 html.dark .text-gray-600 { color: #8a8694; }
 html.dark .text-gray-700 { color: #b6b1c0; }
+
+/* Destaques — primary */
+html.dark .text-primary { color: #b9a5f0; }
+html.dark .hover\:text-primary:hover { color: #c5b4f5; }
+html.dark .hover\:text-primaryDark:hover { color: #c5b4f5; }
+
+/* Bordas com primary/alpha */
+html.dark .hover\:border-primary\/40:hover { border-color: rgba(185, 165, 240, 0.5); }
+
+/* Vermelhos */
+html.dark .text-red-500 { color: #f28b8b; }
+html.dark .text-red-600 { color: #f28b8b; }
+html.dark .text-red-700 { color: #fca5a5; }
+html.dark .hover\:text-red-500:hover { color: #fca5a5; }
+html.dark .hover\:text-red-700:hover { color: #fca5a5; }
+html.dark .border-red-200 { border-color: #5c2a2a; }
+html.dark .border-red-300 { border-color: #7a3a3a; }
+html.dark .hover\:border-red-400:hover { border-color: #a14a4a; }
+html.dark .bg-red-50 { background-color: rgba(233, 130, 130, 0.12); }
+html.dark .hover\:bg-red-50:hover { background-color: rgba(233, 130, 130, 0.18); }
+
+/* Verdes */
+html.dark .text-green-500 { color: #8fd8ac; }
+html.dark .text-green-600 { color: #a3e4bd; }
+html.dark .text-green-700 { color: #a3e4bd; }
+html.dark .border-green-300 { border-color: #2f5c40; }
+html.dark .bg-green-50 { background-color: rgba(114, 198, 154, 0.12); }
+html.dark .hover\:bg-green-50:hover { background-color: rgba(114, 198, 154, 0.18); }
+
+/* Amarelo / rosa dos badges */
+html.dark .text-yellow-700 { color: #f3c979; }
+html.dark .text-pink-700 { color: #eba2c4; }
+html.dark .text-pink-300 { color: #f5c2da; }
 
 /* Bordas */
 html.dark .border-borderSoft { border-color: #2f2d3a; }
@@ -152,7 +279,7 @@ html.dark .input-field {
   border-color: #35323f;
   color: #e8e6ec;
 }
-html.dark .input-field::placeholder { color: #7a7684; }
+html.dark .input-field::placeholder { color: #9b96a8; }
 html.dark .input-field:focus { border-color: #8B6FD8; }
 
 /* Sombras */
@@ -165,12 +292,9 @@ html.dark .bg-accentGreen\/60  { background-color: rgba(114, 198, 154, 0.22); }
 html.dark .bg-accentPink\/60   { background-color: rgba(233, 155, 196, 0.22); }
 html.dark .bg-accentBlue\/60   { background-color: rgba(112, 168, 222, 0.22); }
 
-html.dark .text-yellow-700 { color: #f3c979; }
-html.dark .text-green-700  { color: #8fd8ac; }
-html.dark .text-pink-700   { color: #eba2c4; }
-
 /* Hover da lista de tarefas no dark */
 html.dark .hover\:bg-surface:hover { background-color: #2a2933; }
+html.dark .hover\:bg-primaryExtraSoft:hover { background-color: #262330; }
 
 /* Previews */
 html.dark .docx-container .docx-wrapper { background: #14131a !important; }
