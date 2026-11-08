@@ -41,13 +41,6 @@ export default function CalendarioView({
     () => fetchMaterias(uid)
   );
 
-  const { data: profile } = useSWR(
-    uid ? swrKeys.profile(uid) : null,
-    () => fetchProfile(uid)
-  );
-
-  const { showToast } = useToast();
-
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -159,19 +152,6 @@ export default function CalendarioView({
           {title}
         </h2>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (profile?.widget_token) {
-                navigator.clipboard.writeText(profile.widget_token);
-                showToast("Token copiado! Volte à tela inicial para adicionar o widget.", "success");
-              } else {
-                showToast("Erro ao gerar token. Tente recarregar a página.", "error");
-              }
-            }}
-            className="text-sm border border-borderSoft rounded-xl px-3 py-1 text-textMuted hover:text-primary hover:border-primary transition-colors mr-2 hidden sm:block"
-          >
-            Copiar Token do Widget
-          </button>
           <button
             onClick={() => mudarMes(-1)}
             aria-label="Mês anterior"

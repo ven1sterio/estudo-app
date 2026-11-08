@@ -1,7 +1,7 @@
 {
   "version": 2,
   "workspaceRoot": "c:\\Users\\lucas\\Desktop\\estudo-app-copia",
-  "generatedAt": "2026-11-08T01:03:49.653Z",
+  "generatedAt": "2026-11-08T01:05:35.114Z",
   "files": {
     "postcss.config.js": {
       "path": "postcss.config.js",
@@ -2091,8 +2091,8 @@
     },
     "lib/auth-context.js": {
       "path": "lib/auth-context.js",
-      "tokens": 301,
-      "sha1": "67c1c3c5b657cd6ea17d7036df8b46bcb1c63793",
+      "tokens": 427,
+      "sha1": "56989afbbfaf5a8bb2d4da715edf7e4a2a1c1226",
       "imports": [
         "react",
         "lib/supabaseClient.js"
@@ -2121,10 +2121,22 @@
           "end": 14
         },
         {
+          "name": "urlParams",
+          "kind": "const",
+          "start": 30,
+          "end": 38
+        },
+        {
+          "name": "deviceId",
+          "kind": "const",
+          "start": 31,
+          "end": 38
+        },
+        {
           "name": "useAuthContext",
           "kind": "function",
-          "start": 43,
-          "end": 45
+          "start": 56,
+          "end": 58
         }
       ],
       "summary": null,
@@ -4788,8 +4800,8 @@
     },
     "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/LauncherActivity.java": {
       "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/LauncherActivity.java",
-      "tokens": 444,
-      "sha1": "bd126daf591e63f8e3877d3fa410a1f6eb2b4890",
+      "tokens": 536,
+      "sha1": "683354113847d899729cf4ba58e7ae5b65618589",
       "imports": [],
       "exports": [],
       "symbols": [],
@@ -4918,8 +4930,8 @@
     },
     "components/CalendarioView.js": {
       "path": "components/CalendarioView.js",
-      "tokens": 3746,
-      "sha1": "3ee0baeaa6c7b23463dc7b3a0146a83f3b27769d",
+      "tokens": 3544,
+      "sha1": "e04125808218779a69c3eef750bf32165212897a",
       "imports": [
         "react",
         "swr",
@@ -4957,146 +4969,146 @@
         {
           "name": "d",
           "kind": "const",
-          "start": 52,
-          "end": 83
+          "start": 45,
+          "end": 76
         },
         {
           "name": "inicioMes",
           "kind": "const",
-          "start": 56,
-          "end": 59
+          "start": 49,
+          "end": 52
         },
         {
           "name": "fimMes",
           "kind": "const",
-          "start": 57,
-          "end": 59
+          "start": 50,
+          "end": 52
         },
         {
           "name": "detalheRef",
           "kind": "const",
-          "start": 70,
-          "end": 98
+          "start": 63,
+          "end": 91
         },
         {
           "name": "eventos",
           "kind": "const",
-          "start": 72,
-          "end": 98
+          "start": 65,
+          "end": 91
         },
         {
           "name": "handleCriarEvento",
           "kind": "function",
-          "start": 100,
-          "end": 100
+          "start": 93,
+          "end": 93
         },
         {
           "name": "eventosFiltrados",
           "kind": "const",
-          "start": 119,
-          "end": 130
+          "start": 112,
+          "end": 123
         },
         {
           "name": "eventosPorDia",
           "kind": "const",
-          "start": 124,
-          "end": 130
+          "start": 117,
+          "end": 123
         },
         {
           "name": "map",
           "kind": "const",
-          "start": 125,
-          "end": 125
+          "start": 118,
+          "end": 118
         },
         {
           "name": "dias",
           "kind": "const",
-          "start": 132,
-          "end": 141
+          "start": 125,
+          "end": 134
         },
         {
           "name": "ano",
           "kind": "const",
-          "start": 133,
-          "end": 158
+          "start": 126,
+          "end": 151
         },
         {
           "name": "mes",
           "kind": "const",
-          "start": 134,
-          "end": 158
+          "start": 127,
+          "end": 151
         },
         {
           "name": "primeiroDiaSemana",
           "kind": "const",
-          "start": 135,
-          "end": 158
+          "start": 128,
+          "end": 151
         },
         {
           "name": "totalDias",
           "kind": "const",
-          "start": 136,
-          "end": 158
+          "start": 129,
+          "end": 151
         },
         {
           "name": "celulas",
           "kind": "const",
-          "start": 137,
-          "end": 158
+          "start": 130,
+          "end": 151
         },
         {
           "name": "mudarMes",
           "kind": "function",
-          "start": 143,
-          "end": 147
+          "start": 136,
+          "end": 140
         },
         {
           "name": "hojeStr",
           "kind": "const",
-          "start": 149,
-          "end": 158
+          "start": 142,
+          "end": 151
         },
         {
           "name": "eventosDoDiaSelecionado",
           "kind": "const",
-          "start": 150,
-          "end": 158
+          "start": 143,
+          "end": 151
         },
         {
           "name": "dataStr",
           "kind": "const",
-          "start": 232,
-          "end": 238
+          "start": 212,
+          "end": 218
         },
         {
           "name": "eventosDoDia",
           "kind": "const",
-          "start": 233,
-          "end": 238
+          "start": 213,
+          "end": 218
         },
         {
           "name": "isHoje",
           "kind": "const",
-          "start": 234,
-          "end": 238
+          "start": 214,
+          "end": 218
         },
         {
           "name": "isSelected",
           "kind": "const",
-          "start": 235,
-          "end": 238
+          "start": 215,
+          "end": 218
         },
         {
           "name": "NovoEventoForm",
           "kind": "function",
-          "start": 356,
-          "end": 356
+          "start": 336,
+          "end": 336
         },
         {
           "name": "handleSubmit",
           "kind": "function",
-          "start": 364,
-          "end": 375
+          "start": 344,
+          "end": 355
         }
       ],
       "summary": null,
@@ -5104,8 +5116,8 @@
     },
     "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/CalendarWidget.java": {
       "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/CalendarWidget.java",
-      "tokens": 1192,
-      "sha1": "3abff00a64b4f71bb632772f5cdc518160e2197c",
+      "tokens": 1066,
+      "sha1": "32d50b006c11a04fbff06fa17ace27525921f734",
       "imports": [],
       "exports": [],
       "symbols": [],
@@ -5154,8 +5166,8 @@
     },
     "pages/api/widget.js": {
       "path": "pages/api/widget.js",
-      "tokens": 416,
-      "sha1": "ea147fee6c6bac2c2c7e46519fedc2531a129ff0",
+      "tokens": 383,
+      "sha1": "22b190345367cbef53e78294ced7651ae02363ed",
       "imports": [
         "@supabase/supabase-js"
       ],
@@ -5164,44 +5176,44 @@
         {
           "name": "supabaseUrl",
           "kind": "const",
-          "start": 6,
-          "end": 11
+          "start": 5,
+          "end": 10
         },
         {
           "name": "supabaseServiceKey",
           "kind": "const",
-          "start": 7,
-          "end": 11
+          "start": 6,
+          "end": 10
         },
         {
           "name": "supabase",
           "kind": "const",
-          "start": 14,
-          "end": 16
+          "start": 12,
+          "end": 14
         },
         {
           "name": "hoje",
+          "kind": "const",
+          "start": 22,
+          "end": 22
+        },
+        {
+          "name": "inicioMes",
+          "kind": "const",
+          "start": 23,
+          "end": 23
+        },
+        {
+          "name": "fimMes",
           "kind": "const",
           "start": 24,
           "end": 24
         },
         {
-          "name": "inicioMes",
-          "kind": "const",
-          "start": 25,
-          "end": 25
-        },
-        {
-          "name": "fimMes",
-          "kind": "const",
-          "start": 26,
-          "end": 26
-        },
-        {
           "name": "todasDatas",
           "kind": "const",
-          "start": 34,
-          "end": 37
+          "start": 32,
+          "end": 35
         }
       ],
       "summary": null,
@@ -5209,8 +5221,8 @@
     },
     "sql/08_widget_token.sql": {
       "path": "sql/08_widget_token.sql",
-      "tokens": 81,
-      "sha1": "39f079ff472dd09388f6379f7eecc5d0e4e89756",
+      "tokens": 86,
+      "sha1": "0c16c048545dacd43f7f35fe457a62e219d139f1",
       "imports": [],
       "exports": [],
       "symbols": [],

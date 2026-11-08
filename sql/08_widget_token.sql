@@ -1,5 +1,6 @@
--- Adiciona um token seguro para o widget buscar os dados
-alter table profiles add column if not exists widget_token text default replace(gen_random_uuid()::text, '-', '');
+-- Adiciona o ID do aparelho para o widget buscar os dados sem precisar de token
+alter table profiles add column if not exists device_id text;
+create index if not exists idx_profiles_device_id on profiles(device_id);
 
--- Gera token para usuários existentes
-update profiles set widget_token = replace(gen_random_uuid()::text, '-', '') where widget_token is null;
+-- Limpa a coluna antiga de token (caso já tenha rodado antes)
+alter table profiles drop column if exists widget_token;
