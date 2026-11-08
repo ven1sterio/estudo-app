@@ -1,7 +1,7 @@
 {
   "version": 2,
   "workspaceRoot": "c:\\Users\\lucas\\Desktop\\estudo-app-copia",
-  "generatedAt": "2026-11-08T00:53:48.577Z",
+  "generatedAt": "2026-11-08T01:03:49.653Z",
   "files": {
     "postcss.config.js": {
       "path": "postcss.config.js",
@@ -4209,8 +4209,8 @@
     },
     "android/app/build.gradle": {
       "path": "android/app/build.gradle",
-      "tokens": 2456,
-      "sha1": "90726ff8e18c5a1839725a9346d7ca38bdc58ab3",
+      "tokens": 2520,
+      "sha1": "f4e93ab33c78ffde332f45f8cc24c91e64c62f5f",
       "imports": [],
       "exports": [],
       "symbols": [],
@@ -4229,8 +4229,8 @@
     },
     "public/.well-known/assetlinks.json": {
       "path": "public/.well-known/assetlinks.json",
-      "tokens": 88,
-      "sha1": "b717729914586e7e316e613489b6519d87ffa38d",
+      "tokens": 115,
+      "sha1": "ec9ebaf9e62307e759c37f5dd60bc4a225a31ebb",
       "imports": [],
       "exports": [],
       "symbols": [],
@@ -4249,8 +4249,8 @@
     },
     "android/app/src/main/AndroidManifest.xml": {
       "path": "android/app/src/main/AndroidManifest.xml",
-      "tokens": 2005,
-      "sha1": "b56a021c696acfe06ce3e474c5674dd720ae1d87",
+      "tokens": 1943,
+      "sha1": "a66c1b861cbbc710b1ce618b83b834360bd8c583",
       "imports": [],
       "exports": [],
       "symbols": [],
@@ -4918,15 +4918,15 @@
     },
     "components/CalendarioView.js": {
       "path": "components/CalendarioView.js",
-      "tokens": 3853,
-      "sha1": "0965e2c9c383a7a2e7756a8c5be4945a5e91532d",
+      "tokens": 3746,
+      "sha1": "3ee0baeaa6c7b23463dc7b3a0146a83f3b27769d",
       "imports": [
         "react",
         "swr",
         "lib/cacheWrite.js",
         "lib/sync.js",
         "components/Skeleton.js",
-        "components/Modal.js"
+        "components/Toast.js"
       ],
       "exports": [],
       "symbols": [
@@ -5065,38 +5065,38 @@
         {
           "name": "dataStr",
           "kind": "const",
-          "start": 225,
-          "end": 231
+          "start": 232,
+          "end": 238
         },
         {
           "name": "eventosDoDia",
           "kind": "const",
-          "start": 226,
-          "end": 231
+          "start": 233,
+          "end": 238
         },
         {
           "name": "isHoje",
           "kind": "const",
-          "start": 227,
-          "end": 231
+          "start": 234,
+          "end": 238
         },
         {
           "name": "isSelected",
           "kind": "const",
-          "start": 228,
-          "end": 231
+          "start": 235,
+          "end": 238
         },
         {
           "name": "NovoEventoForm",
           "kind": "function",
-          "start": 362,
-          "end": 362
+          "start": 356,
+          "end": 356
         },
         {
           "name": "handleSubmit",
           "kind": "function",
-          "start": 370,
-          "end": 381
+          "start": 364,
+          "end": 375
         }
       ],
       "summary": null,
@@ -5104,8 +5104,8 @@
     },
     "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/CalendarWidget.java": {
       "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/CalendarWidget.java",
-      "tokens": 997,
-      "sha1": "5aced404246278942aee9da20906db4d86a5ba15",
+      "tokens": 1192,
+      "sha1": "3abff00a64b4f71bb632772f5cdc518160e2197c",
       "imports": [],
       "exports": [],
       "symbols": [],
@@ -5219,8 +5219,8 @@
     },
     "android/app/src/main/res/xml/widget_info.xml": {
       "path": "android/app/src/main/res/xml/widget_info.xml",
-      "tokens": 112,
-      "sha1": "e083eb802f80282985310d6d6f0c119c699550e9",
+      "tokens": 92,
+      "sha1": "5381ba5d50e4b2a16ea6bd3ed2049b6683087ebf",
       "imports": [],
       "exports": [],
       "symbols": [],

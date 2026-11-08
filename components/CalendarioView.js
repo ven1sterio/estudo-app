@@ -3,7 +3,7 @@ import useSWR, { mutate as globalMutate } from "swr";
 import { insertLocal } from "../lib/cacheWrite";
 import { sincronizarAgoraSeOnline } from "../lib/sync";
 import Skeleton from "./Skeleton";
-import Modal from "./Modal";
+import { useToast } from "./Toast";
 import {
   swrKeys,
   fetcherEventosRange,
@@ -46,7 +46,7 @@ export default function CalendarioView({
     () => fetchProfile(uid)
   );
 
-  const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const { showToast } = useToast();
 
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
@@ -160,10 +160,17 @@ export default function CalendarioView({
         </h2>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowWidgetModal(true)}
+            onClick={() => {
+              if (profile?.widget_token) {
+                navigator.clipboard.writeText(profile.widget_token);
+                showToast("Token copiado! Volte à tela inicial para adicionar o widget.", "success");
+              } else {
+                showToast("Erro ao gerar token. Tente recarregar a página.", "error");
+              }
+            }}
             className="text-sm border border-borderSoft rounded-xl px-3 py-1 text-textMuted hover:text-primary hover:border-primary transition-colors mr-2 hidden sm:block"
           >
-            Configurar Widget
+            Copiar Token do Widget
           </button>
           <button
             onClick={() => mudarMes(-1)}
@@ -342,19 +349,6 @@ export default function CalendarioView({
           </div>
         </div>
       )}
-
-      <Modal open={showWidgetModal} onClose={() => setShowWidgetModal(false)} title="Widget do Android">
-        <div className="space-y-4 text-sm text-textSecondary">
-          <p>Adicione o widget SIMPLIFY na tela inicial do seu celular Android.</p>
-          <p>Quando solicitado, cole o token abaixo para sincronizar seus eventos:</p>
-          <div className="bg-surface p-3 rounded-lg border border-borderSoft text-center">
-            <code className="text-lg font-mono text-primary select-all">
-              {profile?.widget_token || "Carregando..."}
-            </code>
-          </div>
-          <p className="text-xs">Se o token não aparecer, faça login novamente para atualizar seus dados.</p>
-        </div>
-      </Modal>
     </>
   );
 }
