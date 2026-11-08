@@ -2,6 +2,11 @@ node_modules/
 .next/
 .env.local
 
+# Arquivos gerados pelo PWA (build)
+public/sw.js
+public/workbox-*.js
+public/swe-worker-*.js
+
 # Artefatos de empacotamento Android (TWA)
 android/
 *.keystore

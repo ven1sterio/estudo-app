@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { montarHorarios } from "../lib/sigaaHorarios";
+import { insertLocal } from "../lib/cacheWrite";
+import { sincronizarAgoraSeOnline } from "../lib/sync";
 
 const TIPOS = {
   prova: "Prova",
@@ -134,17 +136,28 @@ export default function PlanoEnsinoAssistente() {
         prioridade: "media",
       }));
 
-    if (provasParaInserir.length > 0) {
-      const { error } = await supabase.from("provas").insert(provasParaInserir);
-      if (error) { setError(error.message); setLoading(false); return; }
+    try {
+      for (const p of provasParaInserir) {
+        const novaProva = await insertLocal("provas", p);
+        await insertLocal("eventos_calendario", {
+          user_id: p.user_id,
+          materia_id: p.materia_id,
+          prova_id: novaProva.id,
+          titulo: p.titulo,
+          data: p.data,
+          tipo: "prova",
+        });
+      }
+      for (const t of tarefasParaInserir) {
+        await insertLocal("tarefas", t);
+      }
+      await sincronizarAgoraSeOnline();
+      setLoading(false);
+      setStep("salvo");
+    } catch (err) {
+      setError(err.message || "Erro ao salvar avaliações.");
+      setLoading(false);
     }
-    if (tarefasParaInserir.length > 0) {
-      const { error } = await supabase.from("tarefas").insert(tarefasParaInserir);
-      if (error) { setError(error.message); setLoading(false); return; }
-    }
-
-    setLoading(false);
-    setStep("salvo");
   }
 
   // ---------- Fluxo: Comprovante de Matrícula ----------
@@ -222,46 +235,35 @@ export default function PlanoEnsinoAssistente() {
       return;
     }
 
-    for (const d of selecionadas) {
-      const { data: materia, error: materiaError } = await supabase
-        .from("materias")
-        .insert({
+    try {
+      for (const d of selecionadas) {
+        const novaMateria = await insertLocal("materias", {
           user_id: user.id,
           nome: d.nome,
           codigo: d.codigo,
           professor: d.professor,
           cor: d.cor,
-          // email do professor fica em branco de propósito — você preenche depois na matéria
-        })
-        .select()
-        .single();
+        });
 
-      if (materiaError) {
-        setError(`Erro ao criar "${d.nome}": ${materiaError.message}`);
-        setLoading(false);
-        return;
-      }
-
-      if (d.horarios.length > 0) {
-        const { error: horarioError } = await supabase.from("horarios").insert(
-          d.horarios.map((h) => ({
-            materia_id: materia.id,
-            dia_semana: h.diaSemana,
-            hora_inicio: h.horaInicio,
-            hora_fim: h.horaFim,
-            sala: h.sala || null,
-          }))
-        );
-        if (horarioError) {
-          setError(`Erro ao salvar horários de "${d.nome}": ${horarioError.message}`);
-          setLoading(false);
-          return;
+        if (d.horarios.length > 0) {
+          for (const h of d.horarios) {
+            await insertLocal("horarios", {
+              materia_id: novaMateria.id,
+              dia_semana: h.diaSemana,
+              hora_inicio: h.horaInicio,
+              hora_fim: h.horaFim,
+              sala: h.sala || null,
+            });
+          }
         }
       }
+      await sincronizarAgoraSeOnline();
+      setLoading(false);
+      setStep("salvo");
+    } catch (err) {
+      setError(err.message || "Erro ao criar matérias.");
+      setLoading(false);
     }
-
-    setLoading(false);
-    setStep("salvo");
   }
 
   return (

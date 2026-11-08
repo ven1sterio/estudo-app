@@ -29,6 +29,7 @@ import {
   fetchColecoesDaMateria,
   fetchTarefasDaMateria,
   fetchProvasDaMateria,
+  fetchEventosDaMateria,
   fetchLembretes,
 } from "../../lib/fetchers";
 
@@ -78,6 +79,10 @@ export default function MateriaDetalhe() {
   const { data: provas = [] } = useSWR(
     ready ? swrKeys.provasMateria(id) : null,
     () => fetchProvasDaMateria(id)
+  );
+  const { data: eventos = [] } = useSWR(
+    ready ? swrKeys.eventosMateria(id) : null,
+    () => fetchEventosDaMateria(id)
   );
   const { data: lembretes = [] } = useSWR(
     uid ? swrKeys.lembretes(uid) : null,
@@ -257,7 +262,11 @@ export default function MateriaDetalhe() {
 
     setUploading(true);
 
-    const filePath = `${uid}/${id}/${Date.now()}_${file.name}`;
+    const nomeLimpo = file.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const filePath = `${uid}/${id}/${Date.now()}_${nomeLimpo}`;
 
     const { error: uploadError } = await supabase.storage
       .from("materiais")
@@ -393,11 +402,19 @@ export default function MateriaDetalhe() {
     setSavingProva(true);
 
     try {
-      await insertLocal("provas", {
+      const novaProva = await insertLocal("provas", {
         materia_id: id,
         user_id: uid,
         titulo: provaTitulo.trim(),
         data: provaData,
+      });
+      await insertLocal("eventos_calendario", {
+        user_id: uid,
+        materia_id: id,
+        prova_id: novaProva.id,
+        titulo: provaTitulo.trim(),
+        data: provaData,
+        tipo: "prova",
       });
       await sincronizarAgoraSeOnline();
       setProvaTitulo("");
@@ -493,6 +510,13 @@ export default function MateriaDetalhe() {
       titulo: t.titulo,
       data: t.data_entrega,
       isProva: false,
+    })),
+    ...eventos.map((e) => ({
+      id: `evento-${e.id}`,
+      titulo: e.titulo,
+      data: e.data,
+      isProva: false,
+      isEvento: true,
     })),
   ].sort((a, b) => a.data.localeCompare(b.data));
 
@@ -727,7 +751,7 @@ export default function MateriaDetalhe() {
                 {atividadesLista.map((a) => (
                   <li key={a.id} className="text-sm flex justify-between gap-2">
                     <span className="min-w-0 break-words">
-                      {a.isProva ? "📝 " : ""}
+                      {a.isProva ? "📝 " : a.isEvento ? "📅 " : ""}
                       <span className="text-primary">{a.titulo}</span>
                     </span>
                     <span className="text-xs text-textMuted shrink-0">

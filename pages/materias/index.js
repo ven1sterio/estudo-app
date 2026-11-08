@@ -248,7 +248,7 @@ function MateriaCard({ m, index, stats, onDelete }) {
           {stats && (
             <div className="flex items-center gap-2 text-[11px] text-textPrimary/70 dark:text-textSecondary min-w-0 overflow-hidden">
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
-                {icons.check}
+                {icons.circle}
                 {stats.tarefasPendentes}
               </span>
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3 truncate">
@@ -300,7 +300,7 @@ function MateriaRow({ m, index, stats, onDelete }) {
           {stats && (
             <div className="flex items-center gap-2.5 text-[11px] text-textPrimary/70 dark:text-textSecondary mt-1">
               <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
-                {icons.check}
+                {icons.circle}
                 {stats.tarefasPendentes} tarefa
                 {stats.tarefasPendentes === 1 ? "" : "s"}
               </span>

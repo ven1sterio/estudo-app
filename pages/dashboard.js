@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useRequireAuth } from "../lib/useAuth";
-import { insertLocal, updateLocal } from "../lib/cacheWrite";
+import { updateLocal } from "../lib/cacheWrite";
 import { sincronizarAgoraSeOnline } from "../lib/sync";
 import AppLayout from "../components/AppLayout";
 import Skeleton from "../components/Skeleton";
+import CalendarioView from "../components/CalendarioView";
 import { icons } from "../components/icons";
+import { useToast } from "../components/Toast";
 import { diasConsecutivos, hojeIso } from "../lib/streak";
 import {
   swrKeys,
@@ -17,33 +19,16 @@ import {
   fetchLembretes,
   fetchEventosProximos,
   fetchDiasRevisao,
-  fetcherEventosRange,
-  ymd,
 } from "../lib/fetchers";
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const MESES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
-const TIPO_INFO = {
-  prova: { label: "Provas", cor: "#8B85F0" },
-  trabalho: { label: "Trabalhos", cor: "#B8E6D5" },
-  atividade: { label: "Atividades", cor: "#FFE9B3" },
-  outro: { label: "Outros Eventos", cor: "#F5C9E0" },
-};
-
-const TAREFA_TIPO_PARA_FILTRO = {
-  prova: "prova", trabalho: "trabalho", atividade: "atividade",
-  seminario: "atividade", lista: "atividade", outro: "outro",
-};
 
 const PASTEL_COLORS = ["#FBE9D0", "#E9E1FF", "#DDEEFF", "#E3F5E9", "#FFE4EF"];
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useRequireAuth();
   const uid = user?.id;
+  const { showToast } = useToast();
 
   const { data: profile } = useSWR(
     uid ? swrKeys.profile(uid) : null,
@@ -73,27 +58,6 @@ export default function Dashboard() {
     uid ? swrKeys.diasRevisao(uid) : null,
     fetchDiasRevisao
   );
-
-  const [cursor, setCursor] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d;
-  });
-  const inicioMes = ymd(new Date(cursor.getFullYear(), cursor.getMonth(), 1));
-  const fimMes = ymd(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0));
-
-  const { data: eventosRange, isLoading: lCal } = useSWR(
-    uid ? swrKeys.eventosRange(uid, inicioMes, fimMes) : null,
-    fetcherEventosRange,
-    { keepPreviousData: false }
-  );
-
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [showNovoEvento, setShowNovoEvento] = useState(false);
-  const [filtros, setFiltros] = useState({
-    prova: true, trabalho: true, atividade: true, outro: true,
-  });
-  const detalheRef = useRef(null);
 
   // Lock por id de lembrete: evita mutações otimistas conflitantes se o
   // usuário clicar rápido (o segundo clique espera o primeiro terminar).
@@ -127,6 +91,8 @@ export default function Dashboard() {
     const lista = [
       ...(eventosProximos || []).map((e) => ({
         id: `ev-${e.id}`,
+        realId: e.id,
+        tipo: "evento",
         titulo: e.titulo,
         data: e.data,
         materia: e.materias?.nome,
@@ -136,6 +102,8 @@ export default function Dashboard() {
         .slice(0, 4)
         .map((t) => ({
           id: `tf-${t.id}`,
+          realId: t.id,
+          tipo: "tarefa",
           titulo: t.titulo,
           data: t.data_entrega,
           materia: t.materias?.nome,
@@ -146,80 +114,31 @@ export default function Dashboard() {
     return lista;
   }, [eventosProximos, tarefas]);
 
-  const eventosNormalizados = useMemo(() => {
-    if (!eventosRange) return [];
-    return [
-      ...eventosRange.eventos.map((e) => ({
-        id: `evento-${e.id}`,
-        data: e.data,
-        titulo: e.titulo,
-        descricao: e.descricao,
-        filtro: e.tipo,
-        cor: e.cor || e.materias?.cor || TIPO_INFO[e.tipo]?.cor,
-        materia: e.materias?.nome,
-      })),
-      ...eventosRange.tarefas.map((t) => ({
-        id: `tarefa-${t.id}`,
-        data: t.data_entrega,
-        titulo: t.titulo,
-        descricao: t.descricao,
-        filtro: TAREFA_TIPO_PARA_FILTRO[t.tipo] || "atividade",
-        cor: t.cor || t.materias?.cor || TIPO_INFO[TAREFA_TIPO_PARA_FILTRO[t.tipo]]?.cor,
-        materia: t.materias?.nome,
-        concluido: t.concluido,
-      })),
-    ];
-  }, [eventosRange]);
-
-  const eventosFiltrados = useMemo(
-    () => eventosNormalizados.filter((e) => filtros[e.filtro]),
-    [eventosNormalizados, filtros]
-  );
-
-  const eventosPorDia = useMemo(() => {
-    const map = {};
-    for (const e of eventosFiltrados) {
-      (map[e.data] = map[e.data] || []).push(e);
+  // Concluir uma tarefa diretamente do card de "Atividades" do dashboard.
+  // Atualização otimista (a tarefa some da lista na hora) + sync + toast.
+  async function concluirTarefa(tarefaId) {
+    globalMutate(
+      swrKeys.tarefas(uid),
+      (prev) =>
+        prev?.map((t) =>
+          t.id === tarefaId ? { ...t, concluido: true } : t
+        ),
+      false
+    );
+    try {
+      await updateLocal("tarefas", tarefaId, { concluido: true });
+      await sincronizarAgoraSeOnline();
+      globalMutate(swrKeys.tarefas(uid));
+      globalMutate(swrKeys.eventosProximos(uid));
+      globalMutate((key) => Array.isArray(key) && key[0] === "eventos_range");
+      showToast("Tarefa concluída.", "success");
+    } catch (e) {
+      showToast(
+        "Erro ao concluir tarefa: " + (e?.message || String(e)),
+        "error"
+      );
+      globalMutate(swrKeys.tarefas(uid));
     }
-    return map;
-  }, [eventosFiltrados]);
-
-  const dias = useMemo(() => {
-    const ano = cursor.getFullYear();
-    const mes = cursor.getMonth();
-    const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
-    const totalDias = new Date(ano, mes + 1, 0).getDate();
-    const celulas = [];
-    for (let i = 0; i < primeiroDiaSemana; i++) celulas.push(null);
-    for (let d = 1; d <= totalDias; d++) celulas.push(new Date(ano, mes, d));
-    return celulas;
-  }, [cursor]);
-
-  const hojeStr = ymd(new Date());
-  const eventosDoDiaSelecionado = selectedDay
-    ? eventosPorDia[selectedDay] || []
-    : [];
-
-  function mudarMes(delta) {
-    setCursor((c) => new Date(c.getFullYear(), c.getMonth() + delta, 1));
-    setSelectedDay(null);
-    setShowNovoEvento(false);
-  }
-
-  async function handleCriarEvento({ titulo, descricao, tipo, cor }) {
-    await insertLocal("eventos_calendario", {
-      user_id: uid,
-      titulo,
-      descricao,
-      tipo,
-      cor,
-      data: selectedDay,
-      origem: "manual",
-    });
-    await sincronizarAgoraSeOnline();
-    setShowNovoEvento(false);
-    globalMutate(swrKeys.eventosRange(uid, inicioMes, fimMes));
-    globalMutate(swrKeys.eventosProximos(uid));
   }
 
   // Lock por id: só aplica a mudança otimista depois que o clique anterior
@@ -309,7 +228,7 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold flex items-center gap-2 text-textPrimary">
-                <span aria-hidden="true">{icons.check}</span> Atividades
+                <span aria-hidden="true">{icons.clipboard}</span> Atividades
               </h2>
               <Link
                 href="/tarefas"
@@ -325,25 +244,42 @@ export default function Dashboard() {
               <div className="flex flex-col gap-2">
                 {proximos.map((p, i) => {
                   const destaque = i === 0;
+                  const isTarefa = p.tipo === "tarefa";
                   return (
-                    <Link
+                    <div
                       key={p.id}
-                      href="/tarefas"
                       className={
                         "flex items-center gap-3 rounded-2xl px-4 py-3 shadow-soft transition-shadow hover:shadow-softHover " +
                         (destaque ? "bg-primary" : "bg-white")
                       }
                     >
-                      <span
-                        className={
-                          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 " +
-                          (destaque ? "bg-white/20 text-white" : "bg-primarySoft text-primaryDark")
-                        }
-                        aria-hidden="true"
-                      >
-                        {icons.check}
-                      </span>
-                      <div className="flex-1 min-w-0">
+                      {isTarefa ? (
+                        <button
+                          type="button"
+                          onClick={() => concluirTarefa(p.realId)}
+                          className={
+                            "w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors " +
+                            (destaque
+                              ? "bg-white/20 text-white hover:bg-success hover:text-white"
+                              : "bg-primarySoft text-primaryDark hover:bg-success hover:text-white")
+                          }
+                          aria-label={`Marcar "${p.titulo}" como concluída`}
+                          title="Marcar como concluída"
+                        >
+                          {icons.circle}
+                        </button>
+                      ) : (
+                        <span
+                          className={
+                            "w-9 h-9 rounded-full flex items-center justify-center shrink-0 " +
+                            (destaque ? "bg-white/20 text-white" : "bg-primarySoft text-primaryDark")
+                          }
+                          aria-hidden="true"
+                        >
+                          {icons.calendar}
+                        </span>
+                      )}
+                      <Link href="/tarefas" className="flex-1 min-w-0">
                         <p
                           className={
                             "text-sm font-medium truncate " +
@@ -362,8 +298,9 @@ export default function Dashboard() {
                             {p.materia}
                           </p>
                         )}
-                      </div>
-                      <span
+                      </Link>
+                      <Link
+                        href="/tarefas"
                         className={
                           "text-xs shrink-0 " +
                           (destaque ? "text-white/85" : "text-textMuted")
@@ -373,8 +310,8 @@ export default function Dashboard() {
                           day: "2-digit",
                           month: "2-digit",
                         })}
-                      </span>
-                    </Link>
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -429,177 +366,7 @@ export default function Dashboard() {
 
       <hr className="border-borderSoft my-8" />
 
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-textPrimary">
-            <span aria-hidden="true">{icons.calendar}</span> Calendário
-          </h2>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => mudarMes(-1)}
-              aria-label="Mês anterior"
-              className="text-textMuted hover:text-primary px-3 py-1 text-xl"
-            >
-              ‹
-            </button>
-            <span className="font-medium w-32 sm:w-40 text-center text-sm sm:text-base text-textPrimary">
-              {MESES[cursor.getMonth()]} {cursor.getFullYear()}
-            </span>
-            <button
-              onClick={() => mudarMes(1)}
-              aria-label="Próximo mês"
-              className="text-textMuted hover:text-primary px-3 py-1 text-xl"
-            >
-              ›
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-4 mb-4 text-sm">
-          {Object.entries(TIPO_INFO).map(([key, info]) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer text-textSecondary">
-              <input
-                type="checkbox"
-                checked={filtros[key]}
-                onChange={(e) => setFiltros((f) => ({ ...f, [key]: e.target.checked }))}
-                className="accent-primary"
-              />
-              <span
-                className="inline-block w-2 h-2 rounded-full"
-                style={{ background: info.cor }}
-                aria-hidden="true"
-              />
-              {info.label}
-            </label>
-          ))}
-        </div>
-
-        {lCal ? (
-          <Skeleton className="h-[400px] w-full" />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 bg-white rounded-2xl shadow-soft p-4">
-              <div className="grid grid-cols-7 text-center text-xs text-textMuted mb-2">
-                {DIAS_SEMANA.map((d) => (
-                  <div key={d}>{d}</div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1">
-                {dias.map((dia, i) => {
-                  if (!dia) return <div key={i} />;
-                  const dataStr = ymd(dia);
-                  const eventosDoDia = eventosPorDia[dataStr] || [];
-                  const isHoje = dataStr === hojeStr;
-                  const isSelected = dataStr === selectedDay;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setSelectedDay(dataStr);
-                        setShowNovoEvento(false);
-                        if (typeof window !== "undefined" && window.innerWidth < 768) {
-                          setTimeout(
-                            () =>
-                              detalheRef.current?.scrollIntoView({
-                                behavior: "smooth",
-                                block: "center",
-                              }),
-                            60
-                          );
-                        }
-                      }}
-                      className={
-                        "aspect-square rounded-lg sm:rounded-xl border text-left p-1 sm:p-1.5 flex flex-col overflow-hidden transition-colors " +
-                        (isSelected
-                          ? "border-primary bg-primarySoft/50"
-                          : "border-borderSoft hover:border-primary/40")
-                      }
-                    >
-                      <span
-                        className={
-                          "text-xs font-medium " +
-                          (isHoje
-                            ? "text-primary font-bold"
-                            : "text-textSecondary")
-                        }
-                      >
-                        {dia.getDate()}
-                      </span>
-                      <div className="flex flex-wrap gap-0.5 mt-1">
-                        {eventosDoDia.slice(0, 4).map((e) => (
-                          <span
-                            key={e.id}
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ background: e.cor }}
-                            aria-hidden="true"
-                          />
-                        ))}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div ref={detalheRef} className="bg-white rounded-2xl shadow-soft p-4 h-fit">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-textPrimary">
-                  {selectedDay
-                    ? new Date(selectedDay + "T00:00:00").toLocaleDateString(
-                        "pt-BR",
-                        { weekday: "long", day: "2-digit", month: "long" }
-                      )
-                    : "Selecione um dia"}
-                </h2>
-                {selectedDay && (
-                  <button
-                    onClick={() => setShowNovoEvento((s) => !s)}
-                    aria-label="Novo evento"
-                    className="w-6 h-6 flex items-center justify-center rounded-full bg-primarySoft text-primaryDark hover:bg-primary hover:text-white transition-colors"
-                  >
-                    +
-                  </button>
-                )}
-              </div>
-
-              {showNovoEvento && (
-                <NovoEventoForm
-                  onCancel={() => setShowNovoEvento(false)}
-                  onCreate={handleCriarEvento}
-                />
-              )}
-
-              {selectedDay && !showNovoEvento && eventosDoDiaSelecionado.length === 0 && (
-                <p className="text-textMuted text-sm">Nada por aqui neste dia.</p>
-              )}
-
-              {!showNovoEvento && (
-                <ul className="space-y-2">
-                  {eventosDoDiaSelecionado.map((e) => (
-                    <li key={e.id} className="flex items-start gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                        style={{ background: e.cor }}
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-textPrimary">{e.titulo}</p>
-                        {e.descricao && (
-                          <p className="text-xs text-textMuted">{e.descricao}</p>
-                        )}
-                        <p className="text-xs text-textMuted">
-                          {TIPO_INFO[e.filtro]?.label}
-                          {e.materia ? ` · ${e.materia}` : ""}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      <CalendarioView uid={uid} title="Calendário" titleIcon={icons.calendar} />
     </AppLayout>
   );
 }
@@ -710,7 +477,7 @@ function MateriasCarousel({ materias, materiaStats }) {
                     {stats && (
                       <div className="flex items-center gap-2 text-[11px] text-textPrimary/70 dark:text-textSecondary min-w-0 overflow-hidden">
                         <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3">
-                          {icons.check}
+                          {icons.circle}
                           {stats.tarefasPendentes}
                         </span>
                         <span className="flex items-center gap-1 shrink-0 [&>svg]:w-3 [&>svg]:h-3 truncate">
@@ -799,68 +566,5 @@ function FlashcardsList({ cartoes }) {
         </div>
       )}
     </section>
-  );
-}
-
-function NovoEventoForm({ onCancel, onCreate }) {
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [tipo, setTipo] = useState("outro");
-  const [cor, setCor] = useState("#F5C9E0");
-  const [saving, setSaving] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setSaving(true);
-    await onCreate({ titulo, descricao, tipo, cor });
-    setSaving(false);
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 mb-3">
-      <input
-        required
-        autoFocus
-        className="input-field"
-        placeholder="Título do evento"
-        value={titulo}
-        onChange={(e) => setTitulo(e.target.value)}
-      />
-      <textarea
-        className="input-field"
-        rows={2}
-        placeholder="Descrição (opcional)"
-        value={descricao}
-        onChange={(e) => setDescricao(e.target.value)}
-      />
-      <div className="flex gap-2">
-        <select
-          className="input-field"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-        >
-          {Object.entries(TIPO_INFO).map(([key, info]) => (
-            <option key={key} value={key}>
-              {info.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="color"
-          className="w-12 h-10 rounded-xl border border-gray-200 shrink-0"
-          value={cor}
-          onChange={(e) => setCor(e.target.value)}
-          aria-label="Cor do evento"
-        />
-      </div>
-      <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="btn-primary">
-          {saving ? "Salvando..." : "Salvar evento"}
-        </button>
-        <button type="button" onClick={onCancel} className="text-gray-400 px-3">
-          Cancelar
-        </button>
-      </div>
-    </form>
   );
 }

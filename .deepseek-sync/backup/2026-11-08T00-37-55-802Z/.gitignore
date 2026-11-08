@@ -1,0 +1,27 @@
+node_modules/
+.next/
+.env.local
+
+# Artefatos de empacotamento Android (TWA)
+android/
+*.keystore
+*.jks
+twa-manifest.json.bak
+
+# Build de exportação estática (não usamos hoje, mas evita ruído)
+out/
+
+# Logs e caches locais
+*.log
+.DS_Store
+
+android.keystore
+# Arquivos temporários e compilados do Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Chaves de assinatura: nunca enviar ao GitHub
+*.keystore
+*.jks
