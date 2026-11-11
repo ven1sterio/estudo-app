@@ -1,0 +1,5314 @@
+{
+  "version": 2,
+  "workspaceRoot": "c:\\Users\\lucas\\Desktop\\estudo-app-copia",
+  "generatedAt": "2026-11-11T04:48:50.986Z",
+  "files": {
+    "postcss.config.js": {
+      "path": "postcss.config.js",
+      "tokens": 23,
+      "sha1": "fec8f2681a35a4ded2a5e60bc3db58372aadd918",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "twa-manifest.json": {
+      "path": "twa-manifest.json",
+      "tokens": 436,
+      "sha1": "1d9e1ef3eb916a78c8f9fcb9cd7cffb5623a50e2",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "tailwind.config.js": {
+      "path": "tailwind.config.js",
+      "tokens": 265,
+      "sha1": "28ed76e86e51e51963fe7bc75f46c09e76e6e428",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "components/AppLayout.js": {
+      "path": "components/AppLayout.js",
+      "tokens": 2266,
+      "sha1": "07fbddf907b450685d862193bf4f04c722074be0",
+      "imports": [
+        "react",
+        "next/link",
+        "next/dynamic",
+        "next/router",
+        "swr",
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/useSyncOutbox.js",
+        "lib/theme-context.js",
+        "components/Toast.js",
+        "components/icons.js",
+        "components/PlanoEnsinoAssistente.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "PlanoEnsinoAssistente",
+          "kind": "const",
+          "start": 14,
+          "end": 16
+        },
+        {
+          "name": "LINKS",
+          "kind": "const",
+          "start": 18,
+          "end": 19
+        },
+        {
+          "name": "isActiveLink",
+          "kind": "function",
+          "start": 29,
+          "end": 40
+        },
+        {
+          "name": "matches",
+          "kind": "const",
+          "start": 30,
+          "end": 30
+        },
+        {
+          "name": "maisEspecifico",
+          "kind": "const",
+          "start": 33,
+          "end": 44
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 43,
+          "end": 44
+        },
+        {
+          "name": "isDark",
+          "kind": "const",
+          "start": 47,
+          "end": 59
+        },
+        {
+          "name": "themeIcon",
+          "kind": "const",
+          "start": 48,
+          "end": 59
+        },
+        {
+          "name": "themeLabel",
+          "kind": "const",
+          "start": 49,
+          "end": 59
+        },
+        {
+          "name": "wasOnlineRef",
+          "kind": "const",
+          "start": 52,
+          "end": 59
+        },
+        {
+          "name": "handleLogout",
+          "kind": "function",
+          "start": 61,
+          "end": 77
+        },
+        {
+          "name": "active",
+          "kind": "const",
+          "start": 90,
+          "end": 93
+        },
+        {
+          "name": "active",
+          "kind": "const",
+          "start": 200,
+          "end": 203
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/ConfirmDialog.js": {
+      "path": "components/ConfirmDialog.js",
+      "tokens": 667,
+      "sha1": "839811d83d26fa8b5afec7a77dc8102c9c4ce80a",
+      "imports": [],
+      "exports": [
+        "ConfirmProvider",
+        "useConfirm"
+      ],
+      "symbols": [
+        {
+          "name": "ConfirmContext",
+          "kind": "const",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "name": "DEFAULTS",
+          "kind": "const",
+          "start": 11,
+          "end": 17
+        },
+        {
+          "name": "ConfirmProvider",
+          "kind": "function",
+          "start": 19,
+          "end": 19
+        },
+        {
+          "name": "resolverRef",
+          "kind": "const",
+          "start": 21,
+          "end": 23
+        },
+        {
+          "name": "confirm",
+          "kind": "const",
+          "start": 23,
+          "end": 23
+        },
+        {
+          "name": "resolver",
+          "kind": "function",
+          "start": 30,
+          "end": 35
+        },
+        {
+          "name": "fn",
+          "kind": "const",
+          "start": 31,
+          "end": 38
+        },
+        {
+          "name": "useConfirm",
+          "kind": "function",
+          "start": 89,
+          "end": 91
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/EmptyState.js": {
+      "path": "components/EmptyState.js",
+      "tokens": 183,
+      "sha1": "81e401b05c3b36dbd15cee6c9b81b95de7a87a7d",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "components/GradeSemanal.js": {
+      "path": "components/GradeSemanal.js",
+      "tokens": 704,
+      "sha1": "981bfdf5bad6e385cca06495a44a18706d4f5de6",
+      "imports": [
+        "react",
+        "next/link",
+        "lib/theme-context.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "DIAS",
+          "kind": "const",
+          "start": 5,
+          "end": 10
+        },
+        {
+          "name": "ORDEM",
+          "kind": "const",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "name": "isDark",
+          "kind": "const",
+          "start": 12,
+          "end": 34
+        },
+        {
+          "name": "blocosPorDia",
+          "kind": "const",
+          "start": 14,
+          "end": 34
+        },
+        {
+          "name": "mapa",
+          "kind": "const",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "name": "dia",
+          "kind": "const",
+          "start": 18,
+          "end": 25
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 51,
+          "end": 56
+        },
+        {
+          "name": "alpha",
+          "kind": "const",
+          "start": 53,
+          "end": 56
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/PlanoEnsinoAssistente.js": {
+      "path": "components/PlanoEnsinoAssistente.js",
+      "tokens": 5003,
+      "sha1": "06825892f689daeb682ff5eb7e5b784f1f87ea2f",
+      "imports": [
+        "react",
+        "lib/supabaseClient.js",
+        "lib/sigaaHorarios.js",
+        "lib/cacheWrite.js",
+        "lib/sync.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "TIPOS",
+          "kind": "const",
+          "start": 7,
+          "end": 14
+        },
+        {
+          "name": "CORES_AUTO",
+          "kind": "const",
+          "start": 16,
+          "end": 26
+        },
+        {
+          "name": "DIAS",
+          "kind": "const",
+          "start": 17,
+          "end": 26
+        },
+        {
+          "name": "fileToBase64",
+          "kind": "function",
+          "start": 19,
+          "end": 26
+        },
+        {
+          "name": "reader",
+          "kind": "const",
+          "start": 21,
+          "end": 55
+        },
+        {
+          "name": "abrir",
+          "kind": "function",
+          "start": 44,
+          "end": 56
+        },
+        {
+          "name": "fechar",
+          "kind": "function",
+          "start": 58,
+          "end": 60
+        },
+        {
+          "name": "trocarModo",
+          "kind": "function",
+          "start": 62,
+          "end": 66
+        },
+        {
+          "name": "handleFilePlano",
+          "kind": "function",
+          "start": 69,
+          "end": 105
+        },
+        {
+          "name": "file",
+          "kind": "const",
+          "start": 70,
+          "end": 75
+        },
+        {
+          "name": "pdfBase64",
+          "kind": "const",
+          "start": 81,
+          "end": 86
+        },
+        {
+          "name": "res",
+          "kind": "const",
+          "start": 82,
+          "end": 86
+        },
+        {
+          "name": "data",
+          "kind": "const",
+          "start": 87,
+          "end": 93
+        },
+        {
+          "name": "avaliacoes",
+          "kind": "const",
+          "start": 95,
+          "end": 95
+        },
+        {
+          "name": "atualizarAvaliacao",
+          "kind": "function",
+          "start": 107,
+          "end": 109
+        },
+        {
+          "name": "handleSalvarAvaliacoes",
+          "kind": "function",
+          "start": 111,
+          "end": 161
+        },
+        {
+          "name": "selecionadas",
+          "kind": "const",
+          "start": 116,
+          "end": 122
+        },
+        {
+          "name": "provasParaInserir",
+          "kind": "const",
+          "start": 124,
+          "end": 126
+        },
+        {
+          "name": "tarefasParaInserir",
+          "kind": "const",
+          "start": 128,
+          "end": 137
+        },
+        {
+          "name": "novaProva",
+          "kind": "const",
+          "start": 141,
+          "end": 149
+        },
+        {
+          "name": "handleFileMatricula",
+          "kind": "function",
+          "start": 164,
+          "end": 209
+        },
+        {
+          "name": "file",
+          "kind": "const",
+          "start": 165,
+          "end": 170
+        },
+        {
+          "name": "pdfBase64",
+          "kind": "const",
+          "start": 176,
+          "end": 181
+        },
+        {
+          "name": "res",
+          "kind": "const",
+          "start": 177,
+          "end": 181
+        },
+        {
+          "name": "data",
+          "kind": "const",
+          "start": 182,
+          "end": 188
+        },
+        {
+          "name": "disciplinas",
+          "kind": "const",
+          "start": 191,
+          "end": 199
+        },
+        {
+          "name": "atualizarDisciplina",
+          "kind": "function",
+          "start": 211,
+          "end": 213
+        },
+        {
+          "name": "atualizarHorarioDisciplina",
+          "kind": "function",
+          "start": 215,
+          "end": 223
+        },
+        {
+          "name": "handleSalvarMatricula",
+          "kind": "function",
+          "start": 225,
+          "end": 267
+        },
+        {
+          "name": "selecionadas",
+          "kind": "const",
+          "start": 230,
+          "end": 236
+        },
+        {
+          "name": "novaMateria",
+          "kind": "const",
+          "start": 240,
+          "end": 246
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/Modal.js": {
+      "path": "components/Modal.js",
+      "tokens": 442,
+      "sha1": "1d5c4d7400bf158530e5826f5db2a6bca6cd060d",
+      "imports": [
+        "react"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "onKey",
+          "kind": "const",
+          "start": 13,
+          "end": 20
+        },
+        {
+          "name": "anterior",
+          "kind": "const",
+          "start": 15,
+          "end": 20
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/icons.js": {
+      "path": "components/icons.js",
+      "tokens": 977,
+      "sha1": "261ae1d0bf078519bd0a0e722b8bbeb71367c9bd",
+      "imports": [],
+      "exports": [
+        "icons"
+      ],
+      "symbols": [
+        {
+          "name": "icons",
+          "kind": "const",
+          "start": 2,
+          "end": 83
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/Toast.js": {
+      "path": "components/Toast.js",
+      "tokens": 654,
+      "sha1": "0445d940053a2176872765b29cf80bf958a780c8",
+      "imports": [
+        "react"
+      ],
+      "exports": [
+        "ToastProvider",
+        "useToast"
+      ],
+      "symbols": [
+        {
+          "name": "ToastContext",
+          "kind": "const",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "name": "nextId",
+          "kind": "const",
+          "start": 5,
+          "end": 7
+        },
+        {
+          "name": "ToastProvider",
+          "kind": "function",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "name": "dismiss",
+          "kind": "const",
+          "start": 10,
+          "end": 12
+        },
+        {
+          "name": "showToast",
+          "kind": "const",
+          "start": 14,
+          "end": 22
+        },
+        {
+          "name": "id",
+          "kind": "const",
+          "start": 16,
+          "end": 17
+        },
+        {
+          "name": "value",
+          "kind": "const",
+          "start": 26,
+          "end": 26
+        },
+        {
+          "name": "STYLE_POR_TIPO",
+          "kind": "const",
+          "start": 44,
+          "end": 48
+        },
+        {
+          "name": "ToastItem",
+          "kind": "function",
+          "start": 50,
+          "end": 50
+        },
+        {
+          "name": "estilo",
+          "kind": "const",
+          "start": 51,
+          "end": 58
+        },
+        {
+          "name": "useToast",
+          "kind": "function",
+          "start": 84,
+          "end": 86
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "components/Skeleton.js": {
+      "path": "components/Skeleton.js",
+      "tokens": 48,
+      "sha1": "634b2bdbf0e11afae0a42ff5281f3922913a2285",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "components/VisualizadorArquivo.js": {
+      "path": "components/VisualizadorArquivo.js",
+      "tokens": 3552,
+      "sha1": "14fca8e07733df07d7e3db68ca907c82ee9b8563",
+      "imports": [
+        "react",
+        "lib/supabaseClient.js",
+        "pdfjs-dist/legacy/build/pdf.mjs",
+        "pdfjs-dist/legacy/build/pdf",
+        "docx-preview"
+      ],
+      "exports": [
+        "tipoDoArquivo",
+        "caminhoNoStorage"
+      ],
+      "symbols": [
+        {
+          "name": "BUCKET",
+          "kind": "const",
+          "start": 4,
+          "end": 13
+        },
+        {
+          "name": "EXTENSOES",
+          "kind": "const",
+          "start": 6,
+          "end": 13
+        },
+        {
+          "name": "tipoDoArquivo",
+          "kind": "function",
+          "start": 15,
+          "end": 21
+        },
+        {
+          "name": "ext",
+          "kind": "const",
+          "start": 16,
+          "end": 19
+        },
+        {
+          "name": "caminhoNoStorage",
+          "kind": "function",
+          "start": 23,
+          "end": 31
+        },
+        {
+          "name": "parte",
+          "kind": "const",
+          "start": 24,
+          "end": 24
+        },
+        {
+          "name": "urlDeDownload",
+          "kind": "function",
+          "start": 33,
+          "end": 35
+        },
+        {
+          "name": "extensaoDe",
+          "kind": "function",
+          "start": 37,
+          "end": 40
+        },
+        {
+          "name": "fonte",
+          "kind": "const",
+          "start": 38,
+          "end": 61
+        },
+        {
+          "name": "PaginaPdf",
+          "kind": "function",
+          "start": 44,
+          "end": 44
+        },
+        {
+          "name": "canvasRef",
+          "kind": "const",
+          "start": 45,
+          "end": 61
+        },
+        {
+          "name": "wrapRef",
+          "kind": "const",
+          "start": 46,
+          "end": 61
+        },
+        {
+          "name": "el",
+          "kind": "const",
+          "start": 50,
+          "end": 54
+        },
+        {
+          "name": "io",
+          "kind": "const",
+          "start": 55,
+          "end": 57
+        },
+        {
+          "name": "task",
+          "kind": "const",
+          "start": 65,
+          "end": 88
+        },
+        {
+          "name": "cancelado",
+          "kind": "const",
+          "start": 66,
+          "end": 88
+        },
+        {
+          "name": "page",
+          "kind": "const",
+          "start": 69,
+          "end": 71
+        },
+        {
+          "name": "base",
+          "kind": "const",
+          "start": 71,
+          "end": 71
+        },
+        {
+          "name": "escala",
+          "kind": "const",
+          "start": 72,
+          "end": 74
+        },
+        {
+          "name": "dpr",
+          "kind": "const",
+          "start": 73,
+          "end": 74
+        },
+        {
+          "name": "vp",
+          "kind": "const",
+          "start": 74,
+          "end": 74
+        },
+        {
+          "name": "canvas",
+          "kind": "const",
+          "start": 75,
+          "end": 81
+        },
+        {
+          "name": "VisualizadorPdf",
+          "kind": "function",
+          "start": 106,
+          "end": 106
+        },
+        {
+          "name": "containerRef",
+          "kind": "const",
+          "start": 107,
+          "end": 122
+        },
+        {
+          "name": "el",
+          "kind": "const",
+          "start": 114,
+          "end": 174
+        },
+        {
+          "name": "medir",
+          "kind": "const",
+          "start": 116,
+          "end": 174
+        },
+        {
+          "name": "ro",
+          "kind": "const",
+          "start": 119,
+          "end": 174
+        },
+        {
+          "name": "cancelado",
+          "kind": "const",
+          "start": 125,
+          "end": 174
+        },
+        {
+          "name": "pdf",
+          "kind": "const",
+          "start": 126,
+          "end": 174
+        },
+        {
+          "name": "buffer",
+          "kind": "const",
+          "start": 131,
+          "end": 138
+        },
+        {
+          "name": "pdfjsLib",
+          "kind": "const",
+          "start": 135,
+          "end": 138
+        },
+        {
+          "name": "pdfjs",
+          "kind": "const",
+          "start": 143,
+          "end": 148
+        },
+        {
+          "name": "p1",
+          "kind": "const",
+          "start": 164,
+          "end": 165
+        },
+        {
+          "name": "vp",
+          "kind": "const",
+          "start": 165,
+          "end": 165
+        },
+        {
+          "name": "larguraPagina",
+          "kind": "const",
+          "start": 181,
+          "end": 184
+        },
+        {
+          "name": "VisualizadorDocx",
+          "kind": "function",
+          "start": 204,
+          "end": 204
+        },
+        {
+          "name": "containerRef",
+          "kind": "const",
+          "start": 205,
+          "end": 240
+        },
+        {
+          "name": "cancelado",
+          "kind": "const",
+          "start": 209,
+          "end": 235
+        },
+        {
+          "name": "VisualizadorTexto",
+          "kind": "function",
+          "start": 254,
+          "end": 254
+        },
+        {
+          "name": "cancelado",
+          "kind": "const",
+          "start": 257,
+          "end": 270
+        },
+        {
+          "name": "t",
+          "kind": "const",
+          "start": 262,
+          "end": 269
+        },
+        {
+          "name": "ZOOMS",
+          "kind": "const",
+          "start": 288,
+          "end": 290
+        },
+        {
+          "name": "tipo",
+          "kind": "const",
+          "start": 291,
+          "end": 307
+        },
+        {
+          "name": "ext",
+          "kind": "const",
+          "start": 293,
+          "end": 307
+        },
+        {
+          "name": "path",
+          "kind": "const",
+          "start": 294,
+          "end": 307
+        },
+        {
+          "name": "onKey",
+          "kind": "const",
+          "start": 299,
+          "end": 306
+        },
+        {
+          "name": "anterior",
+          "kind": "const",
+          "start": 301,
+          "end": 306
+        },
+        {
+          "name": "handleErro",
+          "kind": "const",
+          "start": 309,
+          "end": 314
+        },
+        {
+          "name": "corpo",
+          "kind": "const",
+          "start": 311,
+          "end": 314
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "next.config.js": {
+      "path": "next.config.js",
+      "tokens": 880,
+      "sha1": "c9a1e3f5e12f1593bc37509e55a657f59ebc9977",
+      "imports": [
+        "@ducanh2912/next-pwa"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "withPWAInit",
+          "kind": "const",
+          "start": 1,
+          "end": 95
+        },
+        {
+          "name": "withPWA",
+          "kind": "const",
+          "start": 2,
+          "end": 95
+        },
+        {
+          "name": "nextConfig",
+          "kind": "const",
+          "start": 98,
+          "end": 106
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "do projetos": {
+      "path": "do projetos",
+      "tokens": 4090,
+      "sha1": "86401d20e1d525c30fabc13038d1fd71e74a42c7",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "styles/globals.css": {
+      "path": "styles/globals.css",
+      "tokens": 2603,
+      "sha1": "369e0a9a3c3ca117fbb16cecbea4acf633de4b62",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "package.json": {
+      "path": "package.json",
+      "tokens": 202,
+      "sha1": "a67afbecc10b3692260fd8e4226a3d3532b2ed9c",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "package-lock.json": {
+      "path": "package-lock.json",
+      "tokens": 69605,
+      "sha1": "c938623d217c853ed6492940aa471f8d8dd60bef",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/cadastro.js": {
+      "path": "pages/cadastro.js",
+      "tokens": 918,
+      "sha1": "5304041d54cabd058a3f560db15744b92eabf9e7",
+      "imports": [
+        "react",
+        "next/router",
+        "next/link",
+        "lib/supabaseClient.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 13,
+          "end": 41
+        },
+        {
+          "name": "handleCadastro",
+          "kind": "function",
+          "start": 15,
+          "end": 41
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    ".gitignore": {
+      "path": ".gitignore",
+      "tokens": 142,
+      "sha1": "6f78b26b4897306b964e963561d0dc194aed244f",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/login.js": {
+      "path": "pages/login.js",
+      "tokens": 900,
+      "sha1": "0fcef9c0aa1e3f1835c512ea90a711195a84fb47",
+      "imports": [
+        "react",
+        "next/router",
+        "next/link",
+        "lib/supabaseClient.js",
+        "lib/network.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 12,
+          "end": 49
+        },
+        {
+          "name": "online",
+          "kind": "const",
+          "start": 13,
+          "end": 49
+        },
+        {
+          "name": "handleLogin",
+          "kind": "function",
+          "start": 15,
+          "end": 49
+        },
+        {
+          "name": "msg",
+          "kind": "const",
+          "start": 37,
+          "end": 42
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/dashboard.js": {
+      "path": "pages/dashboard.js",
+      "tokens": 5559,
+      "sha1": "5f4e459071d663338562ff9eba7f8c3c23fa0fd6",
+      "imports": [
+        "react",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "lib/cacheWrite.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "components/CalendarioView.js",
+        "components/icons.js",
+        "components/Toast.js",
+        "lib/streak.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "DIAS_SEMANA",
+          "kind": "const",
+          "start": 24,
+          "end": 372
+        },
+        {
+          "name": "PASTEL_COLORS",
+          "kind": "const",
+          "start": 26,
+          "end": 372
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 30,
+          "end": 31
+        },
+        {
+          "name": "togglingRef",
+          "kind": "const",
+          "start": 64,
+          "end": 88
+        },
+        {
+          "name": "streak",
+          "kind": "const",
+          "start": 66,
+          "end": 88
+        },
+        {
+          "name": "materiaStats",
+          "kind": "const",
+          "start": 71,
+          "end": 88
+        },
+        {
+          "name": "stats",
+          "kind": "const",
+          "start": 72,
+          "end": 72
+        },
+        {
+          "name": "tarefasM",
+          "kind": "const",
+          "start": 75,
+          "end": 85
+        },
+        {
+          "name": "concluidas",
+          "kind": "const",
+          "start": 76,
+          "end": 85
+        },
+        {
+          "name": "flashcardsTotal",
+          "kind": "const",
+          "start": 77,
+          "end": 85
+        },
+        {
+          "name": "proximos",
+          "kind": "const",
+          "start": 90,
+          "end": 115
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 91,
+          "end": 99
+        },
+        {
+          "name": "concluirTarefa",
+          "kind": "function",
+          "start": 119,
+          "end": 142
+        },
+        {
+          "name": "toggleLembrete",
+          "kind": "function",
+          "start": 148,
+          "end": 169
+        },
+        {
+          "name": "novoConcluido",
+          "kind": "const",
+          "start": 151,
+          "end": 157
+        },
+        {
+          "name": "nomeUsuario",
+          "kind": "const",
+          "start": 179,
+          "end": 190
+        },
+        {
+          "name": "destaque",
+          "kind": "const",
+          "start": 246,
+          "end": 250
+        },
+        {
+          "name": "isTarefa",
+          "kind": "const",
+          "start": 247,
+          "end": 250
+        },
+        {
+          "name": "MateriasCarousel",
+          "kind": "function",
+          "start": 374,
+          "end": 374
+        },
+        {
+          "name": "scrollerRef",
+          "kind": "const",
+          "start": 375,
+          "end": 379
+        },
+        {
+          "name": "scrollByAmount",
+          "kind": "function",
+          "start": 377,
+          "end": 379
+        },
+        {
+          "name": "el",
+          "kind": "const",
+          "start": 382,
+          "end": 389
+        },
+        {
+          "name": "handleWheel",
+          "kind": "function",
+          "start": 384,
+          "end": 389
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 432,
+          "end": 436
+        },
+        {
+          "name": "stats",
+          "kind": "const",
+          "start": 433,
+          "end": 436
+        },
+        {
+          "name": "FlashcardsList",
+          "kind": "function",
+          "start": 507,
+          "end": 507
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 522,
+          "end": 530
+        },
+        {
+          "name": "total",
+          "kind": "const",
+          "start": 523,
+          "end": 530
+        },
+        {
+          "name": "progresso",
+          "kind": "const",
+          "start": 524,
+          "end": 530
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/calendario.js": {
+      "path": "pages/calendario.js",
+      "tokens": 130,
+      "sha1": "f91989e6a8d54ddd68de6bdd454832975fefa653",
+      "imports": [
+        "lib/useAuth.js",
+        "components/AppLayout.js",
+        "components/CalendarioView.js",
+        "components/icons.js"
+      ],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/index.js": {
+      "path": "pages/index.js",
+      "tokens": 197,
+      "sha1": "145d2323e0156f7413193a27aef01c1096506331",
+      "imports": [
+        "next/link"
+      ],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/onboarding.js": {
+      "path": "pages/onboarding.js",
+      "tokens": 735,
+      "sha1": "620d45dce9773a0c258d4af51b84f460eaad490b",
+      "imports": [
+        "react",
+        "next/router",
+        "lib/supabaseClient.js",
+        "lib/useAuth.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 13,
+          "end": 36
+        },
+        {
+          "name": "handleSubmit",
+          "kind": "function",
+          "start": 15,
+          "end": 36
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/nova-senha.js": {
+      "path": "pages/nova-senha.js",
+      "tokens": 445,
+      "sha1": "5a1bba3a04446c2e4327c06f57dc1f1db6971ebf",
+      "imports": [
+        "react",
+        "next/router",
+        "lib/supabaseClient.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 10,
+          "end": 28
+        },
+        {
+          "name": "handleUpdate",
+          "kind": "function",
+          "start": 12,
+          "end": 28
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/tarefas.js": {
+      "path": "pages/tarefas.js",
+      "tokens": 6892,
+      "sha1": "089c73cff4c39cfb31139a5b0e34a195bbf5e964",
+      "imports": [
+        "react",
+        "swr",
+        "lib/useAuth.js",
+        "components/ConfirmDialog.js",
+        "components/Toast.js",
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/cacheWrite.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "components/EmptyState.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "TIPOS",
+          "kind": "const",
+          "start": 22,
+          "end": 29
+        },
+        {
+          "name": "PRIORIDADES",
+          "kind": "const",
+          "start": 31,
+          "end": 35
+        },
+        {
+          "name": "hojeStr",
+          "kind": "function",
+          "start": 37,
+          "end": 41
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 38,
+          "end": 52
+        },
+        {
+          "name": "dataRelativa",
+          "kind": "function",
+          "start": 43,
+          "end": 55
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 45,
+          "end": 52
+        },
+        {
+          "name": "alvo",
+          "kind": "const",
+          "start": 47,
+          "end": 52
+        },
+        {
+          "name": "diff",
+          "kind": "const",
+          "start": 48,
+          "end": 52
+        },
+        {
+          "name": "VIEWS",
+          "kind": "const",
+          "start": 57,
+          "end": 58
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 66,
+          "end": 68
+        },
+        {
+          "name": "confirm",
+          "kind": "const",
+          "start": 67,
+          "end": 68
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 97,
+          "end": 102
+        },
+        {
+          "name": "limiteSemana",
+          "kind": "const",
+          "start": 98,
+          "end": 102
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 99,
+          "end": 115
+        },
+        {
+          "name": "tarefasFiltradas",
+          "kind": "const",
+          "start": 104,
+          "end": 116
+        },
+        {
+          "name": "grupos",
+          "kind": "const",
+          "start": 118,
+          "end": 137
+        },
+        {
+          "name": "mapa",
+          "kind": "const",
+          "start": 119,
+          "end": 119
+        },
+        {
+          "name": "mat",
+          "kind": "const",
+          "start": 121,
+          "end": 130
+        },
+        {
+          "name": "key",
+          "kind": "const",
+          "start": 122,
+          "end": 130
+        },
+        {
+          "name": "totalPendentes",
+          "kind": "const",
+          "start": 139,
+          "end": 146
+        },
+        {
+          "name": "totalHoje",
+          "kind": "const",
+          "start": 140,
+          "end": 146
+        },
+        {
+          "name": "handleAddTarefa",
+          "kind": "function",
+          "start": 146,
+          "end": 146
+        },
+        {
+          "name": "handleUpdateTarefa",
+          "kind": "function",
+          "start": 172,
+          "end": 182
+        },
+        {
+          "name": "toggleTarefa",
+          "kind": "function",
+          "start": 184,
+          "end": 195
+        },
+        {
+          "name": "novo",
+          "kind": "const",
+          "start": 185,
+          "end": 189
+        },
+        {
+          "name": "removeTarefa",
+          "kind": "function",
+          "start": 197,
+          "end": 210
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 198,
+          "end": 203
+        },
+        {
+          "name": "handleAddLembrete",
+          "kind": "function",
+          "start": 212,
+          "end": 234
+        },
+        {
+          "name": "toggleLembrete",
+          "kind": "function",
+          "start": 236,
+          "end": 247
+        },
+        {
+          "name": "novo",
+          "kind": "const",
+          "start": 237,
+          "end": 241
+        },
+        {
+          "name": "removeLembrete",
+          "kind": "function",
+          "start": 249,
+          "end": 260
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 250,
+          "end": 254
+        },
+        {
+          "name": "removeProva",
+          "kind": "function",
+          "start": 262,
+          "end": 289
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 263,
+          "end": 268
+        },
+        {
+          "name": "locais",
+          "kind": "const",
+          "start": 273,
+          "end": 278
+        },
+        {
+          "name": "removeEventoManual",
+          "kind": "function",
+          "start": 291,
+          "end": 304
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 292,
+          "end": 297
+        },
+        {
+          "name": "NotionCheckbox",
+          "kind": "function",
+          "start": 548,
+          "end": 548
+        },
+        {
+          "name": "TarefaGrupo",
+          "kind": "function",
+          "start": 579,
+          "end": 586
+        },
+        {
+          "name": "done",
+          "kind": "const",
+          "start": 587,
+          "end": 594
+        },
+        {
+          "name": "total",
+          "kind": "const",
+          "start": 588,
+          "end": 594
+        },
+        {
+          "name": "TarefaRow",
+          "kind": "function",
+          "start": 635,
+          "end": 635
+        },
+        {
+          "name": "inputRef",
+          "kind": "const",
+          "start": 639,
+          "end": 643
+        },
+        {
+          "name": "commitEdit",
+          "kind": "function",
+          "start": 649,
+          "end": 657
+        },
+        {
+          "name": "novo",
+          "kind": "const",
+          "start": 650,
+          "end": 653
+        },
+        {
+          "name": "prio",
+          "kind": "const",
+          "start": 659,
+          "end": 665
+        },
+        {
+          "name": "AddTarefaInline",
+          "kind": "function",
+          "start": 767,
+          "end": 767
+        },
+        {
+          "name": "handleSubmit",
+          "kind": "function",
+          "start": 775,
+          "end": 791
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 779,
+          "end": 785
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/recuperar-senha.js": {
+      "path": "pages/recuperar-senha.js",
+      "tokens": 509,
+      "sha1": "4ee80e41425d106834e847fea70cc28693dcd623",
+      "imports": [
+        "react",
+        "next/link",
+        "lib/supabaseClient.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "handleReset",
+          "kind": "function",
+          "start": 11,
+          "end": 28
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/_app.js": {
+      "path": "pages/_app.js",
+      "tokens": 561,
+      "sha1": "9c78dac534c9cbe6bf3a3bbf3dff3a067432d1e2",
+      "imports": [
+        "styles/globals.css",
+        "next/head",
+        "next/font/google",
+        "swr",
+        "lib/auth-context.js",
+        "lib/theme-context.js",
+        "components/Toast.js",
+        "components/ConfirmDialog.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "poppins",
+          "kind": "const",
+          "start": 10,
+          "end": 14
+        },
+        {
+          "name": "swrConfig",
+          "kind": "const",
+          "start": 16,
+          "end": 22
+        },
+        {
+          "name": "themeInitScript",
+          "kind": "const",
+          "start": 25,
+          "end": 36
+        },
+        {
+          "name": "t",
+          "kind": "const",
+          "start": 28,
+          "end": 31
+        },
+        {
+          "name": "root",
+          "kind": "const",
+          "start": 32,
+          "end": 55
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "README.md": {
+      "path": "README.md",
+      "tokens": 505,
+      "sha1": "5027ef1e3a5377dd2a56748a4236466dcec89bbe",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/api/extrair-plano.js": {
+      "path": "pages/api/extrair-plano.js",
+      "tokens": 827,
+      "sha1": "d2d998f1f7277ce9156d19559fba3f59a94879b7",
+      "imports": [],
+      "exports": [
+        "config"
+      ],
+      "symbols": [
+        {
+          "name": "config",
+          "kind": "const",
+          "start": 6,
+          "end": 10
+        },
+        {
+          "name": "PROMPT",
+          "kind": "const",
+          "start": 12,
+          "end": 28
+        },
+        {
+          "name": "apiKey",
+          "kind": "const",
+          "start": 46,
+          "end": 49
+        },
+        {
+          "name": "geminiRes",
+          "kind": "const",
+          "start": 52,
+          "end": 53
+        },
+        {
+          "name": "data",
+          "kind": "const",
+          "start": 71,
+          "end": 77
+        },
+        {
+          "name": "textoResposta",
+          "kind": "const",
+          "start": 79,
+          "end": 82
+        },
+        {
+          "name": "parsed",
+          "kind": "const",
+          "start": 84,
+          "end": 87
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/api/extrair-matricula.js": {
+      "path": "pages/api/extrair-matricula.js",
+      "tokens": 803,
+      "sha1": "9df6d6cad29f4fbd1a179b4ad4aab659bbad7387",
+      "imports": [],
+      "exports": [
+        "config"
+      ],
+      "symbols": [
+        {
+          "name": "config",
+          "kind": "const",
+          "start": 6,
+          "end": 10
+        },
+        {
+          "name": "PROMPT",
+          "kind": "const",
+          "start": 12,
+          "end": 27
+        },
+        {
+          "name": "apiKey",
+          "kind": "const",
+          "start": 44,
+          "end": 47
+        },
+        {
+          "name": "geminiRes",
+          "kind": "const",
+          "start": 50,
+          "end": 51
+        },
+        {
+          "name": "data",
+          "kind": "const",
+          "start": 69,
+          "end": 75
+        },
+        {
+          "name": "textoResposta",
+          "kind": "const",
+          "start": 77,
+          "end": 80
+        },
+        {
+          "name": "parsed",
+          "kind": "const",
+          "start": 82,
+          "end": 85
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "sql/03_calendario_tarefas.sql": {
+      "path": "sql/03_calendario_tarefas.sql",
+      "tokens": 1242,
+      "sha1": "eaf22cbc792dd52eb58d7f2cf5546fda20537d4d",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "sql/02_flashcards.sql": {
+      "path": "sql/02_flashcards.sql",
+      "tokens": 689,
+      "sha1": "32748d235b6cbb693c698cb3661ee66caa154974",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "sql/01_setup.sql": {
+      "path": "sql/01_setup.sql",
+      "tokens": 1419,
+      "sha1": "a778a463186d5116c60d9c55c0e141546f3005f4",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "sql/05_performance_e_hardening.sql": {
+      "path": "sql/05_performance_e_hardening.sql",
+      "tokens": 1925,
+      "sha1": "829782ed6f6070e119c94b3793748432f84fc753",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "sql/04_extras.sql": {
+      "path": "sql/04_extras.sql",
+      "tokens": 460,
+      "sha1": "6d7e6855b7c418f261bc693fe79ca5f77e452fd5",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "sql/06_flashcards_ease.sql": {
+      "path": "sql/06_flashcards_ease.sql",
+      "tokens": 158,
+      "sha1": "8915cb3af534543396eb16d0484dc88c6527d04c",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "lib/cacheWrite.js": {
+      "path": "lib/cacheWrite.js",
+      "tokens": 1473,
+      "sha1": "6aa6f7eb7572cae2f285546b1126522ebfdf634d",
+      "imports": [
+        "lib/db.js",
+        "lib/sync.js"
+      ],
+      "exports": [
+        "salvarCache",
+        "salvarMateriasCache",
+        "salvarColecoesCache",
+        "salvarListaComMaterias",
+        "insertLocal",
+        "updateLocal",
+        "deleteLocal",
+        "deleteMateriaLocal"
+      ],
+      "symbols": [
+        {
+          "name": "salvarCache",
+          "kind": "function",
+          "start": 16,
+          "end": 19
+        },
+        {
+          "name": "salvarMateriasCache",
+          "kind": "function",
+          "start": 25,
+          "end": 44
+        },
+        {
+          "name": "ids",
+          "kind": "const",
+          "start": 27,
+          "end": 36
+        },
+        {
+          "name": "semNested",
+          "kind": "const",
+          "start": 28,
+          "end": 36
+        },
+        {
+          "name": "todosHorarios",
+          "kind": "const",
+          "start": 29,
+          "end": 36
+        },
+        {
+          "name": "salvarColecoesCache",
+          "kind": "function",
+          "start": 51,
+          "end": 71
+        },
+        {
+          "name": "semNested",
+          "kind": "const",
+          "start": 53,
+          "end": 64
+        },
+        {
+          "name": "materiasPorId",
+          "kind": "const",
+          "start": 54,
+          "end": 64
+        },
+        {
+          "name": "exist",
+          "kind": "const",
+          "start": 67,
+          "end": 69
+        },
+        {
+          "name": "salvarListaComMaterias",
+          "kind": "function",
+          "start": 77,
+          "end": 95
+        },
+        {
+          "name": "semNested",
+          "kind": "const",
+          "start": 79,
+          "end": 88
+        },
+        {
+          "name": "materiasPorId",
+          "kind": "const",
+          "start": 80,
+          "end": 88
+        },
+        {
+          "name": "atual",
+          "kind": "const",
+          "start": 85,
+          "end": 85
+        },
+        {
+          "name": "exist",
+          "kind": "const",
+          "start": 91,
+          "end": 93
+        },
+        {
+          "name": "uuid",
+          "kind": "function",
+          "start": 99,
+          "end": 113
+        },
+        {
+          "name": "hex",
+          "kind": "const",
+          "start": 104,
+          "end": 111
+        },
+        {
+          "name": "s",
+          "kind": "const",
+          "start": 105,
+          "end": 111
+        },
+        {
+          "name": "insertLocal",
+          "kind": "function",
+          "start": 115,
+          "end": 121
+        },
+        {
+          "name": "id",
+          "kind": "const",
+          "start": 116,
+          "end": 117
+        },
+        {
+          "name": "completa",
+          "kind": "const",
+          "start": 117,
+          "end": 117
+        },
+        {
+          "name": "updateLocal",
+          "kind": "function",
+          "start": 123,
+          "end": 127
+        },
+        {
+          "name": "deleteLocal",
+          "kind": "function",
+          "start": 129,
+          "end": 132
+        },
+        {
+          "name": "deleteMateriaLocal",
+          "kind": "function",
+          "start": 143,
+          "end": 162
+        },
+        {
+          "name": "colecoes",
+          "kind": "const",
+          "start": 145,
+          "end": 151
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/auth-context.js": {
+      "path": "lib/auth-context.js",
+      "tokens": 473,
+      "sha1": "3c36f73a842143ef18438eb078eeab468df9beb9",
+      "imports": [
+        "react",
+        "lib/supabaseClient.js"
+      ],
+      "exports": [
+        "AuthProvider",
+        "useAuthContext"
+      ],
+      "symbols": [
+        {
+          "name": "AuthContext",
+          "kind": "const",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "name": "AuthProvider",
+          "kind": "function",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "name": "mounted",
+          "kind": "const",
+          "start": 12,
+          "end": 14
+        },
+        {
+          "name": "deviceId",
+          "kind": "const",
+          "start": 30,
+          "end": 35
+        },
+        {
+          "name": "useAuthContext",
+          "kind": "function",
+          "start": 60,
+          "end": 62
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/fetchers.js": {
+      "path": "lib/fetchers.js",
+      "tokens": 4858,
+      "sha1": "7d9d88f67404825a17d8f46e236ffa24bf1deb92",
+      "imports": [
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/network.js"
+      ],
+      "exports": [
+        "ymd",
+        "fetchProfile",
+        "fetchMaterias",
+        "fetchColecoes",
+        "fetchTarefas",
+        "fetchLembretes",
+        "fetchProvas",
+        "fetchEventosManuais",
+        "fetchEventosProximos",
+        "fetchEventosRange",
+        "fetchDiasRevisao",
+        "fetchMateriaDetalhe",
+        "fetchMateriaisDaMateria",
+        "fetchColecoesDaMateria",
+        "fetchTarefasDaMateria",
+        "fetchProvasDaMateria",
+        "fetchEventosDaMateria",
+        "swrKeys",
+        "fetcherEventosRange"
+      ],
+      "symbols": [
+        {
+          "name": "ymd",
+          "kind": "function",
+          "start": 21,
+          "end": 26
+        },
+        {
+          "name": "y",
+          "kind": "const",
+          "start": 22,
+          "end": 25
+        },
+        {
+          "name": "m",
+          "kind": "const",
+          "start": 23,
+          "end": 25
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 24,
+          "end": 25
+        },
+        {
+          "name": "colunaAusente",
+          "kind": "function",
+          "start": 28,
+          "end": 32
+        },
+        {
+          "name": "msg",
+          "kind": "const",
+          "start": 30,
+          "end": 40
+        },
+        {
+          "name": "DEV",
+          "kind": "const",
+          "start": 34,
+          "end": 47
+        },
+        {
+          "name": "onlineOuCache",
+          "kind": "function",
+          "start": 36,
+          "end": 47
+        },
+        {
+          "name": "lerMateriasDoCache",
+          "kind": "function",
+          "start": 51,
+          "end": 60
+        },
+        {
+          "name": "materias",
+          "kind": "const",
+          "start": 52,
+          "end": 55
+        },
+        {
+          "name": "horarios",
+          "kind": "const",
+          "start": 54,
+          "end": 55
+        },
+        {
+          "name": "porMateria",
+          "kind": "const",
+          "start": 55,
+          "end": 55
+        },
+        {
+          "name": "lerColecoesDoCache",
+          "kind": "function",
+          "start": 62,
+          "end": 81
+        },
+        {
+          "name": "colecoes",
+          "kind": "const",
+          "start": 63,
+          "end": 71
+        },
+        {
+          "name": "materias",
+          "kind": "const",
+          "start": 68,
+          "end": 71
+        },
+        {
+          "name": "porId",
+          "kind": "const",
+          "start": 69,
+          "end": 71
+        },
+        {
+          "name": "flashcards",
+          "kind": "const",
+          "start": 70,
+          "end": 71
+        },
+        {
+          "name": "count",
+          "kind": "const",
+          "start": 71,
+          "end": 71
+        },
+        {
+          "name": "mat",
+          "kind": "const",
+          "start": 74,
+          "end": 79
+        },
+        {
+          "name": "lerListaComMateria",
+          "kind": "function",
+          "start": 83,
+          "end": 94
+        },
+        {
+          "name": "linhas",
+          "kind": "const",
+          "start": 84,
+          "end": 93
+        },
+        {
+          "name": "materias",
+          "kind": "const",
+          "start": 85,
+          "end": 93
+        },
+        {
+          "name": "porId",
+          "kind": "const",
+          "start": 86,
+          "end": 93
+        },
+        {
+          "name": "mat",
+          "kind": "const",
+          "start": 88,
+          "end": 92
+        },
+        {
+          "name": "fetchProfile",
+          "kind": "function",
+          "start": 98,
+          "end": 116
+        },
+        {
+          "name": "row",
+          "kind": "const",
+          "start": 112,
+          "end": 113
+        },
+        {
+          "name": "fetchMaterias",
+          "kind": "function",
+          "start": 118,
+          "end": 140
+        },
+        {
+          "name": "base",
+          "kind": "const",
+          "start": 122,
+          "end": 129
+        },
+        {
+          "name": "resp",
+          "kind": "const",
+          "start": 130,
+          "end": 133
+        },
+        {
+          "name": "fetchColecoes",
+          "kind": "function",
+          "start": 142,
+          "end": 171
+        },
+        {
+          "name": "colsCompletas",
+          "kind": "const",
+          "start": 143,
+          "end": 168
+        },
+        {
+          "name": "colsMinimas",
+          "kind": "const",
+          "start": 145,
+          "end": 168
+        },
+        {
+          "name": "base",
+          "kind": "const",
+          "start": 151,
+          "end": 156
+        },
+        {
+          "name": "resp",
+          "kind": "const",
+          "start": 158,
+          "end": 164
+        },
+        {
+          "name": "fetchTarefas",
+          "kind": "function",
+          "start": 173,
+          "end": 194
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 187,
+          "end": 200
+        },
+        {
+          "name": "fetchLembretes",
+          "kind": "function",
+          "start": 196,
+          "end": 218
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 210,
+          "end": 224
+        },
+        {
+          "name": "fetchProvas",
+          "kind": "function",
+          "start": 220,
+          "end": 239
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 234,
+          "end": 245
+        },
+        {
+          "name": "fetchEventosManuais",
+          "kind": "function",
+          "start": 241,
+          "end": 272
+        },
+        {
+          "name": "todos",
+          "kind": "const",
+          "start": 256,
+          "end": 269
+        },
+        {
+          "name": "manuais",
+          "kind": "const",
+          "start": 260,
+          "end": 269
+        },
+        {
+          "name": "materias",
+          "kind": "const",
+          "start": 261,
+          "end": 269
+        },
+        {
+          "name": "porId",
+          "kind": "const",
+          "start": 262,
+          "end": 269
+        },
+        {
+          "name": "fetchEventosProximos",
+          "kind": "function",
+          "start": 274,
+          "end": 312
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 275,
+          "end": 289
+        },
+        {
+          "name": "todos",
+          "kind": "const",
+          "start": 291,
+          "end": 309
+        },
+        {
+          "name": "materias",
+          "kind": "const",
+          "start": 295,
+          "end": 309
+        },
+        {
+          "name": "porId",
+          "kind": "const",
+          "start": 296,
+          "end": 309
+        },
+        {
+          "name": "fetchEventosRange",
+          "kind": "function",
+          "start": 314,
+          "end": 363
+        },
+        {
+          "name": "eventosQ",
+          "kind": "const",
+          "start": 318,
+          "end": 318
+        },
+        {
+          "name": "tarefasQ",
+          "kind": "const",
+          "start": 324,
+          "end": 335
+        },
+        {
+          "name": "porId",
+          "kind": "const",
+          "start": 343,
+          "end": 351
+        },
+        {
+          "name": "eventos",
+          "kind": "const",
+          "start": 344,
+          "end": 351
+        },
+        {
+          "name": "tarefas",
+          "kind": "const",
+          "start": 352,
+          "end": 359
+        },
+        {
+          "name": "fetchDiasRevisao",
+          "kind": "function",
+          "start": 365,
+          "end": 397
+        },
+        {
+          "name": "limite",
+          "kind": "const",
+          "start": 366,
+          "end": 385
+        },
+        {
+          "name": "limiteIso",
+          "kind": "const",
+          "start": 368,
+          "end": 385
+        },
+        {
+          "name": "resp",
+          "kind": "const",
+          "start": 373,
+          "end": 383
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 380,
+          "end": 383
+        },
+        {
+          "name": "flashcards",
+          "kind": "const",
+          "start": 387,
+          "end": 393
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 388,
+          "end": 393
+        },
+        {
+          "name": "fetchMateriaDetalhe",
+          "kind": "function",
+          "start": 401,
+          "end": 441
+        },
+        {
+          "name": "base",
+          "kind": "const",
+          "start": 405,
+          "end": 410
+        },
+        {
+          "name": "resp",
+          "kind": "const",
+          "start": 412,
+          "end": 415
+        },
+        {
+          "name": "horarios",
+          "kind": "const",
+          "start": 422,
+          "end": 426
+        },
+        {
+          "name": "materia",
+          "kind": "const",
+          "start": 431,
+          "end": 438
+        },
+        {
+          "name": "horarios",
+          "kind": "const",
+          "start": 433,
+          "end": 438
+        },
+        {
+          "name": "fetchMateriaisDaMateria",
+          "kind": "function",
+          "start": 443,
+          "end": 465
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 457,
+          "end": 471
+        },
+        {
+          "name": "fetchColecoesDaMateria",
+          "kind": "function",
+          "start": 467,
+          "end": 498
+        },
+        {
+          "name": "semCount",
+          "kind": "const",
+          "start": 477,
+          "end": 477
+        },
+        {
+          "name": "colecoes",
+          "kind": "const",
+          "start": 482,
+          "end": 490
+        },
+        {
+          "name": "flashcards",
+          "kind": "const",
+          "start": 489,
+          "end": 490
+        },
+        {
+          "name": "count",
+          "kind": "const",
+          "start": 490,
+          "end": 490
+        },
+        {
+          "name": "fetchTarefasDaMateria",
+          "kind": "function",
+          "start": 500,
+          "end": 521
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 514,
+          "end": 527
+        },
+        {
+          "name": "fetchProvasDaMateria",
+          "kind": "function",
+          "start": 523,
+          "end": 542
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 537,
+          "end": 548
+        },
+        {
+          "name": "fetchEventosDaMateria",
+          "kind": "function",
+          "start": 544,
+          "end": 574
+        },
+        {
+          "name": "lista",
+          "kind": "const",
+          "start": 558,
+          "end": 571
+        },
+        {
+          "name": "materias",
+          "kind": "const",
+          "start": 562,
+          "end": 571
+        },
+        {
+          "name": "porId",
+          "kind": "const",
+          "start": 563,
+          "end": 571
+        },
+        {
+          "name": "swrKeys",
+          "kind": "const",
+          "start": 578,
+          "end": 596
+        },
+        {
+          "name": "fetcherEventosRange",
+          "kind": "const",
+          "start": 598,
+          "end": 600
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/db.js": {
+      "path": "lib/db.js",
+      "tokens": 615,
+      "sha1": "4f38c328c6a5713fe57e06a94eb3d83a3bda6eea",
+      "imports": [
+        "dexie"
+      ],
+      "exports": [
+        "db",
+        "limparCacheLocal",
+        "substituirTabela",
+        "upsertEm",
+        "lerTudo",
+        "getMeta",
+        "setMeta"
+      ],
+      "symbols": [
+        {
+          "name": "db",
+          "kind": "const",
+          "start": 12,
+          "end": 27
+        },
+        {
+          "name": "limparCacheLocal",
+          "kind": "function",
+          "start": 30,
+          "end": 45
+        },
+        {
+          "name": "substituirTabela",
+          "kind": "function",
+          "start": 48,
+          "end": 53
+        },
+        {
+          "name": "upsertEm",
+          "kind": "function",
+          "start": 56,
+          "end": 59
+        },
+        {
+          "name": "lerTudo",
+          "kind": "function",
+          "start": 62,
+          "end": 68
+        },
+        {
+          "name": "getMeta",
+          "kind": "function",
+          "start": 71,
+          "end": 74
+        },
+        {
+          "name": "row",
+          "kind": "const",
+          "start": 72,
+          "end": 77
+        },
+        {
+          "name": "setMeta",
+          "kind": "function",
+          "start": 76,
+          "end": 78
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/sigaaHorarios.js": {
+      "path": "lib/sigaaHorarios.js",
+      "tokens": 869,
+      "sha1": "12036cab9ce80468440ef70d273def404a09f0bc",
+      "imports": [],
+      "exports": [
+        "TABELA_HORARIOS",
+        "parseHorarioSigaa",
+        "parseLocaisSigaa",
+        "montarHorarios"
+      ],
+      "symbols": [
+        {
+          "name": "TABELA_HORARIOS",
+          "kind": "const",
+          "start": 7,
+          "end": 29
+        },
+        {
+          "name": "diaSigaaParaIndice",
+          "kind": "function",
+          "start": 32,
+          "end": 34
+        },
+        {
+          "name": "parseHorarioSigaa",
+          "kind": "function",
+          "start": 38,
+          "end": 70
+        },
+        {
+          "name": "tokens",
+          "kind": "const",
+          "start": 40,
+          "end": 67
+        },
+        {
+          "name": "resultados",
+          "kind": "const",
+          "start": 41,
+          "end": 67
+        },
+        {
+          "name": "match",
+          "kind": "const",
+          "start": 44,
+          "end": 44
+        },
+        {
+          "name": "turno",
+          "kind": "const",
+          "start": 48,
+          "end": 66
+        },
+        {
+          "name": "tabelaTurno",
+          "kind": "const",
+          "start": 49,
+          "end": 66
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 52,
+          "end": 66
+        },
+        {
+          "name": "slots",
+          "kind": "const",
+          "start": 53,
+          "end": 66
+        },
+        {
+          "name": "horaInicio",
+          "kind": "const",
+          "start": 56,
+          "end": 66
+        },
+        {
+          "name": "horaFim",
+          "kind": "const",
+          "start": 57,
+          "end": 66
+        },
+        {
+          "name": "parseLocaisSigaa",
+          "kind": "function",
+          "start": 76,
+          "end": 92
+        },
+        {
+          "name": "partes",
+          "kind": "const",
+          "start": 79,
+          "end": 89
+        },
+        {
+          "name": "comOrdinal",
+          "kind": "const",
+          "start": 80,
+          "end": 89
+        },
+        {
+          "name": "mapa",
+          "kind": "const",
+          "start": 83,
+          "end": 83
+        },
+        {
+          "name": "m",
+          "kind": "const",
+          "start": 85,
+          "end": 106
+        },
+        {
+          "name": "montarHorarios",
+          "kind": "function",
+          "start": 95,
+          "end": 105
+        },
+        {
+          "name": "horarios",
+          "kind": "const",
+          "start": 96,
+          "end": 104
+        },
+        {
+          "name": "locais",
+          "kind": "const",
+          "start": 97,
+          "end": 104
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/network.js": {
+      "path": "lib/network.js",
+      "tokens": 259,
+      "sha1": "14af20aedbf0f507e178d63ecdb439fe098fdf37",
+      "imports": [
+        "react"
+      ],
+      "exports": [
+        "useNetworkStatus",
+        "isOnline"
+      ],
+      "symbols": [
+        {
+          "name": "useNetworkStatus",
+          "kind": "function",
+          "start": 9,
+          "end": 30
+        },
+        {
+          "name": "handleOnline",
+          "kind": "function",
+          "start": 15,
+          "end": 17
+        },
+        {
+          "name": "handleOffline",
+          "kind": "function",
+          "start": 18,
+          "end": 20
+        },
+        {
+          "name": "isOnline",
+          "kind": "function",
+          "start": 33,
+          "end": 36
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/sm2.js": {
+      "path": "lib/sm2.js",
+      "tokens": 561,
+      "sha1": "d9587dbfa868970e3f44a8f5d75a9c3202b6933c",
+      "imports": [],
+      "exports": [
+        "DEFAULT_EASE",
+        "MIN_EASE",
+        "calcularProximoReview",
+        "estaParaRevisar"
+      ],
+      "symbols": [
+        {
+          "name": "DEFAULT_EASE",
+          "kind": "const",
+          "start": 9,
+          "end": 16
+        },
+        {
+          "name": "MIN_EASE",
+          "kind": "const",
+          "start": 10,
+          "end": 16
+        },
+        {
+          "name": "hoje",
+          "kind": "function",
+          "start": 12,
+          "end": 16
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 13,
+          "end": 22
+        },
+        {
+          "name": "isoDate",
+          "kind": "function",
+          "start": 18,
+          "end": 23
+        },
+        {
+          "name": "y",
+          "kind": "const",
+          "start": 19,
+          "end": 22
+        },
+        {
+          "name": "m",
+          "kind": "const",
+          "start": 20,
+          "end": 22
+        },
+        {
+          "name": "dd",
+          "kind": "const",
+          "start": 21,
+          "end": 22
+        },
+        {
+          "name": "calcularProximoReview",
+          "kind": "function",
+          "start": 30,
+          "end": 64
+        },
+        {
+          "name": "intervaloAtual",
+          "kind": "const",
+          "start": 31,
+          "end": 47
+        },
+        {
+          "name": "acertos",
+          "kind": "const",
+          "start": 32,
+          "end": 47
+        },
+        {
+          "name": "erros",
+          "kind": "const",
+          "start": 33,
+          "end": 47
+        },
+        {
+          "name": "ease",
+          "kind": "const",
+          "start": 34,
+          "end": 47
+        },
+        {
+          "name": "novoIntervalo",
+          "kind": "const",
+          "start": 36,
+          "end": 47
+        },
+        {
+          "name": "novoEase",
+          "kind": "const",
+          "start": 37,
+          "end": 47
+        },
+        {
+          "name": "novosAcertos",
+          "kind": "const",
+          "start": 38,
+          "end": 47
+        },
+        {
+          "name": "novosErros",
+          "kind": "const",
+          "start": 39,
+          "end": 47
+        },
+        {
+          "name": "proximo",
+          "kind": "const",
+          "start": 53,
+          "end": 63
+        },
+        {
+          "name": "estaParaRevisar",
+          "kind": "function",
+          "start": 70,
+          "end": 73
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/useSyncOutbox.js": {
+      "path": "lib/useSyncOutbox.js",
+      "tokens": 539,
+      "sha1": "515cf4d35d360700d6a0799c707b0194da23fa0a",
+      "imports": [
+        "react",
+        "swr",
+        "lib/network.js",
+        "lib/sync.js"
+      ],
+      "exports": [
+        "useSyncOutbox"
+      ],
+      "symbols": [
+        {
+          "name": "INTERVALO_SYNC_MS",
+          "kind": "const",
+          "start": 14,
+          "end": 66
+        },
+        {
+          "name": "INTERVALO_CONTADOR_MS",
+          "kind": "const",
+          "start": 15,
+          "end": 66
+        },
+        {
+          "name": "useSyncOutbox",
+          "kind": "function",
+          "start": 17,
+          "end": 66
+        },
+        {
+          "name": "online",
+          "kind": "const",
+          "start": 18,
+          "end": 29
+        },
+        {
+          "name": "syncandoRef",
+          "kind": "const",
+          "start": 21,
+          "end": 29
+        },
+        {
+          "name": "atualizarContador",
+          "kind": "const",
+          "start": 23,
+          "end": 29
+        },
+        {
+          "name": "sincronizarAgora",
+          "kind": "const",
+          "start": 31,
+          "end": 48
+        },
+        {
+          "name": "r",
+          "kind": "const",
+          "start": 38,
+          "end": 41
+        },
+        {
+          "name": "id",
+          "kind": "const",
+          "start": 53,
+          "end": 67
+        },
+        {
+          "name": "id",
+          "kind": "const",
+          "start": 61,
+          "end": 67
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/useAuth.js": {
+      "path": "lib/useAuth.js",
+      "tokens": 116,
+      "sha1": "1f620aadb0c0918e819ac6da4a37064b74cfc587",
+      "imports": [
+        "react",
+        "next/router",
+        "lib/auth-context.js"
+      ],
+      "exports": [
+        "useRequireAuth"
+      ],
+      "symbols": [
+        {
+          "name": "useRequireAuth",
+          "kind": "function",
+          "start": 6,
+          "end": 15
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 8,
+          "end": 12
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/theme-context.js": {
+      "path": "lib/theme-context.js",
+      "tokens": 629,
+      "sha1": "6a31bf3826ee74b40ba8203b0ceae06b59417e0a",
+      "imports": [
+        "react"
+      ],
+      "exports": [
+        "ThemeProvider",
+        "useTheme"
+      ],
+      "symbols": [
+        {
+          "name": "ThemeContext",
+          "kind": "const",
+          "start": 3,
+          "end": 8
+        },
+        {
+          "name": "STORAGE_KEY",
+          "kind": "const",
+          "start": 10,
+          "end": 17
+        },
+        {
+          "name": "aplicarClasseNoDom",
+          "kind": "function",
+          "start": 12,
+          "end": 17
+        },
+        {
+          "name": "root",
+          "kind": "const",
+          "start": 14,
+          "end": 23
+        },
+        {
+          "name": "persistir",
+          "kind": "function",
+          "start": 19,
+          "end": 26
+        },
+        {
+          "name": "ThemeProvider",
+          "kind": "function",
+          "start": 28,
+          "end": 28
+        },
+        {
+          "name": "mql",
+          "kind": "const",
+          "start": 44,
+          "end": 54
+        },
+        {
+          "name": "handler",
+          "kind": "const",
+          "start": 45,
+          "end": 54
+        },
+        {
+          "name": "next",
+          "kind": "const",
+          "start": 51,
+          "end": 93
+        },
+        {
+          "name": "setTheme",
+          "kind": "function",
+          "start": 65,
+          "end": 71
+        },
+        {
+          "name": "next",
+          "kind": "const",
+          "start": 66,
+          "end": 80
+        },
+        {
+          "name": "toggle",
+          "kind": "function",
+          "start": 73,
+          "end": 81
+        },
+        {
+          "name": "next",
+          "kind": "const",
+          "start": 75,
+          "end": 93
+        },
+        {
+          "name": "useTheme",
+          "kind": "function",
+          "start": 90,
+          "end": 92
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/sync.js": {
+      "path": "lib/sync.js",
+      "tokens": 1064,
+      "sha1": "3ba5093fbaa3d3e532da090fc9f79ccf0cdc9fe0",
+      "imports": [
+        "lib/db.js",
+        "lib/supabaseClient.js",
+        "lib/network.js"
+      ],
+      "exports": [
+        "enfileirar",
+        "tamanhoFila",
+        "processarFila",
+        "sincronizarAgoraSeOnline",
+        "cancelarOperacao",
+        "listarFila"
+      ],
+      "symbols": [
+        {
+          "name": "MAX_TENTATIVAS",
+          "kind": "const",
+          "start": 18,
+          "end": 21
+        },
+        {
+          "name": "enfileirar",
+          "kind": "function",
+          "start": 26,
+          "end": 35
+        },
+        {
+          "name": "tamanhoFila",
+          "kind": "function",
+          "start": 37,
+          "end": 39
+        },
+        {
+          "name": "aplicarNoSupabase",
+          "kind": "function",
+          "start": 42,
+          "end": 69
+        },
+        {
+          "name": "processando",
+          "kind": "const",
+          "start": 71,
+          "end": 113
+        },
+        {
+          "name": "processarFila",
+          "kind": "function",
+          "start": 77,
+          "end": 113
+        },
+        {
+          "name": "ops",
+          "kind": "const",
+          "start": 83,
+          "end": 107
+        },
+        {
+          "name": "processadas",
+          "kind": "const",
+          "start": 84,
+          "end": 107
+        },
+        {
+          "name": "erros",
+          "kind": "const",
+          "start": 85,
+          "end": 107
+        },
+        {
+          "name": "tentativas",
+          "kind": "const",
+          "start": 93,
+          "end": 102
+        },
+        {
+          "name": "sincronizarAgoraSeOnline",
+          "kind": "function",
+          "start": 120,
+          "end": 123
+        },
+        {
+          "name": "cancelarOperacao",
+          "kind": "function",
+          "start": 126,
+          "end": 128
+        },
+        {
+          "name": "listarFila",
+          "kind": "function",
+          "start": 131,
+          "end": 133
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/supabaseClient.js": {
+      "path": "lib/supabaseClient.js",
+      "tokens": 109,
+      "sha1": "a8dc8948bed65b1c9e90d518c7816c9af4210740",
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "exports": [
+        "supabase"
+      ],
+      "symbols": [
+        {
+          "name": "supabaseUrl",
+          "kind": "const",
+          "start": 3,
+          "end": 10
+        },
+        {
+          "name": "supabaseAnonKey",
+          "kind": "const",
+          "start": 4,
+          "end": 10
+        },
+        {
+          "name": "supabase",
+          "kind": "const",
+          "start": 12,
+          "end": 13
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "lib/streak.js": {
+      "path": "lib/streak.js",
+      "tokens": 241,
+      "sha1": "11eff28851e2d3757e1b7be4dc07a976a5440452",
+      "imports": [],
+      "exports": [
+        "diasConsecutivos",
+        "hojeIso"
+      ],
+      "symbols": [
+        {
+          "name": "diasConsecutivos",
+          "kind": "function",
+          "start": 7,
+          "end": 27
+        },
+        {
+          "name": "set",
+          "kind": "const",
+          "start": 8,
+          "end": 17
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 11,
+          "end": 17
+        },
+        {
+          "name": "cursor",
+          "kind": "const",
+          "start": 12,
+          "end": 17
+        },
+        {
+          "name": "streak",
+          "kind": "const",
+          "start": 19,
+          "end": 25
+        },
+        {
+          "name": "iso",
+          "kind": "const",
+          "start": 21,
+          "end": 34
+        },
+        {
+          "name": "hojeIso",
+          "kind": "function",
+          "start": 29,
+          "end": 33
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 30,
+          "end": 34
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/flashcards/index.js": {
+      "path": "pages/flashcards/index.js",
+      "tokens": 1959,
+      "sha1": "cef1cc95ef20ed7c45dd377f7b989050be4e2ac4",
+      "imports": [
+        "react",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "components/icons.js",
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/network.js",
+        "lib/fetchers.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "formatRevisao",
+          "kind": "function",
+          "start": 13,
+          "end": 18
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 15,
+          "end": 17
+        },
+        {
+          "name": "hojeStr",
+          "kind": "function",
+          "start": 20,
+          "end": 24
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 21,
+          "end": 37
+        },
+        {
+          "name": "fetchContagemPendentes",
+          "kind": "function",
+          "start": 32,
+          "end": 63
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 33,
+          "end": 37
+        },
+        {
+          "name": "resp",
+          "kind": "const",
+          "start": 40,
+          "end": 43
+        },
+        {
+          "name": "contagem",
+          "kind": "const",
+          "start": 55,
+          "end": 55
+        },
+        {
+          "name": "contarPendentesDoDexie",
+          "kind": "function",
+          "start": 65,
+          "end": 74
+        },
+        {
+          "name": "todos",
+          "kind": "const",
+          "start": 66,
+          "end": 67
+        },
+        {
+          "name": "contagem",
+          "kind": "const",
+          "start": 67,
+          "end": 67
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 78,
+          "end": 80
+        },
+        {
+          "name": "totalPendentes",
+          "kind": "const",
+          "start": 89,
+          "end": 100
+        },
+        {
+          "name": "FlashcardCard",
+          "kind": "function",
+          "start": 134,
+          "end": 134
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 135,
+          "end": 146
+        },
+        {
+          "name": "total",
+          "kind": "const",
+          "start": 136,
+          "end": 146
+        },
+        {
+          "name": "progresso",
+          "kind": "const",
+          "start": 137,
+          "end": 146
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "public/manifest.json": {
+      "path": "public/manifest.json",
+      "tokens": 494,
+      "sha1": "7cecf00d0016ee2a1fa749ae41526afa3365f773",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/build.gradle": {
+      "path": "android/build.gradle",
+      "tokens": 289,
+      "sha1": "5033526c27ae91cad3977c093e3e517e830191c8",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/semana.js": {
+      "path": "pages/materias/semana.js",
+      "tokens": 480,
+      "sha1": "06f53531afc512c2d543104f977a7bf171f4781a",
+      "imports": [
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "components/EmptyState.js",
+        "components/GradeSemanal.js",
+        "lib/fetchers.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 12,
+          "end": 14
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/materias.js": {
+      "path": "pages/materias/materias.js",
+      "tokens": 128,
+      "sha1": "286ffd4f0224181abe278d1b891d6260a31c7a48",
+      "imports": [
+        "react",
+        "next/router"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 9,
+          "end": 14
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/index.js": {
+      "path": "pages/materias/index.js",
+      "tokens": 5668,
+      "sha1": "06164664d31770360add89e63db3d85e4268bc85",
+      "imports": [
+        "react",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/ConfirmDialog.js",
+        "components/Toast.js",
+        "lib/cacheWrite.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "components/icons.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "DIAS",
+          "kind": "const",
+          "start": 19,
+          "end": 188
+        },
+        {
+          "name": "PASTEL_COLORS",
+          "kind": "const",
+          "start": 20,
+          "end": 188
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 24,
+          "end": 26
+        },
+        {
+          "name": "confirm",
+          "kind": "const",
+          "start": 25,
+          "end": 26
+        },
+        {
+          "name": "materiaStats",
+          "kind": "const",
+          "start": 44,
+          "end": 60
+        },
+        {
+          "name": "stats",
+          "kind": "const",
+          "start": 45,
+          "end": 45
+        },
+        {
+          "name": "tarefasM",
+          "kind": "const",
+          "start": 47,
+          "end": 57
+        },
+        {
+          "name": "concluidas",
+          "kind": "const",
+          "start": 48,
+          "end": 57
+        },
+        {
+          "name": "flashcardsTotal",
+          "kind": "const",
+          "start": 49,
+          "end": 57
+        },
+        {
+          "name": "handleDeleteMateria",
+          "kind": "function",
+          "start": 62,
+          "end": 88
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 66,
+          "end": 71
+        },
+        {
+          "name": "HorariosBadges",
+          "kind": "function",
+          "start": 190,
+          "end": 190
+        },
+        {
+          "name": "MateriaCard",
+          "kind": "function",
+          "start": 208,
+          "end": 208
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 209,
+          "end": 214
+        },
+        {
+          "name": "MateriaRow",
+          "kind": "function",
+          "start": 273,
+          "end": 273
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 274,
+          "end": 279
+        },
+        {
+          "name": "NovaMateriaForm",
+          "kind": "function",
+          "start": 346,
+          "end": 346
+        },
+        {
+          "name": "addHorario",
+          "kind": "function",
+          "start": 361,
+          "end": 366
+        },
+        {
+          "name": "removeHorario",
+          "kind": "function",
+          "start": 367,
+          "end": 369
+        },
+        {
+          "name": "updateHorario",
+          "kind": "function",
+          "start": 370,
+          "end": 374
+        },
+        {
+          "name": "handleSubmit",
+          "kind": "function",
+          "start": 376,
+          "end": 418
+        },
+        {
+          "name": "materia",
+          "kind": "const",
+          "start": 388,
+          "end": 396
+        },
+        {
+          "name": "horariosValidos",
+          "kind": "const",
+          "start": 398,
+          "end": 409
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/[id] 01.js": {
+      "path": "pages/materias/[id] 01.js",
+      "tokens": 184,
+      "sha1": "f4980f5e858be9304ceac6def1d33e38ebc7a89d",
+      "imports": [
+        "react",
+        "next/router"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 12,
+          "end": 13
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/[id].js": {
+      "path": "pages/materias/[id].js",
+      "tokens": 10287,
+      "sha1": "c733efaf3b0025777a1fff61139737ac3eaec644",
+      "imports": [
+        "react",
+        "next/router",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/ConfirmDialog.js",
+        "components/Toast.js",
+        "components/Modal.js",
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/network.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "components/icons.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "DIAS",
+          "kind": "const",
+          "start": 36,
+          "end": 43
+        },
+        {
+          "name": "formatRevisao",
+          "kind": "function",
+          "start": 38,
+          "end": 43
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 40,
+          "end": 42
+        },
+        {
+          "name": "fmtData",
+          "kind": "function",
+          "start": 45,
+          "end": 51
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 55,
+          "end": 56
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 57,
+          "end": 59
+        },
+        {
+          "name": "confirm",
+          "kind": "const",
+          "start": 58,
+          "end": 59
+        },
+        {
+          "name": "ready",
+          "kind": "const",
+          "start": 61,
+          "end": 63
+        },
+        {
+          "name": "togglingRef",
+          "kind": "const",
+          "start": 116,
+          "end": 122
+        },
+        {
+          "name": "playlists",
+          "kind": "const",
+          "start": 118,
+          "end": 122
+        },
+        {
+          "name": "existentes",
+          "kind": "const",
+          "start": 119,
+          "end": 135
+        },
+        {
+          "name": "abrirEdicao",
+          "kind": "function",
+          "start": 126,
+          "end": 148
+        },
+        {
+          "name": "addHorarioEdit",
+          "kind": "function",
+          "start": 150,
+          "end": 163
+        },
+        {
+          "name": "removeHorarioEdit",
+          "kind": "function",
+          "start": 165,
+          "end": 167
+        },
+        {
+          "name": "updateHorarioEdit",
+          "kind": "function",
+          "start": 169,
+          "end": 173
+        },
+        {
+          "name": "handleSaveEdit",
+          "kind": "function",
+          "start": 175,
+          "end": 224
+        },
+        {
+          "name": "horariosAtuais",
+          "kind": "const",
+          "start": 193,
+          "end": 199
+        },
+        {
+          "name": "validos",
+          "kind": "const",
+          "start": 201,
+          "end": 212
+        },
+        {
+          "name": "handleDeleteMateria",
+          "kind": "function",
+          "start": 226,
+          "end": 248
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 227,
+          "end": 232
+        },
+        {
+          "name": "handleUpload",
+          "kind": "function",
+          "start": 252,
+          "end": 303
+        },
+        {
+          "name": "file",
+          "kind": "const",
+          "start": 253,
+          "end": 261
+        },
+        {
+          "name": "nomeLimpo",
+          "kind": "const",
+          "start": 265,
+          "end": 269
+        },
+        {
+          "name": "filePath",
+          "kind": "const",
+          "start": 269,
+          "end": 269
+        },
+        {
+          "name": "handleDeleteMaterial",
+          "kind": "function",
+          "start": 305,
+          "end": 334
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 306,
+          "end": 310
+        },
+        {
+          "name": "path",
+          "kind": "const",
+          "start": 315,
+          "end": 322
+        },
+        {
+          "name": "handleCriarPlaylist",
+          "kind": "function",
+          "start": 336,
+          "end": 342
+        },
+        {
+          "name": "handleDeleteBaralho",
+          "kind": "function",
+          "start": 346,
+          "end": 370
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 347,
+          "end": 352
+        },
+        {
+          "name": "toggleLembrete",
+          "kind": "function",
+          "start": 374,
+          "end": 395
+        },
+        {
+          "name": "novoConcluido",
+          "kind": "const",
+          "start": 377,
+          "end": 383
+        },
+        {
+          "name": "handleAddProva",
+          "kind": "function",
+          "start": 399,
+          "end": 436
+        },
+        {
+          "name": "novaProva",
+          "kind": "const",
+          "start": 405,
+          "end": 410
+        },
+        {
+          "name": "msg",
+          "kind": "const",
+          "start": 427,
+          "end": 455
+        },
+        {
+          "name": "handleDeleteProva",
+          "kind": "function",
+          "start": 438,
+          "end": 466
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 439,
+          "end": 444
+        },
+        {
+          "name": "eventos",
+          "kind": "const",
+          "start": 450,
+          "end": 455
+        },
+        {
+          "name": "materiaisDaPlaylist",
+          "kind": "const",
+          "start": 496,
+          "end": 507
+        },
+        {
+          "name": "atividadesLista",
+          "kind": "const",
+          "start": 500,
+          "end": 507
+        },
+        {
+          "name": "BaralhoCard",
+          "kind": "function",
+          "start": 1077,
+          "end": 1077
+        },
+        {
+          "name": "cor",
+          "kind": "const",
+          "start": 1078,
+          "end": 1089
+        },
+        {
+          "name": "total",
+          "kind": "const",
+          "start": 1079,
+          "end": 1089
+        },
+        {
+          "name": "progresso",
+          "kind": "const",
+          "start": 1080,
+          "end": 1089
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "scripts/copy-pdf-worker.mjs": {
+      "path": "scripts/copy-pdf-worker.mjs",
+      "tokens": 173,
+      "sha1": "aeb3b15a8de9c6b9d3f75d5c75e7afaa304c6bd8",
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "candidates",
+          "kind": "const",
+          "start": 5,
+          "end": 11
+        },
+        {
+          "name": "destino",
+          "kind": "const",
+          "start": 10,
+          "end": 11
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "android/gradlew.bat": {
+      "path": "android/gradlew.bat",
+      "tokens": 730,
+      "sha1": "bd6130207ef7a9a6335483c0231313025bc9a605",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/gradlew": {
+      "path": "android/gradlew",
+      "tokens": 2171,
+      "sha1": "de7b104136b5fdcd60bfebe242e86607988aa592",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/gradle.properties": {
+      "path": "android/gradle.properties",
+      "tokens": 62,
+      "sha1": "b80d097da0cdd9f66685c348b5ff7cc9bd559d2f",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/settings.gradle": {
+      "path": "android/settings.gradle",
+      "tokens": 4,
+      "sha1": "1d4ff5f74491507580bc2281551125551e28e8de",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/manifest-checksum.txt": {
+      "path": "android/manifest-checksum.txt",
+      "tokens": 10,
+      "sha1": "8f0fa67bf3bec7287fe638f02244c5aa669c556a",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "public/icon.svg": {
+      "path": "public/icon.svg",
+      "tokens": 187,
+      "sha1": "114cdc7f12c8cf356f8bfa530166f0efc63ef36e",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/build.gradle": {
+      "path": "android/app/build.gradle",
+      "tokens": 2689,
+      "sha1": "8edcf0763429b50d7d7b1be3fd20fc619adb3b48",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/twa-manifest.json": {
+      "path": "android/twa-manifest.json",
+      "tokens": 374,
+      "sha1": "bbbc43f32adf9a4efe30173710517c4aae254929",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "public/.well-known/assetlinks.json": {
+      "path": "public/.well-known/assetlinks.json",
+      "tokens": 115,
+      "sha1": "ec9ebaf9e62307e759c37f5dd60bc4a225a31ebb",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/gradle/wrapper/gradle-wrapper.properties": {
+      "path": "android/gradle/wrapper/gradle-wrapper.properties",
+      "tokens": 64,
+      "sha1": "31324f9966a0b0e5885ea34050617501b23a9ff7",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/AndroidManifest.xml": {
+      "path": "android/app/src/main/AndroidManifest.xml",
+      "tokens": 1975,
+      "sha1": "baaa27bf01245a57e9ea60418f70745788acfb9c",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/[id]/flashcards/index.js": {
+      "path": "pages/materias/[id]/flashcards/index.js",
+      "tokens": 1920,
+      "sha1": "5784ec6a5b80727d109636ee19f81f6fe6d2fd54",
+      "imports": [
+        "react",
+        "next/router",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/ConfirmDialog.js",
+        "components/Toast.js",
+        "lib/db.js",
+        "lib/cacheWrite.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "formatRevisao",
+          "kind": "function",
+          "start": 19,
+          "end": 24
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 21,
+          "end": 23
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 28,
+          "end": 29
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 30,
+          "end": 32
+        },
+        {
+          "name": "confirm",
+          "kind": "const",
+          "start": 31,
+          "end": 32
+        },
+        {
+          "name": "ready",
+          "kind": "const",
+          "start": 34,
+          "end": 36
+        },
+        {
+          "name": "handleCreate",
+          "kind": "function",
+          "start": 52,
+          "end": 85
+        },
+        {
+          "name": "handleDelete",
+          "kind": "function",
+          "start": 87,
+          "end": 106
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 88,
+          "end": 93
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/[id]/flashcards/[colecaoId]/estudar.js": {
+      "path": "pages/materias/[id]/flashcards/[colecaoId]/estudar.js",
+      "tokens": 2347,
+      "sha1": "b7be1e805907dfff91f22afeba99b567ea286974",
+      "imports": [
+        "react",
+        "next/router",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/Toast.js",
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/network.js",
+        "lib/cacheWrite.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js",
+        "lib/sm2.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "swrKeyColecao",
+          "kind": "const",
+          "start": 16,
+          "end": 37
+        },
+        {
+          "name": "swrKeyCards",
+          "kind": "const",
+          "start": 17,
+          "end": 37
+        },
+        {
+          "name": "fetchColecao",
+          "kind": "function",
+          "start": 19,
+          "end": 37
+        },
+        {
+          "name": "local",
+          "kind": "const",
+          "start": 21,
+          "end": 25
+        },
+        {
+          "name": "local",
+          "kind": "const",
+          "start": 34,
+          "end": 44
+        },
+        {
+          "name": "fetchCards",
+          "kind": "function",
+          "start": 39,
+          "end": 54
+        },
+        {
+          "name": "shuffle",
+          "kind": "function",
+          "start": 56,
+          "end": 63
+        },
+        {
+          "name": "a",
+          "kind": "const",
+          "start": 57,
+          "end": 61
+        },
+        {
+          "name": "j",
+          "kind": "const",
+          "start": 59,
+          "end": 119
+        },
+        {
+          "name": "hojeStr",
+          "kind": "function",
+          "start": 65,
+          "end": 69
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 66,
+          "end": 72
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 73,
+          "end": 74
+        },
+        {
+          "name": "ready",
+          "kind": "const",
+          "start": 77,
+          "end": 79
+        },
+        {
+          "name": "inicioRef",
+          "kind": "const",
+          "start": 92,
+          "end": 104
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 100,
+          "end": 119
+        },
+        {
+          "name": "pendentes",
+          "kind": "const",
+          "start": 101,
+          "end": 119
+        },
+        {
+          "name": "base",
+          "kind": "const",
+          "start": 102,
+          "end": 119
+        },
+        {
+          "name": "proximo",
+          "kind": "function",
+          "start": 106,
+          "end": 123
+        },
+        {
+          "name": "cartaoAtual",
+          "kind": "const",
+          "start": 107,
+          "end": 119
+        },
+        {
+          "name": "update",
+          "kind": "const",
+          "start": 111,
+          "end": 118
+        },
+        {
+          "name": "acabou",
+          "kind": "const",
+          "start": 125,
+          "end": 143
+        },
+        {
+          "name": "total",
+          "kind": "const",
+          "start": 145,
+          "end": 149
+        },
+        {
+          "name": "pendentesHoje",
+          "kind": "const",
+          "start": 146,
+          "end": 149
+        },
+        {
+          "name": "hoje",
+          "kind": "const",
+          "start": 147,
+          "end": 163
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "pages/materias/[id]/flashcards/[colecaoId]/index.js": {
+      "path": "pages/materias/[id]/flashcards/[colecaoId]/index.js",
+      "tokens": 3520,
+      "sha1": "5929aa27b6fc07b1b97f681512bc28d976b720a2",
+      "imports": [
+        "react",
+        "next/router",
+        "next/link",
+        "swr",
+        "lib/useAuth.js",
+        "components/ConfirmDialog.js",
+        "components/Toast.js",
+        "lib/supabaseClient.js",
+        "lib/db.js",
+        "lib/network.js",
+        "lib/sync.js",
+        "components/AppLayout.js",
+        "components/Skeleton.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "swrKeyColecao",
+          "kind": "const",
+          "start": 20,
+          "end": 41
+        },
+        {
+          "name": "swrKeyCards",
+          "kind": "const",
+          "start": 21,
+          "end": 41
+        },
+        {
+          "name": "fetchColecao",
+          "kind": "function",
+          "start": 23,
+          "end": 41
+        },
+        {
+          "name": "local",
+          "kind": "const",
+          "start": 25,
+          "end": 29
+        },
+        {
+          "name": "local",
+          "kind": "const",
+          "start": 38,
+          "end": 48
+        },
+        {
+          "name": "fetchCards",
+          "kind": "function",
+          "start": 43,
+          "end": 59
+        },
+        {
+          "name": "parseCsvLine",
+          "kind": "function",
+          "start": 63,
+          "end": 91
+        },
+        {
+          "name": "cells",
+          "kind": "const",
+          "start": 64,
+          "end": 88
+        },
+        {
+          "name": "cur",
+          "kind": "const",
+          "start": 65,
+          "end": 88
+        },
+        {
+          "name": "inQuotes",
+          "kind": "const",
+          "start": 66,
+          "end": 88
+        },
+        {
+          "name": "ch",
+          "kind": "const",
+          "start": 68,
+          "end": 78
+        },
+        {
+          "name": "parseCsv",
+          "kind": "function",
+          "start": 93,
+          "end": 113
+        },
+        {
+          "name": "linhas",
+          "kind": "const",
+          "start": 94,
+          "end": 94
+        },
+        {
+          "name": "primeira",
+          "kind": "const",
+          "start": 101,
+          "end": 111
+        },
+        {
+          "name": "temCabecalho",
+          "kind": "const",
+          "start": 102,
+          "end": 111
+        },
+        {
+          "name": "corpo",
+          "kind": "const",
+          "start": 105,
+          "end": 111
+        },
+        {
+          "name": "resultado",
+          "kind": "const",
+          "start": 106,
+          "end": 111
+        },
+        {
+          "name": "toCsv",
+          "kind": "function",
+          "start": 115,
+          "end": 123
+        },
+        {
+          "name": "header",
+          "kind": "const",
+          "start": 116,
+          "end": 121
+        },
+        {
+          "name": "linhas",
+          "kind": "const",
+          "start": 117,
+          "end": 121
+        },
+        {
+          "name": "f",
+          "kind": "const",
+          "start": 118,
+          "end": 120
+        },
+        {
+          "name": "v",
+          "kind": "const",
+          "start": 119,
+          "end": 120
+        },
+        {
+          "name": "downloadArquivo",
+          "kind": "function",
+          "start": 125,
+          "end": 135
+        },
+        {
+          "name": "blob",
+          "kind": "const",
+          "start": 126,
+          "end": 126
+        },
+        {
+          "name": "url",
+          "kind": "const",
+          "start": 127,
+          "end": 127
+        },
+        {
+          "name": "a",
+          "kind": "const",
+          "start": 128,
+          "end": 140
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 141,
+          "end": 142
+        },
+        {
+          "name": "uid",
+          "kind": "const",
+          "start": 143,
+          "end": 145
+        },
+        {
+          "name": "confirm",
+          "kind": "const",
+          "start": 144,
+          "end": 145
+        },
+        {
+          "name": "ready",
+          "kind": "const",
+          "start": 147,
+          "end": 149
+        },
+        {
+          "name": "refreshAfterWrite",
+          "kind": "function",
+          "start": 167,
+          "end": 172
+        },
+        {
+          "name": "handleSubmit",
+          "kind": "function",
+          "start": 174,
+          "end": 204
+        },
+        {
+          "name": "handleEdit",
+          "kind": "function",
+          "start": 206,
+          "end": 210
+        },
+        {
+          "name": "cancelEdit",
+          "kind": "function",
+          "start": 212,
+          "end": 216
+        },
+        {
+          "name": "handleDelete",
+          "kind": "function",
+          "start": 218,
+          "end": 229
+        },
+        {
+          "name": "ok",
+          "kind": "const",
+          "start": 219,
+          "end": 223
+        },
+        {
+          "name": "handleExport",
+          "kind": "function",
+          "start": 231,
+          "end": 241
+        },
+        {
+          "name": "nomeBase",
+          "kind": "const",
+          "start": 236,
+          "end": 239
+        },
+        {
+          "name": "handleImport",
+          "kind": "function",
+          "start": 243,
+          "end": 273
+        },
+        {
+          "name": "novos",
+          "kind": "const",
+          "start": 248,
+          "end": 253
+        },
+        {
+          "name": "proximaRevisao",
+          "kind": "const",
+          "start": 407,
+          "end": 414
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/DelegationService.java": {
+      "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/DelegationService.java",
+      "tokens": 60,
+      "sha1": "35fc2580e993c123b4d9dd38edf5014ea0a0b92b",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/LauncherActivity.java": {
+      "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/LauncherActivity.java",
+      "tokens": 536,
+      "sha1": "683354113847d899729cf4ba58e7ae5b65618589",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/Application.java": {
+      "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/Application.java",
+      "tokens": 195,
+      "sha1": "a57dd01db759959aede094fc780d9534c0127b00",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/raw/web_app_manifest.json": {
+      "path": "android/app/src/main/res/raw/web_app_manifest.json",
+      "tokens": 359,
+      "sha1": "bd25ad777e53d59096dd4628f3e26050eeb21fd0",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/drawable-anydpi/shortcut_legacy_background.xml": {
+      "path": "android/app/src/main/res/drawable-anydpi/shortcut_legacy_background.xml",
+      "tokens": 255,
+      "sha1": "d73b1b400afc0a486799f320d6cee6f929ba41ba",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/values/colors.xml": {
+      "path": "android/app/src/main/res/values/colors.xml",
+      "tokens": 178,
+      "sha1": "e69e31afb789ad914b9c90eab12428b23fcb9d18",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/values/strings.xml": {
+      "path": "android/app/src/main/res/values/strings.xml",
+      "tokens": 381,
+      "sha1": "9d21d299608a364bfb7c8a2543a01362c33192f5",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/xml/shortcuts.xml": {
+      "path": "android/app/src/main/res/xml/shortcuts.xml",
+      "tokens": 19,
+      "sha1": "3bf26ed7c75314c8dac13e5ead2ad6d3bcddf7ee",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/xml/filepaths.xml": {
+      "path": "android/app/src/main/res/xml/filepaths.xml",
+      "tokens": 176,
+      "sha1": "65fe16291c90c9c0db91ec99ce56d5d1f80074ea",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml": {
+      "path": "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "tokens": 336,
+      "sha1": "31af9918b9bd9e7c17ea824d96a0de85c117d387",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "sql/07_ajustes_schema.sql": {
+      "path": "sql/07_ajustes_schema.sql",
+      "tokens": 151,
+      "sha1": "3733df9cfc0c1e05994bd0841efd3c23400735e7",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "components/CalendarioView.js": {
+      "path": "components/CalendarioView.js",
+      "tokens": 3962,
+      "sha1": "647b90cf49872d40c0b13c8f43da33f60e09e195",
+      "imports": [
+        "react",
+        "next/router",
+        "swr",
+        "lib/cacheWrite.js",
+        "lib/sync.js",
+        "components/Skeleton.js",
+        "components/Toast.js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "DIAS_SEMANA",
+          "kind": "const",
+          "start": 16,
+          "end": 28
+        },
+        {
+          "name": "MESES",
+          "kind": "const",
+          "start": 18,
+          "end": 28
+        },
+        {
+          "name": "TIPO_INFO",
+          "kind": "const",
+          "start": 23,
+          "end": 28
+        },
+        {
+          "name": "TAREFA_TIPO_PARA_FILTRO",
+          "kind": "const",
+          "start": 30,
+          "end": 33
+        },
+        {
+          "name": "router",
+          "kind": "const",
+          "start": 40,
+          "end": 41
+        },
+        {
+          "name": "d",
+          "kind": "const",
+          "start": 47,
+          "end": 74
+        },
+        {
+          "name": "inicioMes",
+          "kind": "const",
+          "start": 51,
+          "end": 54
+        },
+        {
+          "name": "fimMes",
+          "kind": "const",
+          "start": 52,
+          "end": 54
+        },
+        {
+          "name": "detalheRef",
+          "kind": "const",
+          "start": 65,
+          "end": 75
+        },
+        {
+          "name": "eventos",
+          "kind": "const",
+          "start": 77,
+          "end": 103
+        },
+        {
+          "name": "handleCriarEvento",
+          "kind": "function",
+          "start": 105,
+          "end": 105
+        },
+        {
+          "name": "eventosFiltrados",
+          "kind": "const",
+          "start": 124,
+          "end": 135
+        },
+        {
+          "name": "eventosPorDia",
+          "kind": "const",
+          "start": 129,
+          "end": 135
+        },
+        {
+          "name": "map",
+          "kind": "const",
+          "start": 130,
+          "end": 130
+        },
+        {
+          "name": "dias",
+          "kind": "const",
+          "start": 137,
+          "end": 146
+        },
+        {
+          "name": "ano",
+          "kind": "const",
+          "start": 138,
+          "end": 163
+        },
+        {
+          "name": "mes",
+          "kind": "const",
+          "start": 139,
+          "end": 163
+        },
+        {
+          "name": "primeiroDiaSemana",
+          "kind": "const",
+          "start": 140,
+          "end": 163
+        },
+        {
+          "name": "totalDias",
+          "kind": "const",
+          "start": 141,
+          "end": 163
+        },
+        {
+          "name": "celulas",
+          "kind": "const",
+          "start": 142,
+          "end": 163
+        },
+        {
+          "name": "mudarMes",
+          "kind": "function",
+          "start": 148,
+          "end": 152
+        },
+        {
+          "name": "hojeStr",
+          "kind": "const",
+          "start": 154,
+          "end": 163
+        },
+        {
+          "name": "eventosDoDiaSelecionado",
+          "kind": "const",
+          "start": 155,
+          "end": 163
+        },
+        {
+          "name": "dataStr",
+          "kind": "const",
+          "start": 224,
+          "end": 230
+        },
+        {
+          "name": "eventosDoDia",
+          "kind": "const",
+          "start": 225,
+          "end": 230
+        },
+        {
+          "name": "isHoje",
+          "kind": "const",
+          "start": 226,
+          "end": 230
+        },
+        {
+          "name": "isSelected",
+          "kind": "const",
+          "start": 227,
+          "end": 230
+        },
+        {
+          "name": "isLong",
+          "kind": "const",
+          "start": 270,
+          "end": 274
+        },
+        {
+          "name": "NovoEventoForm",
+          "kind": "function",
+          "start": 369,
+          "end": 369
+        },
+        {
+          "name": "handleSubmit",
+          "kind": "function",
+          "start": 377,
+          "end": 388
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/CalendarWidget.java": {
+      "path": "android/app/src/main/java/app/vercel/estudo_app_alpha/twa/CalendarWidget.java",
+      "tokens": 2298,
+      "sha1": "661d867440c73ebaf40729b0439df35626ef17c9",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/layout/widget_cell.xml": {
+      "path": "android/app/src/main/res/layout/widget_cell.xml",
+      "tokens": 480,
+      "sha1": "1632c503370575a925ebcb400658fd9e868086aa",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/layout/widget_calendar.xml": {
+      "path": "android/app/src/main/res/layout/widget_calendar.xml",
+      "tokens": 904,
+      "sha1": "3639fd802e424cd2cab21764f7fc44125a36b707",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "pages/api/widget.js": {
+      "path": "pages/api/widget.js",
+      "tokens": 536,
+      "sha1": "e17d1d4e4efb47772ce8e0736bf2ff2f0c61b639",
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "exports": [],
+      "symbols": [
+        {
+          "name": "supabaseUrl",
+          "kind": "const",
+          "start": 7,
+          "end": 12
+        },
+        {
+          "name": "supabaseServiceKey",
+          "kind": "const",
+          "start": 8,
+          "end": 12
+        },
+        {
+          "name": "supabase",
+          "kind": "const",
+          "start": 14,
+          "end": 16
+        },
+        {
+          "name": "agora",
+          "kind": "const",
+          "start": 24,
+          "end": 29
+        },
+        {
+          "name": "y",
+          "kind": "const",
+          "start": 25,
+          "end": 29
+        },
+        {
+          "name": "m",
+          "kind": "const",
+          "start": 26,
+          "end": 29
+        },
+        {
+          "name": "pad",
+          "kind": "const",
+          "start": 27,
+          "end": 29
+        },
+        {
+          "name": "ultimo",
+          "kind": "const",
+          "start": 28,
+          "end": 29
+        },
+        {
+          "name": "inicioMes",
+          "kind": "const",
+          "start": 29,
+          "end": 29
+        },
+        {
+          "name": "fimMes",
+          "kind": "const",
+          "start": 30,
+          "end": 30
+        },
+        {
+          "name": "formatados",
+          "kind": "const",
+          "start": 38,
+          "end": 39
+        }
+      ],
+      "summary": null,
+      "tags": []
+    },
+    "sql/08_widget_token.sql": {
+      "path": "sql/08_widget_token.sql",
+      "tokens": 86,
+      "sha1": "0c16c048545dacd43f7f35fe457a62e219d139f1",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/xml/widget_info.xml": {
+      "path": "android/app/src/main/res/xml/widget_info.xml",
+      "tokens": 150,
+      "sha1": "a6370367b9dcef0b9998b4c4650fbfecdb6c6bc8",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/keystore.properties.example": {
+      "path": "android/keystore.properties.example",
+      "tokens": 55,
+      "sha1": "e5f303ad8b5b002deef884b8d9cfe6ea66c94366",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/keystore.properties": {
+      "path": "android/keystore.properties",
+      "tokens": 17,
+      "sha1": "9d8c7a63777e9b337b9a3bb8cee5137e25d713f0",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/layout/widget_row.xml": {
+      "path": "android/app/src/main/res/layout/widget_row.xml",
+      "tokens": 73,
+      "sha1": "31da77e5c3977826f3b7fabd69825c68d9993ccb",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/drawable/widget_bg.xml": {
+      "path": "android/app/src/main/res/drawable/widget_bg.xml",
+      "tokens": 55,
+      "sha1": "4dcf12213b540dc753c4ec1fa172431f78e3a26d",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "android/app/src/main/res/drawable/widget_today.xml": {
+      "path": "android/app/src/main/res/drawable/widget_today.xml",
+      "tokens": 44,
+      "sha1": "cc932aa136892c4395bb5e67396aae5f58a6c0b6",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    ".env.local": {
+      "path": ".env.local",
+      "tokens": 54,
+      "sha1": "b5d35a9cf972731acc1d59acc24c0821e5e25199",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "public/sw.js": {
+      "path": "public/sw.js",
+      "tokens": 1902,
+      "sha1": "aefed1a829e252bdce12957d1b861f5a4683ac90",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "public/swe-worker-5c72df51bb1f6ee0.js": {
+      "path": "public/swe-worker-5c72df51bb1f6ee0.js",
+      "tokens": 258,
+      "sha1": "10e528bda44264cddad3592706be06711ff59571",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    },
+    "public/workbox-4a6e5f9b.js": {
+      "path": "public/workbox-4a6e5f9b.js",
+      "tokens": 5470,
+      "sha1": "9edeb7b5dae6a78a239c6f93be558481bbbd44ad",
+      "imports": [],
+      "exports": [],
+      "symbols": [],
+      "summary": null,
+      "tags": []
+    }
+  }
+}
