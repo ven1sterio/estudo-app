@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/router";
 import useSWR, { mutate as globalMutate } from "swr";
 import { insertLocal } from "../lib/cacheWrite";
 import { sincronizarAgoraSeOnline } from "../lib/sync";
@@ -36,6 +37,7 @@ export default function CalendarioView({
   title = "Calendário",
   titleIcon = null,
 }) {
+  const router = useRouter();
   const { data: materias = [] } = useSWR(
     uid ? swrKeys.materias(uid) : null,
     () => fetchMaterias(uid)
@@ -61,6 +63,16 @@ export default function CalendarioView({
     prova: true, trabalho: true, atividade: true, outro: true,
   });
   const detalheRef = useRef(null);
+
+  // Reage a Deep Link ?addEvent=YYYY-MM-DD (vindo do widget)
+  useEffect(() => {
+    if (router.isReady && router.query.addEvent) {
+      setSelectedDay(router.query.addEvent);
+      setShowNovoEvento(true);
+      // Limpa a URL sem recarregar
+      router.replace(router.pathname, router.pathname, { shallow: true });
+    }
+  }, [router.isReady, router.query.addEvent, router.pathname, router]);
 
   const eventos = useMemo(() => {
     if (!range) return [];
@@ -250,15 +262,36 @@ export default function CalendarioView({
                     >
                       {dia.getDate()}
                     </span>
-                    <div className="flex flex-wrap gap-0.5 mt-1">
-                      {eventosDoDia.slice(0, 4).map((e) => (
-                        <span
-                          key={e.id}
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ background: e.cor }}
-                          aria-hidden="true"
-                        />
-                      ))}
+                    
+                    {/* NOVO: Mostrar nomes dos eventos invés de bolinhas */}
+                    <div className="flex flex-col gap-0.5 mt-1 overflow-hidden w-full">
+                      {eventosDoDia.slice(0, 2).map((e) => {
+                        // Agora conta a quantidade de letras (caracteres)
+                        const isLong = e.titulo.trim().length >= 10;
+                        
+                        return (
+                          <div
+                            key={e.id}
+                            className="text-[9px] sm:text-[10px] leading-tight px-1 py-[1px] rounded text-white font-medium w-full overflow-hidden"
+                            style={{ backgroundColor: e.cor }}
+                            title={e.titulo}
+                          >
+                            {isLong ? (
+                              <div className="animate-marquee">
+                                <span className="pr-4">{e.titulo}</span>
+                                <span className="pr-4">{e.titulo}</span>
+                              </div>
+                            ) : (
+                              <div className="truncate w-full">{e.titulo}</div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {eventosDoDia.length > 2 && (
+                        <span className="text-[9px] text-textMuted font-medium pl-1">
+                          +{eventosDoDia.length - 2}
+                        </span>
+                      )}
                     </div>
                   </button>
                 );

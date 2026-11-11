@@ -155,6 +155,28 @@ html.dark .card-tinted::before {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 6s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 6s linear infinite;
+}
+
 /* ---------- Responsividade / mobile ---------- */
 html { -webkit-text-size-adjust: 100%; }
 html, body { max-width: 100%; overflow-x: hidden; }

@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Devolve sempre um array de datas "YYYY-MM-DD" (dias com eventos/tarefas/provas).
-// Query: ?id=<android_id>&y=2026&m=11  (m = 1..12; opcional, padrao = mes atual em Brasilia)
+// Devolve um array de objetos contendo data, titulo e cor do evento/tarefa.
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const { id } = req.query;
@@ -31,11 +30,16 @@ export default async function handler(req, res) {
   const fimMes = `${y}-${pad(m)}-${pad(ultimo)}`;
 
   const [ev, tf, pv] = await Promise.all([
-    supabase.from('eventos_calendario').select('data').eq('user_id', profile.id).gte('data', inicioMes).lte('data', fimMes),
-    supabase.from('tarefas').select('data:data_entrega').eq('user_id', profile.id).gte('data_entrega', inicioMes).lte('data_entrega', fimMes),
-    supabase.from('provas').select('data').eq('user_id', profile.id).gte('data', inicioMes).lte('data', fimMes),
+    supabase.from('eventos_calendario').select('data, titulo, tipo, cor, materias(cor)').eq('user_id', profile.id).gte('data', inicioMes).lte('data', fimMes),
+    supabase.from('tarefas').select('data:data_entrega, titulo, tipo, cor, materias(cor)').eq('user_id', profile.id).gte('data_entrega', inicioMes).lte('data_entrega', fimMes),
+    supabase.from('provas').select('data, titulo, materias(cor)').eq('user_id', profile.id).gte('data', inicioMes).lte('data', fimMes),
   ]);
 
-  const todas = [...(ev.data || []), ...(tf.data || []), ...(pv.data || [])].map((e) => e.data);
-  return res.status(200).json([...new Set(todas)]);
+  const formatados = [
+    ...(ev.data || []).map(e => ({ data: e.data, titulo: e.titulo, cor: e.cor || e.materias?.cor || '#8B6FD8' })),
+    ...(tf.data || []).map(t => ({ data: t.data, titulo: t.titulo, cor: t.cor || t.materias?.cor || '#F2B866' })),
+    ...(pv.data || []).map(p => ({ data: p.data, titulo: p.titulo, cor: p.materias?.cor || '#E98282' }))
+  ];
+
+  return res.status(200).json(formatados);
 }
